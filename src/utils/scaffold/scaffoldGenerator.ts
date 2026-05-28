@@ -8,6 +8,7 @@ import { resolveStack, type StackEntry } from "./stackMatrix.js";
 import { resolveManifest, type ResolvedFileMapping } from "./manifestLoader.js";
 import { dialectFullType, type Dialect } from "./dialectTypes.js";
 import { emitSkillFiles, emitDocFiles } from "./skillsEmitter.js";
+import { osJunkCopyFilter } from "../fsCopyFilter.js";
 
 export interface ScaffoldParams {
   projectName: string;
@@ -381,12 +382,12 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
     if (ctx.projectType === "war") {
       // WAR: static assets go under src/main/webapp/
       const staticDestDir = path.join(projectDir, "src/main/webapp");
-      await fs.copy(staticSrcDir, staticDestDir);
+      await fs.copy(staticSrcDir, staticDestDir, { filter: osJunkCopyFilter });
       generatedFiles.push("src/main/webapp/ (CSS, JS, images)");
     } else {
       // Boot: static assets go under src/main/resources/static/
       const staticDestDir = path.join(projectDir, "src/main/resources/static");
-      await fs.copy(staticSrcDir, staticDestDir);
+      await fs.copy(staticSrcDir, staticDestDir, { filter: osJunkCopyFilter });
       generatedFiles.push("src/main/resources/static/ (CSS, JS, images)");
     }
   }
@@ -399,14 +400,14 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
       if (await fs.pathExists(validatorRulesSrc)) {
         const validatorRulesDest = path.join(projectDir, "src/main/webapp/WEB-INF/config/egovframework/validator/validator-rules.xml");
         await fs.ensureDir(path.dirname(validatorRulesDest));
-        await fs.copy(validatorRulesSrc, validatorRulesDest);
+        await fs.copy(validatorRulesSrc, validatorRulesDest, { filter: osJunkCopyFilter });
         generatedFiles.push("src/main/webapp/WEB-INF/config/egovframework/validator/validator-rules.xml");
       }
       const manifestSrc = path.join(warStaticDir, "MANIFEST.MF");
       if (await fs.pathExists(manifestSrc)) {
         const manifestDest = path.join(projectDir, "src/main/webapp/META-INF/MANIFEST.MF");
         await fs.ensureDir(path.dirname(manifestDest));
-        await fs.copy(manifestSrc, manifestDest);
+        await fs.copy(manifestSrc, manifestDest, { filter: osJunkCopyFilter });
         generatedFiles.push("src/main/webapp/META-INF/MANIFEST.MF");
       }
     }
