@@ -64,7 +64,7 @@ export const ScaffoldInputSchema = z
     // WAR 는 4.3 만 지원한다. 모순 조합을 차단한다.
     if (v.projectType === "war" && v.stackVersion === "5.0") {
       ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+        code: "custom",
         path: ["stackVersion"],
         message:
           "projectType='war' 는 stackVersion='4.3' 만 지원합니다. WAR + 5.0 조합은 허용되지 않습니다.",
