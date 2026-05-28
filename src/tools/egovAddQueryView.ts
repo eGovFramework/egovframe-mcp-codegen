@@ -39,13 +39,13 @@ const ColumnSpecSchema = z.object({
   /** SELECT alias — VO 필드명이자 검색·정렬·결과 접근 key */
   alias: z
     .string()
-    .min(1, "columns[].alias 가 필요합니다.")
-    .regex(
-      /^[a-z][a-zA-Z0-9]*$/,
-      "columns[].alias 는 camelCase 영문/숫자만 허용합니다 (예: 'studentName').",
-    ),
+    .min(1, { error: "columns[].alias 가 필요합니다." })
+    .regex(/^[a-z][a-zA-Z0-9]*$/, {
+      error:
+        "columns[].alias 는 camelCase 영문/숫자만 허용합니다 (예: 'studentName').",
+    }),
   /** 컬럼 헤더에 노출될 라벨 (예: '학생', 'Student Name') */
-  label: z.string().min(1, "columns[].label 이 필요합니다."),
+  label: z.string().min(1, { error: "columns[].label 이 필요합니다." }),
   /** Java 필드 타입 */
   type: z.enum(COLUMN_TYPES).optional().default("String"),
   /** Date/Timestamp/Number 화면 포맷 (예: 'yyyy-MM-dd', '#,##0.00') */
@@ -53,30 +53,30 @@ const ColumnSpecSchema = z.object({
 });
 
 export const AddQueryViewInputSchema = z.object({
-  projectPath: z.string().min(1, "projectPath 가 필요합니다."),
+  projectPath: z.string().min(1, { error: "projectPath 가 필요합니다." }),
   packageName: z
     .string()
     .min(1)
-    .regex(
-      /^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/,
-      "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.academic.report').",
-    ),
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/, {
+      error:
+        "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.academic.report').",
+    }),
   viewName: z
     .string()
     .min(1)
-    .regex(
-      /^[A-Z][a-zA-Z0-9]*$/,
-      "viewName 은 PascalCase 여야 합니다 (예: 'StudentEnrollmentReport').",
-    ),
+    .regex(/^[A-Z][a-zA-Z0-9]*$/, {
+      error: "viewName 은 PascalCase 여야 합니다 (예: 'StudentEnrollmentReport').",
+    }),
   /** SELECT 본문. LIMIT/OFFSET/외부 WHERE 검색절은 도구가 wrapping 으로 추가하므로 포함하지 말 것. */
   sql: z
     .string()
     .min(1)
-    .refine(
-      (s) => /^\s*SELECT\b/i.test(s),
-      "sql 은 SELECT 문이어야 합니다.",
-    ),
-  columns: z.array(ColumnSpecSchema).min(1, "columns 는 최소 1개 필요합니다."),
+    .refine((s) => /^\s*SELECT\b/i.test(s), {
+      error: "sql 은 SELECT 문이어야 합니다.",
+    }),
+  columns: z
+    .array(ColumnSpecSchema)
+    .min(1, { error: "columns 는 최소 1개 필요합니다." }),
   /** 검색 dropdown 에 노출될 컬럼 alias 들. 빈 배열이면 검색 UI 자체를 숨긴다. */
   searchable: z.array(z.string()).optional().default([]),
   /** 출력 컬럼 alias 기준의 ORDER BY 절. 기본 첫 컬럼 DESC. */

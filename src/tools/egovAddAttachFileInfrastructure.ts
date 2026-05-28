@@ -49,7 +49,7 @@ const HSQL_SEED_TEMPLATE = "attach-file/boot50/ddl/attach-file-hsql-seed.sql.hbs
  * 필수는 projectPath 하나뿐 — 나머지는 안전한 default 보유.
  */
 export const AddAttachFileInfrastructureInputSchema = z.object({
-  projectPath: z.string().min(1, "projectPath 는 필수입니다."),
+  projectPath: z.string().min(1, { error: "projectPath 는 필수입니다." }),
 
   /**
    * Globals.fileStorePath 값. 절대경로 권장.

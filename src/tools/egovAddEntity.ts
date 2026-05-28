@@ -51,28 +51,26 @@ import {
  * - 대신 `projectPath` (기존 프로젝트 루트) 가 필수.
  */
 export const AddEntityInputSchema = z.object({
-  projectPath: z.string().min(1, "projectPath 는 필수입니다."),
+  projectPath: z.string().min(1, { error: "projectPath 는 필수입니다." }),
   packageName: z
     .string()
-    .min(1, "packageName 은 필수입니다.")
-    .regex(
-      /^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/,
-      "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.article').",
-    ),
+    .min(1, { error: "packageName 은 필수입니다." })
+    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/, {
+      error:
+        "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.article').",
+    }),
   entityName: z
     .string()
-    .min(1, "entityName 은 필수입니다.")
-    .regex(
-      /^[A-Z][a-zA-Z0-9]*$/,
-      "entityName 은 PascalCase 여야 합니다 (예: 'Article').",
-    ),
+    .min(1, { error: "entityName 은 필수입니다." })
+    .regex(/^[A-Z][a-zA-Z0-9]*$/, {
+      error: "entityName 은 PascalCase 여야 합니다 (예: 'Article').",
+    }),
   ddl: z
     .string()
-    .min(1, "ddl 은 필수입니다.")
-    .refine(
-      (v) => /CREATE\s+(?:MEMORY\s+)?TABLE/i.test(v),
-      "ddl 은 CREATE TABLE 문이어야 합니다.",
-    ),
+    .min(1, { error: "ddl 은 필수입니다." })
+    .refine((v) => /CREATE\s+(?:MEMORY\s+)?TABLE/i.test(v), {
+      error: "ddl 은 CREATE TABLE 문이어야 합니다.",
+    }),
   description: z.string().optional().default(""),
   normalizeDdl: z.boolean().optional().default(true),
   /**
