@@ -27,7 +27,7 @@
     "test:update": "npm run build && UPDATE_GOLDEN=1 vitest run --reporter=basic"
   },
   "dependencies": {
-    "@modelcontextprotocol/sdk": "0.6.0",
+    "@modelcontextprotocol/sdk": "^1.29.0",
     "fs-extra": "^11.2.0",
     "handlebars": "^4.7.8",
     "node-sql-parser": "^5.4.0",
