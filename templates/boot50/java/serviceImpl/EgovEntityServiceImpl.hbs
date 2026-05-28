@@ -1,0 +1,106 @@
+package {{packageName}}.service.impl;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+{{#if idGenerationAuto}}
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
+{{/if}}
+{{#if hasFk}}
+import {{basePackage}}.cmm.vo.FkComboVO;
+{{/if}}
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import {{packageName}}.service.Egov{{entityName}}Service;
+import {{packageName}}.service.{{entityName}}VO;
+{{#if withAttachment}}
+import {{basePackage}}.cmm.service.EgovFileMngService;
+import {{basePackage}}.cmm.service.FileVO;
+{{/if}}
+import jakarta.annotation.Resource;
+
+@Service("{{entityNameLower}}Service")
+public class Egov{{entityName}}ServiceImpl extends EgovAbstractServiceImpl implements Egov{{entityName}}Service {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(Egov{{entityName}}ServiceImpl.class);
+
+	@Resource(name = "{{entityNameLower}}Mapper")
+	private {{entityName}}Mapper {{entityNameLower}}Mapper;
+{{#if idGenerationAuto}}
+
+	@Resource(name = "egov{{entityName}}IdGnrService")
+	private EgovIdGnrService egov{{entityName}}IdGnrService;
+{{/if}}
+{{#if withAttachment}}
+
+	/** 도메인 삭제 시 첨부파일 그룹도 함께 정리 (orphan 방지) — deleteAllFileInf 호출용. */
+	@Resource(name = "EgovFileMngService")
+	private EgovFileMngService fileMngService;
+{{/if}}
+
+	@Override
+	public void insert{{entityName}}({{entityName}}VO vo) throws Exception {
+{{#if idGenerationAuto}}
+		// PII 노출 방지: VO 전체(vo.toString()) 가 아니라 생성된 PK 만 로깅.
+		// parameterized form 을 사용해 DEBUG 비활성 시 문자열 조립 비용도 회피.
+		String id = egov{{entityName}}IdGnrService.getNextStringId();
+		vo.set{{pkAttributes.0.pcName}}(id);
+		LOGGER.debug("insert{{entityName}}: {{pkAttributes.0.ccName}}={}", id);
+{{else}}
+		// idGeneration='manual' — PK 는 사용자가 화면에서 직접 입력한 값(VO 에 이미 세팅됨) 그대로 사용.
+		// 코드 마스터 테이블 (자연 코드 PK) 패턴.
+		LOGGER.debug("insert{{entityName}} (manual PK): {{pkAttributes.0.ccName}}={}", vo.get{{pkAttributes.0.pcName}}());
+{{/if}}
+		{{entityNameLower}}Mapper.insert{{entityName}}(vo);
+	}
+
+	@Override
+	public void update{{entityName}}({{entityName}}VO vo) throws Exception {
+		{{entityNameLower}}Mapper.update{{entityName}}(vo);
+	}
+
+	@Override
+	public void delete{{entityName}}({{entityName}}VO vo) throws Exception {
+{{#if withAttachment}}
+		// 도메인 삭제 전에 atchFileId 를 캡처 — 도메인 row 가 사라지면 그룹 키도 알 수 없게 됨.
+		String {{attachmentFieldName}} = vo.get{{attachmentFieldNamePascal}}();
+{{/if}}
+		{{entityNameLower}}Mapper.delete{{entityName}}(vo);
+{{#if withAttachment}}
+		// 첨부 그룹 논리 삭제 (USE_AT='N') — 디스크 파일은 운영 정책에 따라 별도 cleanup.
+		if ({{attachmentFieldName}} != null && !{{attachmentFieldName}}.isEmpty()) {
+			FileVO fvo = new FileVO();
+			fvo.setAtchFileId({{attachmentFieldName}});
+			fileMngService.deleteAllFileInf(fvo);
+		}
+{{/if}}
+	}
+
+	@Override
+	public {{entityName}}VO select{{entityName}}({{entityName}}VO vo) throws Exception {
+		{{entityName}}VO resultVO = {{entityNameLower}}Mapper.select{{entityName}}(vo);
+		if (resultVO == null)
+			throw processException("info.nodata.msg");
+		return resultVO;
+	}
+
+	@Override
+	public List<?> select{{entityName}}List({{entityName}}VO vo) throws Exception {
+		return {{entityNameLower}}Mapper.select{{entityName}}List(vo);
+	}
+
+	@Override
+	public int select{{entityName}}ListTotCnt({{entityName}}VO vo) {
+		return {{entityNameLower}}Mapper.select{{entityName}}ListTotCnt(vo);
+	}
+{{#each uniqueFkParents}}
+
+	@Override
+	public List<FkComboVO> select{{fkParent.entityName}}ComboList() {
+		return {{../entityNameLower}}Mapper.select{{fkParent.entityName}}ComboList();
+	}
+{{/each}}
+
+}

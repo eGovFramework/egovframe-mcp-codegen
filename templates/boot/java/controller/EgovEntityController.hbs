@@ -1,0 +1,140 @@
+package {{packageName}}.web;
+
+import javax.validation.Valid;
+{{#if hasDateAttr}}
+import java.beans.PropertyEditorSupport;
+import java.sql.Date;
+import java.sql.Timestamp;
+{{/if}}
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
+{{#if hasDateAttr}}
+import org.springframework.web.bind.WebDataBinder;
+import org.springframework.web.bind.annotation.InitBinder;
+{{/if}}
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import {{packageName}}.service.Egov{{entityName}}Service;
+import {{packageName}}.service.{{entityName}}VO;
+import lombok.RequiredArgsConstructor;
+
+@Controller
+@RequiredArgsConstructor
+public class Egov{{entityName}}Controller {
+	private final Egov{{entityName}}Service {{entityNameLower}}Service;
+	private final EgovPropertyService propertiesService;
+
+{{#if hasDateAttr}}
+	/**
+	 * 폼 입력을 java.sql.Date / java.sql.Timestamp 로 바인딩한다.
+	 * - Date: 'yyyy-MM-dd' 만 허용. 빈 문자열은 null.
+	 * - Timestamp: 'yyyy-MM-dd' 만 들어오면 ' 00:00:00' 보강 후 Timestamp.valueOf().
+	 */
+	@InitBinder
+	public void initBinder(WebDataBinder binder) {
+		binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
+			@Override
+			public void setAsText(String text) throws IllegalArgumentException {
+				if (text == null || text.isBlank()) { setValue(null); return; }
+				setValue(Date.valueOf(text.trim()));
+			}
+		});
+		binder.registerCustomEditor(Timestamp.class, new PropertyEditorSupport() {
+			@Override
+			public void setAsText(String text) throws IllegalArgumentException {
+				if (text == null || text.isBlank()) { setValue(null); return; }
+				String s = text.trim();
+				if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') s = s + " 00:00:00";
+				setValue(Timestamp.valueOf(s));
+			}
+		});
+	}
+
+{{/if}}
+{{#if isPrimaryEntity}}
+	@GetMapping("/")
+	public String search(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO, Model model) throws Exception {
+		return this.list({{entityNameLower}}VO, model);
+	}
+{{/if}}
+
+	@PostMapping("/{{entityNameLower}}/list")
+	public String list(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO, Model model) throws Exception {
+		{{entityNameLower}}VO.setPageUnit(propertiesService.getInt("pageUnit"));
+		{{entityNameLower}}VO.setPageSize(propertiesService.getInt("pageSize"));
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo({{entityNameLower}}VO.getPageIndex());
+		paginationInfo.setRecordCountPerPage({{entityNameLower}}VO.getPageUnit());
+		paginationInfo.setPageSize({{entityNameLower}}VO.getPageSize());
+		{{entityNameLower}}VO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		{{entityNameLower}}VO.setLastIndex(paginationInfo.getLastRecordIndex());
+		{{entityNameLower}}VO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+		model.addAttribute("resultList", {{entityNameLower}}Service.select{{entityName}}List({{entityNameLower}}VO));
+		paginationInfo.setTotalRecordCount({{entityNameLower}}Service.select{{entityName}}ListTotCnt({{entityNameLower}}VO));
+		model.addAttribute("paginationInfo", paginationInfo);
+		return "egov{{entityName}}List";
+	}
+
+	@PostMapping("/{{entityNameLower}}/detail")
+	public String detail(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO, @RequestParam String {{pkAttributes.0.ccName}}, Model model) throws Exception {
+		{{entityNameLower}}VO.set{{pkAttributes.0.pcName}}({{pkAttributes.0.ccName}});
+		{{entityName}}VO detail = this.{{entityNameLower}}Service.select{{entityName}}({{entityNameLower}}VO);
+		model.addAttribute("{{entityNameLower}}VO", detail);
+{{#if hasFk}}
+		populate{{entityName}}ReferenceLists(model);
+{{/if}}
+		return "egov{{entityName}}Register";
+	}
+
+	@GetMapping("/{{entityNameLower}}/add")
+	public String form(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO{{#if hasFk}}, Model model{{/if}}) {
+{{#if hasFk}}
+		populate{{entityName}}ReferenceLists(model);
+{{/if}}
+		return "egov{{entityName}}Register";
+	}
+
+	@PostMapping("/{{entityNameLower}}/add")
+	public String add(@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
+		if (bindingResult.hasErrors()) {
+{{#if hasFk}}
+			populate{{entityName}}ReferenceLists(model);
+{{/if}}
+			return "egov{{entityName}}Register";
+		}
+		this.{{entityNameLower}}Service.insert{{entityName}}({{entityNameLower}}VO);
+		return "redirect:/";
+	}
+
+	@PostMapping("/{{entityNameLower}}/update")
+	public String update(@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
+		if (bindingResult.hasErrors()) {
+{{#if hasFk}}
+			populate{{entityName}}ReferenceLists(model);
+{{/if}}
+			return "egov{{entityName}}Register";
+		}
+		this.{{entityNameLower}}Service.update{{entityName}}({{entityNameLower}}VO);
+		return "redirect:/";
+	}
+{{#if hasFk}}
+
+	/** FK lookup 콤보 리스트들을 모델에 주입한다 (Register 화면에서 select 옵션 소스). */
+	private void populate{{entityName}}ReferenceLists(Model model) {
+{{#each uniqueFkParents}}
+		model.addAttribute("{{fkParent.entityNameLower}}List", {{../entityNameLower}}Service.select{{fkParent.entityName}}ComboList());
+{{/each}}
+	}
+{{/if}}
+
+	@PostMapping("/{{entityNameLower}}/delete")
+	public String delete(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO) throws Exception {
+		this.{{entityNameLower}}Service.delete{{entityName}}({{entityNameLower}}VO);
+		return "redirect:/";
+	}
+}

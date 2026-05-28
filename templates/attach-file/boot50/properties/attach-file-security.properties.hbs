@@ -1,0 +1,16 @@
+
+# === 첨부파일 보안 정책 (egov_add_attach_file_infrastructure) ===
+# EgovFileMngUtil 가 @Value 로 읽어서 parseFileInf 진입 시 검사한다.
+# 변경 후 재시작 필요. 값을 수정해도 도구를 다시 호출할 필요는 없음.
+
+# 도메인 정책 파일 크기 한도. Spring multipart 한도와 별개로 EgovFileMngUtil 가 한 번 더 검사.
+# 단위: B/KB/MB/GB. 예) 10MB
+egov.attach.maxFileSize={{maxFileSize}}
+
+# 화이트리스트 (CSV, 대소문자 무관). 비어 있으면 화이트리스트 비활성화 — 블랙리스트만 적용.
+# 예) PDF,DOCX,XLSX,PNG,JPG,JPEG,GIF,HWP
+egov.attach.allowedExtensions={{allowedExtensionsCsv}}
+
+# 추가 차단 확장자 (CSV). EgovFileMngUtil.DEFAULT_BLOCKED_EXTENSIONS 의 P0 기본 셋에 합쳐진다.
+# 기본 셋은 코드 상수 — 운영 정책으로 더 막아야 하는 확장자가 있을 때만 추가.
+egov.attach.blockedExtensions={{blockedExtensionsCsv}}

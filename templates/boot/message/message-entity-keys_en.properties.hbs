@@ -1,0 +1,17 @@
+
+# === entity '{{entityName}}' keys (egov_add_entity appended) ===
+list.{{entityNameLower}}=List {{entityName}}
+title.{{entityNameLower}}.sample={{entityName}} List
+nav.{{entityNameLower}}={{entityName}}
+{{#each attributes}}
+title.{{../entityNameLower}}.{{ccName}}={{#if fkParent}}{{fkParent.entityName}}{{else}}{{pcName}}{{/if}}
+{{/each}}
+{{#each nonPkAttributes}}
+{{#if (eq javaType "java.lang.String")}}
+confirm.required.{{../entityNameLower}}.{{ccName}}={{pcName}} is required.
+{{/if}}
+{{/each}}
+{{#if withAttachment}}
+title.{{entityNameLower}}.attachment=Attachment
+info.{{entityNameLower}}.attachment.existing=Existing attachments will be kept. Newly uploaded files will be added.
+{{/if}}

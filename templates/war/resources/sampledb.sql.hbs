@@ -1,0 +1,18 @@
+CREATE MEMORY TABLE {{tableName}}(
+{{#each attributes}}
+	{{columnName}} {{dataType}}{{#if maxLength}}({{maxLength}}){{/if}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+{{/each}}
+{{#if hasCompositePk}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+{{/if}}
+{{#each fkAttributes}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+{{/each}}
+);
+
+CREATE MEMORY TABLE IDS(
+	TABLE_NAME VARCHAR(16) NOT NULL PRIMARY KEY,
+	NEXT_ID DECIMAL(30) NOT NULL
+);
+
+INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);

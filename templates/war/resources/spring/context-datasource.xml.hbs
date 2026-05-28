@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+	xmlns:util="http://www.springframework.org/schema/util"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/jdbc http://www.springframework.org/schema/jdbc/spring-jdbc-4.0.xsd
+		http://www.springframework.org/schema/util http://www.springframework.org/schema/util/spring-util.xsd">
+
+	<!--
+		기본 활성 프로파일은 web.xml 의 <context-param>spring.profiles.active</context-param> 로 지정됩니다(기본 hsql).
+		외부 DB 로 전환하려면:
+		  1) egovframework/egovProps/globals.properties 에서 해당 DB 의 Globals.{db}.* 항목 주석 해제
+		  2) web.xml 의 spring.profiles.active 값 변경 (또는 JVM 옵션 -Dspring.profiles.active=oracle)
+		  3) pom.xml 의 해당 JDBC 드라이버 의존성 주석 해제
+
+		비밀번호 암호화는 기본 평문(plain). eGovFrame Crypto Simplify 도입 시
+		${Globals.X.Password} 자리를 #{egovPasswordResolver.resolvePassword('Globals.X.Password')} 형태로 변경하세요.
+		참고: https://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte2:fdl:crypto_simplify_v3_8
+	-->
+
+	<alias name="dataSource" alias="egov.dataSource" />
+
+	<!-- HSQL (기본) -->
+	<beans profile="hsql">
+		<jdbc:embedded-database id="dataSource" type="HSQL">
+			<jdbc:script location="classpath:/db/{{entityNameLower}}db.sql" />
+		</jdbc:embedded-database>
+	</beans>
+
+	<!-- MySQL -->
+	<beans profile="mysql">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.mysql.DriverClassName}"/>
+			<property name="url" value="${Globals.mysql.Url}" />
+			<property name="username" value="${Globals.mysql.UserName}"/>
+			<property name="password" value="${Globals.mysql.Password}"/>
+		</bean>
+	</beans>
+
+	<!-- Oracle -->
+	<beans profile="oracle">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.oracle.DriverClassName}"/>
+			<property name="url" value="${Globals.oracle.Url}" />
+			<property name="username" value="${Globals.oracle.UserName}"/>
+			<property name="password" value="${Globals.oracle.Password}"/>
+		</bean>
+	</beans>
+
+	<!-- Altibase -->
+	<beans profile="altibase">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.altibase.DriverClassName}"/>
+			<property name="url" value="${Globals.altibase.Url}" />
+			<property name="username" value="${Globals.altibase.UserName}"/>
+			<property name="password" value="${Globals.altibase.Password}"/>
+
+			<property name="validationQuery" value="select 1"/>
+			<property name="testWhileIdle" value="true"/>
+		</bean>
+	</beans>
+
+	<!-- Tibero -->
+	<beans profile="tibero">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.tibero.DriverClassName}"/>
+			<property name="url" value="${Globals.tibero.Url}" />
+			<property name="username" value="${Globals.tibero.UserName}"/>
+			<property name="password" value="${Globals.tibero.Password}"/>
+		</bean>
+	</beans>
+
+	<!-- CUBRID -->
+	<beans profile="cubrid">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.cubrid.DriverClassName}"/>
+			<property name="url" value="${Globals.cubrid.Url}" />
+			<property name="username" value="${Globals.cubrid.UserName}"/>
+			<property name="password" value="${Globals.cubrid.Password}"/>
+
+			<property name="validationQuery" value="select 1"/>
+			<property name="testOnBorrow" value="false"/>
+		</bean>
+		<!--
+			CUBRID 가이드 참조
+			https://www.cubrid.com/tutorial/3794188
+			* DBCP 를 통해 최초 connection 시 해당 connection 이 유효한지 체크하는 isValid 를 호출
+		-->
+	</beans>
+
+	<!-- MariaDB -->
+	<beans profile="maria">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.maria.DriverClassName}"/>
+			<property name="url" value="${Globals.maria.Url}" />
+			<property name="username" value="${Globals.maria.UserName}"/>
+			<property name="password" value="${Globals.maria.Password}"/>
+		</bean>
+	</beans>
+
+	<!-- PostgreSQL -->
+	<beans profile="postgres">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.postgres.DriverClassName}"/>
+			<property name="url" value="${Globals.postgres.Url}" />
+			<property name="username" value="${Globals.postgres.UserName}"/>
+			<property name="password" value="${Globals.postgres.Password}"/>
+		</bean>
+	</beans>
+
+	<!-- GOLDILOCKS -->
+	<beans profile="goldilocks">
+		<bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+			<property name="driverClassName" value="${Globals.goldilocks.DriverClassName}"/>
+			<property name="url" value="${Globals.goldilocks.Url}" />
+			<property name="username" value="${Globals.goldilocks.UserName}"/>
+			<property name="password" value="${Globals.goldilocks.Password}"/>
+		</bean>
+	</beans>
+
+	<!--
+		DB Pool 이 생성되더라도 특정 시간 호출되지 않으면 DBMS 설정에 따라 연결이 끊어질 때
+		이 경우 DBCP 를 사용하셨다면 다음과 같은 설정을 추가하시면 연결을 유지시켜 줍니다.
+
+		<property name="validationQuery" value="select 1 from dual" />
+		<property name="testWhileIdle" value="true" />
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+	-->
+</beans>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE form-validation PUBLIC
+	"-//Apache Software Foundation//DTD Commons Validator Rules Configuration 1.2.0//EN"
+	"http://commons.apache.org/dtds/validator_1_2_0.dtd">
+<form-validation>
+	<formset>
+		<form name="{{voName}}">
+{{#each nonPkAttributes}}
+{{#if (eq javaType "java.lang.String")}}
+			<field property="{{ccName}}" depends="required">
+				<arg key="title.{{../entityNameLower}}.{{ccName}}" position="0" />
+			</field>
+{{/if}}
+{{/each}}
+		</form>
+	</formset>
+</form-validation>

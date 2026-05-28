@@ -1,0 +1,42 @@
+{
+  "name": "egovframe-mcp-codegen",
+  "version": "1.0.0",
+  "description": "eGovFrame MCP server: scaffold projects, add entities, and add query views from DDL.",
+  "private": true,
+  "type": "module",
+  "bin": {
+    "egovframe-mcp-codegen": "./build/index.js"
+  },
+  "files": [
+    "build",
+    "templates"
+  ],
+  "keywords": [
+    "egovframe",
+    "mcp",
+    "code-generation"
+  ],
+  "scripts": {
+    "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
+    "prepare": "npm run build",
+    "watch": "tsc --watch",
+    "inspector": "npx @modelcontextprotocol/inspector build/index.js",
+    "test": "npm run build && vitest run --reporter=basic",
+    "test:unit": "vitest run --reporter=basic",
+    "test:watch": "vitest",
+    "test:update": "npm run build && UPDATE_GOLDEN=1 vitest run --reporter=basic"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "0.6.0",
+    "fs-extra": "^11.2.0",
+    "handlebars": "^4.7.8",
+    "node-sql-parser": "^5.4.0",
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "@types/fs-extra": "^11.0.4",
+    "@types/node": "^20.11.24",
+    "typescript": "^5.3.3",
+    "vitest": "^1.6.1"
+  }
+}

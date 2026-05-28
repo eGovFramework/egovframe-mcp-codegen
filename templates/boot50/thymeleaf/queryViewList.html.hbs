@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title th:text="{{concat "#{title." viewNameLower ".sample}"}}"></title>
+
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}"/>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}"/>
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript">
+		function {{viewNameLower}}Search() {
+			document.listForm.pageIndex.value = 1;
+			document.listForm.submit();
+		}
+		function {{viewNameLower}}Pagination(pageNo) {
+			document.listForm.pageIndex.value = pageNo;
+			document.listForm.submit();
+		}
+	</script>
+</head>
+<body>
+<div id="container" class="inner">
+
+	<h2 class="heading-large" th:text="{{concat "#{list." viewNameLower "}"}}"></h2>
+
+	<!-- @egov:nav-include — egov_add_entity / egov_add_query_view 가 fragment 갱신 시 자동 인식하는 마커. -->
+	<div th:replace="~{_fragments/nav :: links}"></div>
+
+	<div id="content_pop">
+		<form id="listForm" name="listForm" th:object="${ {{viewVoName}} }" method="get" th:action="@{/egov{{viewName}}List.do}">
+			<input type="hidden" name="pageIndex" th:value="${ {{viewVoName}}.pageIndex }"/>
+
+{{#if hasSearchable}}
+			<div class="form-group">
+				<div class="search-wrap">
+					<div class="search-body">
+						<div class="form-conts searchOption">
+							<select id="searchCondition" name="searchCondition" class="krds-form-select medium" th:title="#{search.choose}">
+{{#each searchable}}
+								<option th:text="{{concat "#{title." ../viewNameLower "." alias "}"}}" th:value="{{@index}}" th:selected="${ {{../viewVoName}}.searchCondition } == {{@index}}"></option>
+{{/each}}
+							</select>
+						</div>
+						<div class="form-conts btn-ico-wrap searchKeyword">
+							<input type="text" id="searchKeyword" name="searchKeyword" th:value="${ {{viewVoName}}.searchKeyword }" class="krds-input medium" th:placeholder="#{search.keyword}">
+							<button type="button" class="krds-btn medium icon" th:onclick="{{viewNameLower}}Search()">
+								<span class="sr-only" th:text="#{button.search}"></span>
+								<i class="svg-icon ico-sch"></i>
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+{{/if}}
+
+			<div class="krds-table-wrap">
+				<table class="tbl data">
+					<thead>
+						<tr>
+							<th scope="col" class="text-center">No</th>
+{{#each columns}}
+							<th scope="col" class="text-center"><span th:text="{{concat "#{title." ../viewNameLower "." alias "}"}}"></span></th>
+{{/each}}
+						</tr>
+					</thead>
+					<tbody>
+						<tr th:each="result, iterStat : ${resultList}">
+							<td class="text-center" th:text="${paginationInfo.totalRecordCount + 1 - (({{viewVoName}}.pageIndex - 1) * {{viewVoName}}.pageSize + iterStat.count)}"></td>
+{{#each columns}}
+{{#if isDate}}
+							<td class="text-center" th:text="${result.{{alias}} != null} ? ${#dates.format(result.{{alias}}, '{{format}}')} : ''"></td>
+{{else if isTimestamp}}
+							<td class="text-center" th:text="${result.{{alias}} != null} ? ${#dates.format(result.{{alias}}, '{{format}}')} : ''"></td>
+{{else if isNumber}}
+{{#if format}}
+							<td class="text-right" th:text="${result.{{alias}} != null} ? ${#numbers.formatDecimal(result.{{alias}}, 1, 2)} : ''"></td>
+{{else}}
+							<td class="text-right" th:text="{{concat "${result." alias "}"}}"></td>
+{{/if}}
+{{else if isBoolean}}
+							<td class="text-center" th:text="{{concat "${result." alias " != null and result." alias "}"}} ? #{input.yes} : #{input.no}"></td>
+{{else}}
+							<td class="text-center" th:text="{{concat "${result." alias "}"}}"></td>
+{{/if}}
+{{/each}}
+						</tr>
+						<tr th:if="${resultList == null or resultList.isEmpty()}">
+							<td class="text-center" colspan="{{add columns.length 1}}" th:text="#{info.nodata.msg}"></td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+
+			<!--
+				th:utext 사용 근거 (XSS safe — verified, not assumed):
+
+				1) org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo 는 int 9개만 필드로 가짐
+				   (currentPageNo/recordCountPerPage/pageSize/totalRecordCount/totalPageCount/
+				    firstPageNoOnPageList/lastPageNoOnPageList/firstRecordIndex/lastRecordIndex).
+				   String 필드 0개, setSearchKeyword 없음. 사용자 입력이 들어갈 수 있는 구조 자체가 아니다.
+				2) AbstractPaginationRenderer.renderPagination(...) 는 paginationInfo 에서 int getter
+				   만 호출하고 Integer.toString(int) 로 변환. 임의 문자열이 흘러나올 경로 없음.
+				3) jsFunction 인자는 생성 시점에 ^[A-Z][a-zA-Z0-9]*$ 로 검증된 식별자 리터럴.
+				4) label 템플릿(이전/다음 등)은 EgovKrdsPaginationRenderer 의 하드코드 + 우리 message
+				   bundle 만 사용 — 둘 다 개발자 통제.
+
+				위 4가지가 깨지지 않는 한 안전. 셀(<td>) 값은 모두 th:text 로 escape 되어 있다.
+			-->
+			<div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, '{{viewNameLower}}Pagination')}"></div>
+		</form>
+	</div>
+</div>
+</body>
+</html>

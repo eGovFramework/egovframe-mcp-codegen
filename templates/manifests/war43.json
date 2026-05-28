@@ -1,0 +1,54 @@
+{
+  "$comment": "eGovFrame 4.3 WAR (Spring 5.3 + JSP + Tomcat) scaffold 의 파일 매니페스트. 각 항목의 output 은 Handlebars 로 렌더링되며, 사용 가능한 변수는 ScaffoldContext 와 동일하다 (basePackagePath, packagePath, entityName, entityModule, entityNameLower 등). 새 파일 추가 시 이 배열에 한 줄을 추가하면 코드 수정 없이 반영된다. 'scope' 필드는 항목의 생명주기를 표시한다: 'framework'(기본, 프로젝트당 1회 생성) 또는 'entity'(엔티티마다 생성 — egov_add_entity 가 이 항목들만 골라 추가한다).",
+  "name": "war43",
+  "files": [
+    { "template": "war/pom.xml.hbs", "output": "pom.xml" },
+
+    { "template": "war/java/entity/EntityVO.hbs", "output": "src/main/java/{{packagePath}}/service/{{entityName}}VO.java", "scope": "entity" },
+    { "template": "war/java/entity/EntityDefaultVO.hbs", "output": "src/main/java/{{packagePath}}/service/{{entityName}}DefaultVO.java", "scope": "entity" },
+    { "template": "war/java/service/EgovEntityService.hbs", "output": "src/main/java/{{packagePath}}/service/Egov{{entityName}}Service.java", "scope": "entity" },
+    { "template": "war/java/serviceImpl/EgovEntityServiceImpl.hbs", "output": "src/main/java/{{packagePath}}/service/impl/Egov{{entityName}}ServiceImpl.java", "scope": "entity" },
+    { "template": "war/java/mapper/EntityMapper.hbs", "output": "src/main/java/{{packagePath}}/service/impl/{{entityName}}Mapper.java", "scope": "entity" },
+
+    { "template": "war/java/controller/EgovEntityController.hbs", "output": "src/main/java/{{packagePath}}/web/Egov{{entityName}}Controller.java", "scope": "entity" },
+    { "template": "war/java/cmmn/EgovExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/Egov{{entityName}}ExcepHndlr.java" },
+    { "template": "war/java/cmmn/EgovOthersExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/Egov{{entityName}}OthersExcepHndlr.java" },
+    { "template": "war/java/cmmn/web/EgovBindingInitializer.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/web/EgovBindingInitializer.java" },
+    { "template": "war/java/cmmn/web/EgovImgPaginationRenderer.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/web/EgovImgPaginationRenderer.java" },
+    { "template": "war/java/cmm/FkComboVO.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/vo/FkComboVO.java" },
+
+    { "template": "war/resources/spring/context-aspect.xml.hbs", "output": "src/main/resources/egovframework/spring/context-aspect.xml" },
+    { "template": "war/resources/spring/context-common.xml.hbs", "output": "src/main/resources/egovframework/spring/context-common.xml" },
+    { "template": "war/resources/spring/context-datasource.xml.hbs", "output": "src/main/resources/egovframework/spring/context-datasource.xml" },
+    { "template": "war/resources/spring/context-idgen.xml.hbs", "output": "src/main/resources/egovframework/spring/context-{{entityNameLower}}-idgen.xml", "scope": "entity" },
+    { "template": "war/resources/spring/context-mapper.xml.hbs", "output": "src/main/resources/egovframework/spring/context-mapper.xml" },
+    { "template": "war/resources/spring/context-properties.xml.hbs", "output": "src/main/resources/egovframework/spring/context-properties.xml" },
+    { "template": "war/resources/spring/context-transaction.xml.hbs", "output": "src/main/resources/egovframework/spring/context-transaction.xml" },
+    { "template": "war/resources/spring/context-validator.xml.hbs", "output": "src/main/resources/egovframework/spring/context-validator.xml" },
+
+    { "template": "war/resources/mapper-sql.xml.hbs", "output": "src/main/resources/egovframework/sqlmap/{{entityModule}}/mappers/Egov{{entityName}}_{{entityName}}_SQL.xml", "scope": "entity" },
+    { "template": "war/resources/sampledb.sql.hbs", "output": "src/main/resources/db/{{entityNameLower}}db.sql" },
+    { "template": "war/resources/sampledb-migrations.sql.hbs", "output": "src/main/resources/db/migrations/{{dialect}}/{{entityNameLower}}db.sql", "scope": "entity", "expandDialects": true },
+    { "template": "war/resources/globals.properties.hbs", "output": "src/main/resources/egovframework/egovProps/globals.properties" },
+    { "template": "war/resources/log4j2.xml.hbs", "output": "src/main/resources/log4j2.xml" },
+
+    { "template": "war/message/message-common.properties.hbs", "output": "src/main/resources/egovframework/message/message-common.properties" },
+    { "template": "war/message/message-common.properties.hbs", "output": "src/main/resources/egovframework/message/message-common_ko.properties" },
+    { "template": "war/message/message-common_en.properties.hbs", "output": "src/main/resources/egovframework/message/message-common_en.properties" },
+
+    { "template": "war/webapp/web.xml.hbs", "output": "src/main/webapp/WEB-INF/web.xml" },
+    { "template": "war/webapp/dispatcher-servlet.xml.hbs", "output": "src/main/webapp/WEB-INF/config/egovframework/springmvc/dispatcher-servlet.xml" },
+    { "template": "war/webapp/validator.xml.hbs", "output": "src/main/webapp/WEB-INF/config/egovframework/validator/validator.xml" },
+
+    { "template": "war/webapp/jsp/_fragments/nav.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp" },
+    { "template": "war/webapp/jsp/entity/egovEntityList.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/{{entityModule}}/egov{{entityName}}List.jsp", "scope": "entity" },
+    { "template": "war/webapp/jsp/entity/egovEntityRegister.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/{{entityModule}}/egov{{entityName}}Register.jsp", "scope": "entity" },
+    { "template": "war/webapp/jsp/cmmn/egovError.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/cmmn/egovError.jsp" },
+    { "template": "war/webapp/jsp/cmmn/egovBizException.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/cmmn/egovBizException.jsp" },
+    { "template": "war/webapp/jsp/cmmn/dataAccessFailure.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/cmmn/dataAccessFailure.jsp" },
+    { "template": "war/webapp/jsp/cmmn/transactionFailure.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/cmmn/transactionFailure.jsp" },
+    { "template": "war/webapp/jsp/cmmn/validator.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/cmmn/validator.jsp" },
+    { "template": "war/webapp/index.jsp.hbs", "output": "src/main/webapp/index.jsp" },
+    { "template": "war/webapp/common/error.jsp.hbs", "output": "src/main/webapp/common/error.jsp" }
+  ]
+}

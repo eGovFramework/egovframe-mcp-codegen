@@ -1,0 +1,86 @@
+{
+  "$comment": "eGovFrame scaffold 스택 호환성 매트릭스. egov_scaffold_project 가 (projectType, stackVersion) 을 키로 이 매트릭스를 조회해 컨텍스트와 템플릿에 주입한다. 새 스택 추가 시 stacks 키와 selection 매핑을 함께 갱신할 것.",
+  "version": 1,
+  "stacks": {
+    "boot50": {
+      "projectType": "boot",
+      "stackVersion": "5.0",
+      "egovframe": "5.0.0",
+      "springBoot": "3.2.5",
+      "spring": null,
+      "java": "17",
+      "jakarta": true,
+      "rteVersion": null,
+      "starterParentGroupId": "org.egovframe.boot",
+      "starterParentArtifactId": "egovframe-boot-starter-parent",
+      "starterParentVersion": "5.0.0",
+      "frameworkLabel": "eGovFrame Boot 5.0.0",
+      "staticAssets": "static50",
+      "manifest": "manifests/boot50.json",
+      "addEntityMigration": "boot50/resources/add-entity-tables.sql.hbs",
+      "addEntityMessages": {
+        "defaultLocale": "boot50/message/message-entity-keys.properties.hbs",
+        "en": "boot50/message/message-entity-keys_en.properties.hbs"
+      },
+      "navFragment": {
+        "template": "boot50/thymeleaf/_fragments/nav.html.hbs",
+        "output": "src/main/resources/templates/thymeleaf/_fragments/nav.html"
+      }
+    },
+    "boot43": {
+      "projectType": "boot",
+      "stackVersion": "4.3",
+      "egovframe": "4.3.0",
+      "springBoot": "2.7.18",
+      "spring": null,
+      "java": "17",
+      "jakarta": false,
+      "rteVersion": "4.3.0",
+      "starterParentGroupId": "org.springframework.boot",
+      "starterParentArtifactId": "spring-boot-starter-parent",
+      "starterParentVersion": "2.7.18",
+      "frameworkLabel": "Spring Boot 2.7.18",
+      "staticAssets": "static",
+      "manifest": "manifests/boot43.json",
+      "addEntityMigration": "boot/resources/add-entity-tables.sql.hbs",
+      "addEntityMessages": {
+        "defaultLocale": "boot/message/message-entity-keys.properties.hbs",
+        "en": "boot/message/message-entity-keys_en.properties.hbs"
+      },
+      "navFragment": {
+        "template": "boot/thymeleaf/_fragments/nav.html.hbs",
+        "output": "src/main/resources/templates/thymeleaf/_fragments/nav.html"
+      }
+    },
+    "war43": {
+      "projectType": "war",
+      "stackVersion": "4.3",
+      "egovframe": "4.3.0",
+      "springBoot": null,
+      "spring": "5.3.37",
+      "java": "1.8",
+      "jakarta": false,
+      "rteVersion": "4.3.0",
+      "starterParentGroupId": null,
+      "starterParentArtifactId": null,
+      "starterParentVersion": null,
+      "frameworkLabel": "Spring 5.3.37",
+      "staticAssets": "static",
+      "manifest": "manifests/war43.json",
+      "addEntityMigration": "war/resources/add-entity-tables.sql.hbs",
+      "addEntityMessages": {
+        "defaultLocale": "war/message/message-entity-keys.properties.hbs",
+        "en": "war/message/message-entity-keys_en.properties.hbs"
+      },
+      "navFragment": {
+        "template": "war/webapp/jsp/_fragments/nav.jsp.hbs",
+        "output": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp"
+      }
+    }
+  },
+  "selection": [
+    { "projectType": "boot", "stackVersion": "5.0", "stack": "boot50" },
+    { "projectType": "boot", "stackVersion": "4.3", "stack": "boot43" },
+    { "projectType": "war", "stackVersion": "4.3", "stack": "war43" }
+  ]
+}

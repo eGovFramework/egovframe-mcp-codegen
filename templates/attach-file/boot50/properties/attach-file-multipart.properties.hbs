@@ -1,0 +1,7 @@
+
+# === 첨부파일 multipart 업로드 크기 제한 (egov_add_attach_file_infrastructure) ===
+# Spring Boot 기본값: max-file-size=1MB, max-request-size=10MB
+# 첨부파일 인프라 설치 시 합리적 기본값으로 상향됨. 필요 시 수치만 조정하세요.
+# (값 단위: B/KB/MB/GB — 예: 10MB, 524288000B)
+spring.servlet.multipart.max-file-size={{maxFileSize}}
+spring.servlet.multipart.max-request-size={{maxRequestSize}}

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title th:text="#{title.{{entityNameLower}}.sample}"></title>
+    <link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/egovframework/sample.css}">
+    <script type="text/javascript" th:src="@{/js/egovframework/jquery-3.6.1.min.js}"></script>
+    <script th:inline="javascript">
+        document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
+        var contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
+        function notNullCheck(value) { return !(value === '' || value == null || (typeof value == 'object' && !Object.keys(value).length)); }
+        function {{entityNameLower}}Search() {
+            if (notNullCheck($('#searchKeyword').val())) {
+                $.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post',
+                    data: { searchCondition: $('#searchCondition option:selected').val(), searchKeyword: $('#searchKeyword').val() }
+                }).done(function(fragment) { $('#content_pop').replaceWith(fragment); });
+            } else { const errorMessage = [[#{search.error}]]; alert(errorMessage); }
+        }
+        function {{entityNameLower}}Pagination(pageIndex) {
+            $.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post', data: { pageIndex: pageIndex }
+            }).done(function(fragment) { $('#content_pop').replaceWith(fragment); });
+        }
+        function {{entityNameLower}}Create() { $(location).attr('href', contextPath + '/{{entityNameLower}}/add'); }
+        function {{entityNameLower}}Detail({{pkAttributes.0.ccName}}) {
+            $('#{{pkAttributes.0.ccName}}').val({{pkAttributes.0.ccName}});
+            $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/detail').submit();
+        }
+    </script>
+</head>
+<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
+    <div id="content_pop">
+        <div id="title"><ul><li><img th:src="@{/images/egovframework/example/title_dot.gif}"/><span th:text="{{concat "#{list." entityNameLower "}"}}"></span></li></ul></div>
+
+        <!-- @egov:nav-include — egov_add_entity 가 fragment 갱신 시 자동 인식하는 마커. 사용자가 옮기지 마세요. -->
+        <div th:replace="~{_fragments/nav :: links}"></div>
+        <form id="detailForm" th:object="{{{thExpr voName}}}">
+            <input type="hidden" id="{{pkAttributes.0.ccName}}" name="{{pkAttributes.0.ccName}}"/>
+        </form>
+        <div id="search">
+            <ul>
+                <li>
+                    <label for="searchCondition" style="visibility:hidden;" th:text="#{search.choose}"></label>
+                    <select id="searchCondition" name="searchCondition" class="use">
+{{#each searchableAttributes}}
+                        <option th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}" th:value="{{@index}}" th:selected="{{{thExpr ../voName ".searchCondition"}}} == {{@index}}"></option>
+{{/each}}
+                    </select>
+                </li>
+                <li>
+                    <label for="searchKeyword" style="visibility:hidden;display:none;" th:text="#{search.keyword}"></label>
+                    <input type="text" id="searchKeyword" name="searchKeyword" th:value="{{{thExpr voName ".searchKeyword"}}}" class="txt"/>
+                </li>
+                <li><span class="btn_blue_l"><span th:text="#{button.search}" th:onclick="{{entityNameLower}}Search()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.search}"/></span></li>
+                <li><span th:class="btn_blue_l"><span th:text="#{button.create}" th:onclick="{{entityNameLower}}Create()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.create}"/></span></li>
+            </ul>
+        </div>
+        <div id="table">
+            <table th:width="680px">
+            <caption style="visibility:hidden">{{entityName}} List</caption>
+                <tr>
+                    <th th:width="40px">No</th>
+{{#each attributes}}
+                    <th><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></th>
+{{/each}}
+                </tr>
+                <tr data-th-each="item, status : ${resultList}">
+                    <td th:class="listtd" th:align="center">[[${(paginationInfo.getTotalRecordCount()+1)-(({{entityNameLower}}VO.getPageIndex()-1)*paginationInfo.getPageSize()+status.count)}]]</td>
+{{#each attributes}}
+{{#if isPrimaryKey}}
+                    <td th:class="listtd" th:align="center"><a th:onclick="{{../entityNameLower}}Detail([[{{concat "${item." ccName "}"}}]])">[[{{concat "${item." ccName "}"}}]]</a></td>
+{{else}}
+{{#if fkParent}}
+                    <td th:class="listtd">[[{{concat "${item." ccName "DisplayName}"}}]]</td>
+{{else}}
+                    <td th:class="listtd">[[{{concat "${item." ccName "}"}}]]</td>
+{{/if}}
+{{/if}}
+{{/each}}
+                </tr>
+            </table>
+        </div>
+        <div id="paging"><span th:utext="${#egovPaginationFormat.paginationFormat(paginationInfo, '{{entityNameLower}}Pagination')}"></span></div>
+    </div>
+</body>
+</html>

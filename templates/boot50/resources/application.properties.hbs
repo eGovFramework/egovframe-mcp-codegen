@@ -1,0 +1,26 @@
+server.port=8080
+
+spring.main.allow-bean-definition-overriding=true
+
+spring.jpa.open-in-view=false
+
+# === DataSource 프로파일 ===
+# 기본값: hsql (임베디드, 무설정) — 즉시 실행/테스트용
+# 운영 DB 전환:
+#   1) egovframework/egovProps/globals.properties 에서 해당 DB 섹션 주석 해제 및 값 입력
+#   2) 아래 값을 oracle / mysql / maria / postgres / tibero / altibase / cubrid / goldilocks 로 변경
+#   3) pom.xml 의 해당 JDBC 드라이버 의존성 주석 해제
+#
+# 로깅: log4j2.xml 의 baseline 은 INFO (운영 안전 default). hsql profile 에서만
+# application-hsql.properties 가 logging.level.egovframework=DEBUG 등으로 끌어올립니다.
+# 운영 profile 로 바꾸면 자동으로 INFO 로 떨어집니다.
+spring.profiles.active=hsql
+
+# globals.properties 로드 (파일이 없거나 비어 있어도 무시 — hsql 프로파일은 불필요)
+spring.config.import=optional:classpath:/egovframework/egovProps/globals.properties
+
+# === 세션 트래킹 ===
+# URL 에 ;jsessionid=... 가 박히는 동작 비활성화 (cookie 만 사용).
+# - jsessionid 가 매핑/리다이렉트를 깨는 함정 차단 (redirect 후 405 등)
+# - 보안: jsessionid 가 referer/로그/북마크로 유출되는 경로 차단
+server.servlet.session.tracking-modes=cookie

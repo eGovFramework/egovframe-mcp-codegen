@@ -1,0 +1,37 @@
+-- ============================================================================
+-- 엔티티 '{{entityName}}' 추가 마이그레이션 SQL  (egov_add_entity 생성)
+-- ============================================================================
+-- 이 파일은 단독 실행되지 않습니다. egov_add_entity 가 만든 CRUD 코드가 정상
+-- 동작하려면 아래 SQL 을 기존 DB 에 적용해야 합니다.
+--
+-- 적용 방법 (택일):
+--   (a) 기존 시드 SQL 파일 (예: src/main/resources/db/{firstEntityLower}db.sql)
+--       의 끝에 이 파일 내용을 추가한다.
+--   (b) H2 콘솔/DBeaver 등에서 별도로 직접 실행한다.
+--
+{{#if idGenerationAuto}}
+-- 적용 후 IDS 테이블에 '{{entityNameUpper}}' row 가 존재해야
+-- egov{{entityName}}IdGnrService 빈이 새 ID 를 발급할 수 있습니다.
+{{else}}
+-- idGeneration='manual' — PK 는 사용자가 직접 입력하므로 IDS row 가 필요 없습니다.
+{{/if}}
+-- ============================================================================
+
+CREATE MEMORY TABLE {{tableName}}(
+{{#each attributes}}
+	{{columnName}} {{dataType}}{{#if maxLength}}({{maxLength}}){{/if}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
+{{/each}}
+{{#if hasCompositePk}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
+{{/if}}
+{{#each fkAttributes}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
+{{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}} CHAR(20)
+{{/if}}
+);
+{{#if idGenerationAuto}}
+
+INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
+{{/if}}

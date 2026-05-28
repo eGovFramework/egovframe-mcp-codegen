@@ -1,0 +1,121 @@
+package {{packageName}}.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.ui.ModelMap;
+import org.springframework.validation.BindingResult;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.support.SessionStatus;
+import org.springmodules.validation.commons.DefaultBeanValidator;
+
+import {{packageName}}.service.{{entityName}}DefaultVO;
+import {{packageName}}.service.{{entityName}}VO;
+import {{packageName}}.service.Egov{{entityName}}Service;
+import lombok.RequiredArgsConstructor;
+
+@Controller
+@RequiredArgsConstructor
+public class Egov{{entityName}}Controller {
+	private final Egov{{entityName}}Service {{entityNameLower}}Service;
+	private final EgovPropertyService propertiesService;
+	private final DefaultBeanValidator beanValidator;
+
+	@GetMapping("/egov{{entityName}}List.do")
+	public String selectList(@ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, ModelMap model) throws Exception {
+		searchVO.setPageUnit(propertiesService.getInt("pageUnit"));
+		searchVO.setPageSize(propertiesService.getInt("pageSize"));
+
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo(searchVO.getPageIndex());
+		paginationInfo.setRecordCountPerPage(searchVO.getPageUnit());
+		paginationInfo.setPageSize(searchVO.getPageSize());
+
+		searchVO.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		searchVO.setLastIndex(paginationInfo.getLastRecordIndex());
+		searchVO.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		List<?> list = {{entityNameLower}}Service.select{{entityName}}List(searchVO);
+		model.addAttribute("resultList", list);
+
+		int totCnt = {{entityNameLower}}Service.select{{entityName}}ListTotCnt(searchVO);
+		paginationInfo.setTotalRecordCount(totCnt);
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "{{entityModule}}/egov{{entityName}}List";
+	}
+
+	@GetMapping("/add{{entityName}}.do")
+	public String addView(@ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, Model model) throws Exception {
+		model.addAttribute("{{voName}}", new {{entityName}}VO());
+		model.addAttribute("registerFlag", "create");
+{{#if hasFk}}
+		populate{{entityName}}ReferenceLists(model);
+{{/if}}
+		return "{{entityModule}}/egov{{entityName}}Register";
+	}
+
+	@PostMapping("/add{{entityName}}.do")
+	public String add(@ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, {{entityName}}VO {{voName}}, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+		beanValidator.validate({{voName}}, bindingResult);
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("registerFlag", "create");
+{{#if hasFk}}
+			populate{{entityName}}ReferenceLists(model);
+{{/if}}
+			return "{{entityModule}}/egov{{entityName}}Register";
+		}
+		{{entityNameLower}}Service.insert{{entityName}}({{voName}});
+		status.setComplete();
+		return "redirect:/egov{{entityName}}List.do";
+	}
+
+	@GetMapping("/update{{entityName}}View.do")
+	public String updateView(@RequestParam("selectedId") String id, @ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, Model model) throws Exception {
+		{{entityName}}VO vo = new {{entityName}}VO();
+		vo.set{{pkAttributes.0.pcName}}(id);
+		model.addAttribute("{{voName}}", {{entityNameLower}}Service.select{{entityName}}(vo));
+		model.addAttribute("registerFlag", "modify");
+{{#if hasFk}}
+		populate{{entityName}}ReferenceLists(model);
+{{/if}}
+		return "{{entityModule}}/egov{{entityName}}Register";
+	}
+
+	@PostMapping("/update{{entityName}}.do")
+	public String update(@ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, {{entityName}}VO {{voName}}, BindingResult bindingResult, Model model, SessionStatus status) throws Exception {
+		beanValidator.validate({{voName}}, bindingResult);
+		if (bindingResult.hasErrors()) {
+			model.addAttribute("registerFlag", "modify");
+{{#if hasFk}}
+			populate{{entityName}}ReferenceLists(model);
+{{/if}}
+			return "{{entityModule}}/egov{{entityName}}Register";
+		}
+		{{entityNameLower}}Service.update{{entityName}}({{voName}});
+		status.setComplete();
+		return "redirect:/egov{{entityName}}List.do";
+	}
+
+	@PostMapping("/delete{{entityName}}.do")
+	public String delete({{entityName}}VO {{voName}}, @ModelAttribute("searchVO") {{entityName}}DefaultVO searchVO, SessionStatus status) throws Exception {
+		{{entityNameLower}}Service.delete{{entityName}}({{voName}});
+		status.setComplete();
+		return "redirect:/egov{{entityName}}List.do";
+	}
+{{#if hasFk}}
+
+	/** FK lookup 콤보 리스트들을 모델에 주입한다 (Register 화면 select 옵션 소스). */
+	private void populate{{entityName}}ReferenceLists(Model model) {
+{{#each uniqueFkParents}}
+		model.addAttribute("{{fkParent.entityNameLower}}List", {{../entityNameLower}}Service.select{{fkParent.entityName}}ComboList());
+{{/each}}
+	}
+{{/if}}
+}

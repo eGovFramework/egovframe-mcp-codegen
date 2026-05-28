@@ -1,0 +1,9 @@
+
+# === Tomcat 큰 multipart 요청 처리 (egov_add_attach_file_infrastructure) ===
+# Spring 이 multipart 한도 초과로 예외를 던진 후에도, Tomcat 이 클라이언트의 남은 요청 본문을
+# 끝까지 swallow 해야 응답(에러 view) 을 정상 전송할 수 있다. swallow 한도(기본 2MB)에 막히면
+# Tomcat 이 connection 을 RESET 하고 브라우저는 ERR_CONNECTION_RESET 만 본다.
+#
+# -1 = 무제한 swallow. multipart 한도(max-file-size/max-request-size) 가 진짜 정책이므로 안전.
+server.tomcat.max-swallow-size=-1
+server.tomcat.max-http-form-post-size=-1

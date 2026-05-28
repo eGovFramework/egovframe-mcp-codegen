@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/>
+	<title th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="|{{entityName}} #{button.modify}|"></title>
+	<title th:unless="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="|{{entityName}} #{button.create}|"></title>
+	<link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
+	<link type="text/css" rel="stylesheet" th:href="@{/css/egovframework/sample.css}"/>
+	<script type="text/javascript" th:src="@{/js/egovframework/jquery-3.6.1.min.js}"></script>
+	<script th:inline="javascript">
+		document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
+		var contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
+		function {{entityNameLower}}List() { $(location).attr('href', contextPath + '/'); }
+		function {{entityNameLower}}Add() { if (confirm([[#{add.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/add').submit(); } }
+		function {{entityNameLower}}Update() { if (confirm([[#{modify.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/update').submit(); } }
+		function {{entityNameLower}}Delete() { if (confirm([[#{delete.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/delete').submit(); } }
+		function {{entityNameLower}}Reset() { $('form').each(function() { this.reset(); }); }
+	</script>
+</head>
+<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
+<div id="content_pop">
+	<div id="title"><ul><li><img th:src="@{/images/egovframework/example/title_dot.gif}"/>
+		<span th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="#{button.modify}"></span>
+		<span th:unless="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="#{button.create}"></span>
+	</li></ul></div>
+	<form id="detailForm" th:object="{{{thExpr voName}}}">
+		<div id="table">
+			<table th:width="680px" th:border="1" th:cellpadding="0" th:cellspacing="0" style="bordercolor:#D3E2EC; bordercolordark:#FFFFFF; BORDER-TOP:#C2D0DB 2px solid; BORDER-LEFT:#ffffff 1px solid; BORDER-RIGHT:#ffffff 1px solid; BORDER-BOTTOM:#C2D0DB 1px solid; border-collapse: collapse;">
+				<colgroup><col width="150px"/><col width="530px"/></colgroup>
+{{#each attributes}}
+{{#if isPrimaryKey}}
+				<tr th:if="{{{thExpr ../voName "." ccName}}} != null">
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content"><input type="text" id="{{ccName}}" name="{{ccName}}" th:value="{{{thExpr ../voName "." ccName}}}" maxlength="{{#if maxLength}}{{maxLength}}{{else}}10{{/if}}" readonly="readonly" class="essentiality"/></td>
+				</tr>
+{{else}}
+{{#if (eq javaType "java.lang.String")}}
+{{#if fkParent}}
+				<tr>
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content">
+						<select id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" class="txt">
+							<option value="" th:text="#{search.choose}"></option>
+							<option th:each="c : ${ {{fkParent.entityNameLower}}List }"
+									th:value="${c.value}"
+									th:text="${c.label}"
+									th:selected="{{{thExpr ../voName "." ccName " != null and " ../voName "." ccName " == c.value"}}}"></option>
+						</select>
+					</td>
+				</tr>
+{{else}}
+{{#if isYnFlag}}
+				<tr>
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content">
+						<select id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" class="use">
+							<option value="Y" th:text="#{input.yes}">Yes</option>
+							<option value="N" th:text="#{input.no}">No</option>
+						</select>
+					</td>
+				</tr>
+{{else}}
+{{#if isLongText}}
+				<tr>
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content">
+						<textarea id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} class="txt" th:text="{{{thExpr ../voName "." ccName}}}"></textarea>
+						<span th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}">{{pcName}} Error</span></td>
+				</tr>
+{{else}}
+				<tr>
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content">
+						<input type="text" id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" th:value="{{{thExpr ../voName "." ccName}}}" maxlength="{{#if maxLength}}{{maxLength}}{{else}}100{{/if}}" class="txt"/>
+						<span th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}">{{pcName}} Error</span></td>
+				</tr>
+{{/if}}
+{{/if}}
+{{/if}}
+{{else}}
+				<tr>
+					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
+					<td class="tbtd_content"><input type="text" id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" th:value="{{{thExpr ../voName "." ccName}}}" class="txt"/></td>
+				</tr>
+{{/if}}
+{{/if}}
+{{/each}}
+			</table>
+		</div>
+		<div id="sysbtn">
+			<ul>
+				<li><span class="btn_blue_l"><span th:text="#{button.list}" th:onclick="{{entityNameLower}}List()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.list}"/></span></li>
+				<li th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}"><span class="btn_blue_l"><span th:text="#{button.modify}" th:onclick="{{entityNameLower}}Update()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.modify}"/></span></li>
+				<li th:unless="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}"><span class="btn_blue_l"><span th:text="#{button.create}" th:onclick="{{entityNameLower}}Add()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.create}"/></span></li>
+				<li th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}"><span class="btn_blue_l"><span th:text="#{button.delete}" th:onclick="{{entityNameLower}}Delete()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.delete}"/></span></li>
+				<li><span class="btn_blue_l"><span th:text="#{button.reset}" th:onclick="{{entityNameLower}}Reset()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.reset}"/></span></li>
+			</ul>
+		</div>
+	</form>
+</div>
+</body>
+</html>

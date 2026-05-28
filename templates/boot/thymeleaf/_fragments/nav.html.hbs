@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<!--
+	엔티티 간 메뉴 네비게이션 fragment (eGovFrame 4.3 Boot / Thymeleaf 3.x).
+	활성 메뉴 판별: EgovNavModelAdvice 가 주입하는 `egovRequestUri` 모델 속성 사용.
+	primary 엔티티는 URI 가 `/` 일 때도 활성으로 강조.
+-->
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+	<div th:fragment="links" class="egov-entity-nav" role="navigation" aria-label="entity navigation">
+		<style>
+			.egov-entity-nav { margin: 0 auto 1.5rem auto; padding: 0; max-width: 980px; border-bottom: 1px solid #d8e5fd; }
+			.egov-entity-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+			.egov-entity-nav-list > li { margin: 0; padding: 0; }
+			.egov-entity-nav-list > li > a {
+				display: inline-block;
+				padding: 0.5rem 0.95rem;
+				color: #083891;
+				font-weight: 500;
+				text-decoration: none;
+				border-radius: 5px 5px 0 0;
+			}
+			.egov-entity-nav-list > li > a:hover { background: #ecf2fe; color: #052561; }
+			.egov-entity-nav-list > li > a.is-active { background: #256ef4; color: #fff; font-weight: 600; }
+			.egov-entity-nav-list > li > a.is-active:hover { background: #0b50d0; color: #fff; }
+		</style>
+		<ul class="egov-entity-nav-list">
+{{#each entities}}
+			<li>
+				<a th:href="@{/egov{{entityName}}List.do}"
+{{#if isPrimary}}
+				   th:classappend="${egovRequestUri == '/' or (egovRequestUri != null and egovRequestUri.startsWith('/egov{{entityName}}List'))} ? 'is-active' : ''"
+{{else}}
+				   th:classappend="${egovRequestUri != null and egovRequestUri.startsWith('/egov{{entityName}}List')} ? 'is-active' : ''"
+{{/if}}
+				   th:text="{{concat "#{nav." entityNameLower "}"}}">{{entityName}}</a>
+			</li>
+{{/each}}
+		</ul>
+	</div>
+</body>
+</html>

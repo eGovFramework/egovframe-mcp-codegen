@@ -1,0 +1,251 @@
+{
+  "scenario": "boot43",
+  "fileCount": 61,
+  "staticFileCount": 12,
+  "files": [
+    {
+      "path": ".claude/skills/egovframe-attach-file-pattern/SKILL.md",
+      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+    },
+    {
+      "path": ".claude/skills/egovframe-conventions/SKILL.md",
+      "sha256": "e8e0f8b2ee8a436f8dbde7a5c42e2d5e1425bc1f5952cf3b938ec64106953eab"
+    },
+    {
+      "path": ".claude/skills/egovframe-troubleshooting/SKILL.md",
+      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+    },
+    {
+      "path": ".cline/skills/egovframe-attach-file-pattern/SKILL.md",
+      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+    },
+    {
+      "path": ".cline/skills/egovframe-conventions/SKILL.md",
+      "sha256": "e8e0f8b2ee8a436f8dbde7a5c42e2d5e1425bc1f5952cf3b938ec64106953eab"
+    },
+    {
+      "path": ".cline/skills/egovframe-troubleshooting/SKILL.md",
+      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+    },
+    {
+      "path": ".continue/rules/egovframe-attach-file-pattern.md",
+      "sha256": "c2fb004e70af08269a67ea78f8f30ab618c0d4544dd9eead8e6c775c8a8382d0"
+    },
+    {
+      "path": ".continue/rules/egovframe-conventions.md",
+      "sha256": "6a280a1b0ad7e220b345f39de3e63ab42472a02fc59db1b3c5b58e5c02c8024f"
+    },
+    {
+      "path": ".continue/rules/egovframe-troubleshooting.md",
+      "sha256": "03ffc52cdca646c2fb59c83f82689a3e248346a5248230025a3b4ba9d215e669"
+    },
+    {
+      "path": ".cursor/skills/egovframe-attach-file-pattern/SKILL.md",
+      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+    },
+    {
+      "path": ".cursor/skills/egovframe-conventions/SKILL.md",
+      "sha256": "e8e0f8b2ee8a436f8dbde7a5c42e2d5e1425bc1f5952cf3b938ec64106953eab"
+    },
+    {
+      "path": ".cursor/skills/egovframe-troubleshooting/SKILL.md",
+      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+    },
+    {
+      "path": ".opencode/skills/egovframe-attach-file-pattern/SKILL.md",
+      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+    },
+    {
+      "path": ".opencode/skills/egovframe-conventions/SKILL.md",
+      "sha256": "e8e0f8b2ee8a436f8dbde7a5c42e2d5e1425bc1f5952cf3b938ec64106953eab"
+    },
+    {
+      "path": ".opencode/skills/egovframe-troubleshooting/SKILL.md",
+      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+    },
+    {
+      "path": "docs/egovframe-architecture.md",
+      "sha256": "68d74744ac7a836f76c70935926b5af055bc9fb0acb54995b68deb74e171a5e7"
+    },
+    {
+      "path": "pom.xml",
+      "sha256": "c107b96a1d7f523e2be06b55d1d9dc9661401393fda57fc49b69ef9a64e7c554"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/service/BoardDefaultVO.java",
+      "sha256": "1b3dff085567dc441eca8079694af77aeb646ae012dacf55ec6ce56e13d38a0f"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/service/BoardVO.java",
+      "sha256": "82bfbb902c785529c13ed2a8c3b9cad1dfd294cefaf97c19b9ebe4a1a6d21a9a"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/service/EgovBoardService.java",
+      "sha256": "0138f2324895e02a015eb02248b1e873fa4e01941e7c70d5e274cd25650623b5"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/service/impl/BoardMapper.java",
+      "sha256": "10b957121512bb14c5393b190b09159f6aec23f711688bb521b5eb06b73c5439"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/service/impl/EgovBoardServiceImpl.java",
+      "sha256": "f8a2533e9b39f7163da8e359dd515b00e03e41df3182ab53a95d4438300ebc17"
+    },
+    {
+      "path": "src/main/java/egovframework/example/board/web/EgovBoardController.java",
+      "sha256": "519e2f5c9e201bdc5f13bd145661c78a10e5cbe0c312863f0650cd27a1af478b"
+    },
+    {
+      "path": "src/main/java/egovframework/example/cmm/vo/FkComboVO.java",
+      "sha256": "b0cdc38fa0d370c816d0dd5a83dd172aff2a0ba3b22d4b3fa46bf52e96cd10b9"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigAspect.java",
+      "sha256": "e2cd18204075097c4c0ac4d1d14eae47834a88c05a2186a6af6bd72524119fc7"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigBoardIdGeneration.java",
+      "sha256": "b1e505ad78a9141c7d0731f89ef648542967dc50de3414c751b88499641defdb"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigCommon.java",
+      "sha256": "af1e80d2b0b179edd08675313ef5183fc920fc77ac4a7c903647c166cb4f07ea"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigDatasource.java",
+      "sha256": "e9ba2d90f0bb5ab6dd42aec0e3897c554d3a9f1f30739f8020fc928e77097bee"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigMapper.java",
+      "sha256": "3ebcdc94ee9ccbf708a5db48a8f9d7c9e1f668cfd57434ceb62a0cb21b42eb70"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigProperties.java",
+      "sha256": "1d0c343bde71098ccc7bbd35c8e161ba24310b52f0a1a01be93c314c64c542ab"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigTransaction.java",
+      "sha256": "92a404c371c4e297bc8f5cfedbc9688fd5cacc0ad03df1999925e3bc8e8689f4"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigValidation.java",
+      "sha256": "4784ab3e865f23a294f7b3a42a0105583e93c25ee1e2978fced44dcfda4dd943"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovConfigWeb.java",
+      "sha256": "6de573052d4e7b4bbcee7ce03c3ff5e1bc1f8a11b6208bd3ccdf518300df3f68"
+    },
+    {
+      "path": "src/main/java/egovframework/example/config/EgovNavModelAdvice.java",
+      "sha256": "8503c95631d34463a66fc7651c2238462a3e7bf3fd2631440d03b37c5c199fe6"
+    },
+    {
+      "path": "src/main/java/egovframework/example/EgovBootApplication.java",
+      "sha256": "2681efa53160e2996d2bc51ca1c35e613b898c6e95b86dc6449f9d49db917c54"
+    },
+    {
+      "path": "src/main/java/egovframework/example/exception/EgovAopExceptionTransfer.java",
+      "sha256": "4e95f9c858ea78953efba8d09e116ef2025ea28a762272b7c1d92f0f19b187ed"
+    },
+    {
+      "path": "src/main/java/egovframework/example/exception/EgovBoardExcepHndlr.java",
+      "sha256": "74c21cd312b3efb2ec77a1ef04eb543be5df847972aae6a90e20ed6e4797af02"
+    },
+    {
+      "path": "src/main/java/egovframework/example/exception/EgovBoardOthersExcepHndlr.java",
+      "sha256": "05b2f386c86d929e4fa1fc0bf5a1dde299ac9404af527456af7dd83229229387"
+    },
+    {
+      "path": "src/main/java/egovframework/example/pagination/EgovPaginationDialect.java",
+      "sha256": "1dcf465cd8dd9ff03535efea9df1b84eac6cfe76c06edfda707a0017d122e4cb"
+    },
+    {
+      "path": "src/main/java/egovframework/example/pagination/EgovPaginationFormat.java",
+      "sha256": "b1f7293a145ae76a45266eceafaac3a4a77be6be9836a1fe299f0b3d0abf1e37"
+    },
+    {
+      "path": "src/main/java/egovframework/example/validation/EgovNotNull.java",
+      "sha256": "27294a23f16b3f734f2cdc5a24f3087795e96e778012e82af73483b79a4b232c"
+    },
+    {
+      "path": "src/main/java/egovframework/example/validation/EgovValidation.java",
+      "sha256": "9dac9a14e02009fb95fcfe8416e522e3ec60abd9ea51eba5c32fc70286fc4d09"
+    },
+    {
+      "path": "src/main/resources/application.properties",
+      "sha256": "346ffc6c99c13c9b95f72563cc5a926b552e12d351533776eb047f1d8bf731a7"
+    },
+    {
+      "path": "src/main/resources/db/boarddb.sql",
+      "sha256": "becb03c4ec2d517373934fca4f4866f99b5d67559fcb485f07e6f9999da57c8f"
+    },
+    {
+      "path": "src/main/resources/db/migrations/altibase/boarddb.sql",
+      "sha256": "a7a01cd92c17e37c02aac474d318e440ebf496a41c95453e164f85268f34fc50"
+    },
+    {
+      "path": "src/main/resources/db/migrations/cubrid/boarddb.sql",
+      "sha256": "d2b833534434dcdad21bd6e6fe8dc44c79e1f2f41b9cf6760275626a269db3be"
+    },
+    {
+      "path": "src/main/resources/db/migrations/goldilocks/boarddb.sql",
+      "sha256": "05d5bd4ca62335e5277704ccd16830596595fb700832f848726c8037827931d5"
+    },
+    {
+      "path": "src/main/resources/db/migrations/mysql/boarddb.sql",
+      "sha256": "63a9b90f58686a35c904dc7684ad7bb21932c64114198adf6f4fd6bfa4b30595"
+    },
+    {
+      "path": "src/main/resources/db/migrations/oracle/boarddb.sql",
+      "sha256": "6c67a3e7c9bae9a71760e50d9514fcf956f244910809c7aa8ed2edf6884f852d"
+    },
+    {
+      "path": "src/main/resources/db/migrations/postgres/boarddb.sql",
+      "sha256": "6181bee029cc4869eac1d404e4ad7d8c82e436f3822020f5a908b90342c63656"
+    },
+    {
+      "path": "src/main/resources/db/migrations/tibero/boarddb.sql",
+      "sha256": "dcfbcc03ca8e2b69e53951f549050701e988ea4ed5b3396a74267881b7a1b060"
+    },
+    {
+      "path": "src/main/resources/egovframework/egovProps/globals.properties",
+      "sha256": "b8fca50a51efdb9629cc075f15ebc9332bf70425fe2eec2be57e04dd6d76351d"
+    },
+    {
+      "path": "src/main/resources/egovframework/message/message-common_en.properties",
+      "sha256": "cc2d847ee83ea84b2d8394e53261aa59a9a857dc9e5a9f08f4affa579fc372d0"
+    },
+    {
+      "path": "src/main/resources/egovframework/message/message-common_ko.properties",
+      "sha256": "f5ec676d9a3492e1b32e46252ff5fe5c0a14bc89458519afce38c769f6f3d330"
+    },
+    {
+      "path": "src/main/resources/egovframework/message/message-common.properties",
+      "sha256": "f5ec676d9a3492e1b32e46252ff5fe5c0a14bc89458519afce38c769f6f3d330"
+    },
+    {
+      "path": "src/main/resources/egovframework/sqlmap/board/mappers/EgovBoard_Board_SQL.xml",
+      "sha256": "e8cce89f732097e476a5fee33f6a3ac37021589d938c54540b1ab4c529b3691e"
+    },
+    {
+      "path": "src/main/resources/log4j2.xml",
+      "sha256": "bedaa8897b761671d0db1ea297e52b8084c46678b4107564f3188d4d82866949"
+    },
+    {
+      "path": "src/main/resources/templates/thymeleaf/_fragments/nav.html",
+      "sha256": "1b742b26d0b2f1b8bfee9e81bb02d47873554a9bf7b4b2c4d28610cd291e6ac9"
+    },
+    {
+      "path": "src/main/resources/templates/thymeleaf/egovBoardList.html",
+      "sha256": "d2ab585fe76cfd676f5395410be679c72d011bb702ffe07247b73ceade8546ca"
+    },
+    {
+      "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",
+      "sha256": "0fbc3fb68cde96d80f3ddb1df1c282b91a18362d21372f47931cb300d22371f8"
+    },
+    {
+      "path": "src/main/resources/templates/thymeleaf/egovSampleError.html",
+      "sha256": "5b3966f1c6b9c06adf9ff88939c24333efc6df3866fd24f7a95118b2feec8df6"
+    }
+  ]
+}

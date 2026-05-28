@@ -1,0 +1,60 @@
+package {{packageName}}.service;
+
+{{#each imports}}
+import {{this}};
+{{/each}}
+{{#if hasDateAttr}}
+import org.springframework.format.annotation.DateTimeFormat;
+{{/if}}
+import org.egovframe.rte.ptl.reactive.validation.EgovNullCheck;
+
+public class {{entityName}}VO extends {{entityName}}DefaultVO {
+
+	private static final long serialVersionUID = 1L;
+
+{{#each attributes}}
+{{#if isPrimaryKey}}
+	private {{simpleJavaType javaType}} {{ccName}};
+{{else}}
+{{#if isDate}}
+{{#if (eq javaType "java.sql.Timestamp")}}
+	@DateTimeFormat(pattern="yyyy-MM-dd HH:mm:ss")
+{{else}}
+	@DateTimeFormat(pattern="yyyy-MM-dd")
+{{/if}}
+	private {{simpleJavaType javaType}} {{ccName}};
+{{else}}
+{{#if (eq javaType "java.lang.String")}}
+	@EgovNullCheck(message="{{concat "{confirm.required." ../entityNameLower "." ccName "}"}}")
+	private {{simpleJavaType javaType}} {{ccName}};
+{{else}}
+	private {{simpleJavaType javaType}} {{ccName}};
+{{/if}}
+{{/if}}
+{{/if}}
+{{/each}}
+{{#if withAttachment}}
+	/** 첨부파일 그룹 키 (COMTNFILE.ATCH_FILE_ID — CHAR(20)). EgovFileMngService 가 채번/관리. */
+	private String {{attachmentFieldName}};
+{{/if}}
+
+{{#each attributes}}
+	public {{simpleJavaType javaType}} get{{pcName}}() {
+		return {{ccName}};
+	}
+
+	public void set{{pcName}}({{simpleJavaType javaType}} {{ccName}}) {
+		this.{{ccName}} = {{ccName}};
+	}
+
+{{/each}}
+{{#if withAttachment}}
+	public String get{{attachmentFieldNamePascal}}() {
+		return {{attachmentFieldName}};
+	}
+
+	public void set{{attachmentFieldNamePascal}}(String {{attachmentFieldName}}) {
+		this.{{attachmentFieldName}} = {{attachmentFieldName}};
+	}
+{{/if}}
+}

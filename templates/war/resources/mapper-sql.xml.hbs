@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="{{packageName}}.service.impl.{{entityName}}Mapper">
+
+	<resultMap id="{{entityNameLower}}" type="{{packageName}}.service.{{entityName}}VO">
+{{#each attributes}}
+		<result property="{{ccName}}" column="{{columnName}}"/>
+{{/each}}
+	</resultMap>
+
+	<insert id="insert{{entityName}}" parameterType="{{entityNameLower}}VO">
+			INSERT INTO {{tableName}}
+				( {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}} )
+			VALUES ( {{#each attributes}}{{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}} )
+	</insert>
+
+	<update id="update{{entityName}}">
+			UPDATE {{tableName}}
+			SET {{#each nonPkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}}
+			WHERE {{#each pkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}} AND {{/unless}}{{/each}}
+	</update>
+
+	<delete id="delete{{entityName}}">
+			DELETE FROM {{tableName}}
+			WHERE {{#each pkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}} AND {{/unless}}{{/each}}
+	</delete>
+
+	<select id="select{{entityName}}" resultMap="{{entityNameLower}}">
+			SELECT {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}
+			FROM {{tableName}}
+			WHERE {{#each pkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}} AND {{/unless}}{{/each}}
+	</select>
+
+	<select id="select{{entityName}}List" parameterType="{{entityNameLower}}DefaultVO" resultType="egovMap">
+			SELECT {{#each attributes}}t.{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}{{#each resolvedFks}}
+				, ({{joinSqlDisplay fkParent.displayColumns (concat "fk_" ccName)}}) AS {{lowercase columnName}}_display_name{{/each}}
+			FROM {{tableName}} t{{#each resolvedFks}}
+			LEFT JOIN {{fk.targetTable}} fk_{{ccName}} ON t.{{columnName}} = fk_{{ccName}}.{{fkParent.pkColumn}}{{/each}}
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+{{#each searchableAttributes}}
+		            <when test="searchCondition == {{@index}}">
+{{#if fkParent}}
+						AND	({{joinSqlDisplay fkParent.displayColumns (concat "fk_" ccName)}}) LIKE CONCAT('%', #{searchKeyword}, '%')
+{{else}}
+						AND	t.{{columnName}} LIKE CONCAT('%', #{searchKeyword}, '%')
+{{/if}}
+					</when>
+{{/each}}
+				</choose>
+			</if>
+			ORDER BY {{#each pkAttributes}}t.{{columnName}}{{#unless @last}}, {{/unless}}{{/each}} DESC
+			<!--
+				페이징: HSQL / MySQL / MariaDB / PostgreSQL / Oracle 12c 이상은 LIMIT/OFFSET 그대로 동작.
+				Oracle 11g 이하 사용 시: 위 SELECT 를 ROWNUM 서브쿼리로 감싸 변환 필요.
+				   SELECT * FROM (SELECT t.*, ROWNUM rn FROM (...본 쿼리...) t WHERE ROWNUM &lt;= #{firstIndex} + #{recordCountPerPage}) WHERE rn > #{firstIndex}
+			-->
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+	</select>
+
+{{#each uniqueFkParents}}
+	<!-- FK lookup combo list for {{fkParent.entityName}} — alias 는 FkComboVO 필드명에 맞춤 -->
+	<select id="select{{fkParent.entityName}}ComboList" resultType="{{../basePackage}}.cmm.vo.FkComboVO">
+			SELECT p.{{fkParent.pkColumn}} AS value,
+				({{joinSqlDisplay fkParent.displayColumns "p"}}) AS label
+			FROM {{fk.targetTable}} p
+			ORDER BY p.{{fkParent.pkColumn}}
+	</select>
+
+{{/each}}
+	<select id="select{{entityName}}ListTotCnt" parameterType="{{entityNameLower}}DefaultVO" resultType="int">
+			SELECT COUNT(*) totcnt
+			FROM {{tableName}} t{{#each resolvedFks}}
+			LEFT JOIN {{fk.targetTable}} fk_{{ccName}} ON t.{{columnName}} = fk_{{ccName}}.{{fkParent.pkColumn}}{{/each}}
+			WHERE 1=1
+			<if test="searchKeyword != null and searchKeyword != ''">
+		        <choose>
+{{#each searchableAttributes}}
+		            <when test="searchCondition == {{@index}}">
+{{#if fkParent}}
+						AND ({{joinSqlDisplay fkParent.displayColumns (concat "fk_" ccName)}}) LIKE CONCAT('%', #{searchKeyword}, '%')
+{{else}}
+						AND t.{{columnName}} LIKE CONCAT('%', #{searchKeyword}, '%')
+{{/if}}
+					</when>
+{{/each}}
+				</choose>
+			</if>
+	</select>
+
+</mapper>

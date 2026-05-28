@@ -1,0 +1,53 @@
+package {{packageName}}.service.impl;
+
+import java.util.List;
+import javax.annotation.Resource;
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+import {{packageName}}.service.Egov{{entityName}}Service;
+import {{packageName}}.service.{{entityName}}DefaultVO;
+import {{packageName}}.service.{{entityName}}VO;
+import lombok.RequiredArgsConstructor;
+
+@Service
+@RequiredArgsConstructor
+public class Egov{{entityName}}ServiceImpl extends EgovAbstractServiceImpl implements Egov{{entityName}}Service {
+	private static final Logger LOGGER = LoggerFactory.getLogger(Egov{{entityName}}ServiceImpl.class);
+	private final {{entityName}}Mapper {{entityNameLower}}DAO;
+
+	/**
+	 * ID 생성기는 엔티티별로 빈 이름이 분리되어 있어 (egov{{entityName}}IdGnrService) 빈 이름 지정이 필요하다.
+	 * Lombok 의 @RequiredArgsConstructor 로는 생성자 파라미터에 @Qualifier 를 붙일 수 없어 별도 필드 주입을 쓴다.
+	 */
+	@Resource(name = "egov{{entityName}}IdGnrService")
+	private EgovIdGnrService egov{{entityName}}IdGnrService;
+
+	@Override
+	public String insert{{entityName}}({{entityName}}VO vo) throws Exception {
+		LOGGER.debug(vo.toString());
+		String id = egov{{entityName}}IdGnrService.getNextStringId();
+		vo.set{{pkAttributes.0.pcName}}(id);
+		LOGGER.debug(vo.toString());
+		{{entityNameLower}}DAO.insert{{entityName}}(vo);
+		return id;
+	}
+
+	@Override public void update{{entityName}}({{entityName}}VO vo) throws Exception { {{entityNameLower}}DAO.update{{entityName}}(vo); }
+	@Override public void delete{{entityName}}({{entityName}}VO vo) throws Exception { {{entityNameLower}}DAO.delete{{entityName}}(vo); }
+
+	@Override
+	public {{entityName}}VO select{{entityName}}({{entityName}}VO vo) throws Exception {
+		{{entityName}}VO resultVO = {{entityNameLower}}DAO.select{{entityName}}(vo);
+		if (resultVO == null) throw processException("info.nodata.msg");
+		return resultVO;
+	}
+
+	@Override public List<?> select{{entityName}}List({{entityName}}DefaultVO searchVO) throws Exception { return {{entityNameLower}}DAO.select{{entityName}}List(searchVO); }
+	@Override public int select{{entityName}}ListTotCnt({{entityName}}DefaultVO searchVO) { return {{entityNameLower}}DAO.select{{entityName}}ListTotCnt(searchVO); }
+{{#each uniqueFkParents}}
+	@Override public java.util.List<{{basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList() { return {{../entityNameLower}}DAO.select{{fkParent.entityName}}ComboList(); }
+{{/each}}
+}

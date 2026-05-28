@@ -1,0 +1,28 @@
+package {{packageName}}.service;
+
+import java.util.List;
+{{#if hasFk}}
+
+import {{basePackage}}.cmm.vo.FkComboVO;
+{{/if}}
+
+public interface Egov{{entityName}}Service {
+
+	void insert{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	void update{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	void delete{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	{{entityName}}VO select{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	List<?> select{{entityName}}List({{entityName}}VO vo) throws Exception;
+
+	int select{{entityName}}ListTotCnt({{entityName}}VO vo);
+{{#each uniqueFkParents}}
+
+	/** FK lookup: 부모 {{fkParent.entityName}} 의 콤보 리스트 (Register 화면 select 옵션 소스) */
+	List<FkComboVO> select{{fkParent.entityName}}ComboList();
+{{/each}}
+
+}

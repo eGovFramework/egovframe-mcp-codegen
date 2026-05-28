@@ -1,0 +1,34 @@
+package {{packageName}};
+
+{{#each imports}}
+import {{this}};
+{{/each}}
+{{#if hasDateAttr}}
+import org.springframework.format.annotation.DateTimeFormat;
+{{/if}}
+
+/**
+ * Query view '{{viewName}}' 의 결과 row VO.
+ * Mapper.xml 의 SELECT alias 와 1:1 매핑된다.
+ *
+ * 메모: read-only view 이므로 setter 는 단순 mutator. validation 어노테이션은 없다.
+ */
+public class {{viewName}}VO extends {{viewName}}DefaultVO {
+
+	private static final long serialVersionUID = 1L;
+
+{{#each columns}}
+{{#if isDate}}
+	@DateTimeFormat(pattern="{{format}}")
+{{else if isTimestamp}}
+	@DateTimeFormat(pattern="{{format}}")
+{{/if}}
+	private {{this.simpleJavaType}} {{alias}};
+{{/each}}
+
+{{#each columns}}
+	public {{this.simpleJavaType}} get{{pcName}}() { return {{alias}}; }
+	public void set{{pcName}}({{this.simpleJavaType}} {{alias}}) { this.{{alias}} = {{alias}}; }
+
+{{/each}}
+}

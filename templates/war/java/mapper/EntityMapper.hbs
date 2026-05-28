@@ -1,0 +1,19 @@
+package {{packageName}}.service.impl;
+
+import {{packageName}}.service.{{entityName}}DefaultVO;
+import {{packageName}}.service.{{entityName}}VO;
+import org.egovframe.rte.psl.dataaccess.mapper.Mapper;
+import java.util.List;
+
+@Mapper
+public interface {{entityName}}Mapper {
+	void insert{{entityName}}({{entityName}}VO vo);
+	void update{{entityName}}({{entityName}}VO vo);
+	void delete{{entityName}}({{entityName}}VO vo);
+	{{entityName}}VO select{{entityName}}({{entityName}}VO vo);
+	List<?> select{{entityName}}List({{entityName}}DefaultVO searchVO);
+	int select{{entityName}}ListTotCnt({{entityName}}DefaultVO searchVO);
+{{#each uniqueFkParents}}
+	java.util.List<{{basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList();
+{{/each}}
+}

@@ -1,0 +1,246 @@
+/**
+ * SQL Dialect Type Mapper
+ *
+ * DDL 파서가 추출한 정규화된 raw type (대문자) 과 maxLength 를
+ * 목표 방언의 컬럼 타입 문자열로 변환한다.
+ *
+ * 지원 방언:
+ *   - "oracle"     : Oracle
+ *   - "tibero"     : Tibero — Oracle 호환 (alias)
+ *   - "altibase"   : Altibase — Oracle 호환 (alias)
+ *   - "goldilocks" : Goldilocks — Oracle 호환 (alias)
+ *   - "cubrid"     : CUBRID — 자체 방언 (VARCHAR / INTEGER / STRING 등)
+ *   - "mysql"      : MySQL / MariaDB (호환)
+ *   - "postgres"   : PostgreSQL
+ *
+ * 목적: 사용자가 어떤 형태의 DDL (HSQL, Oracle, PostgreSQL ...) 을 입력하든
+ *       방언별 마이그레이션 가이드 SQL 을 일관되게 생성하기 위해 단일 진실원본을
+ *       제공한다.
+ */
+
+export type Dialect =
+  | "oracle"
+  | "tibero"
+  | "altibase"
+  | "goldilocks"
+  | "cubrid"
+  | "mysql"
+  | "postgres";
+
+/** 길이 정보가 의미있는 타입군. 이 외에는 (N) 을 붙이지 않는다. */
+const LENGTH_AWARE = new Set([
+  "VARCHAR",
+  "VARCHAR2",
+  "NVARCHAR",
+  "NVARCHAR2",
+  "CHAR",
+  "NCHAR",
+  "DECIMAL",
+  "NUMERIC",
+  "NUMBER",
+]);
+
+/**
+ * 한 컬럼의 (rawType, maxLength) → "TYPE(LEN)" 문자열.
+ *
+ * 길이가 의미 없는 타입(CLOB/TEXT/DATE/TIMESTAMP/BLOB/INTEGER/BIGINT 등) 에는
+ * 길이를 붙이지 않는다.
+ */
+export function dialectFullType(
+  rawType: string,
+  maxLength: number,
+  dialect: Dialect,
+): string {
+  const t = String(rawType || "").toUpperCase();
+  const mapped = mapType(t, dialect);
+  if (LENGTH_AWARE.has(rootType(mapped)) && maxLength > 0) {
+    return `${mapped}(${maxLength})`;
+  }
+  return mapped;
+}
+
+function rootType(mapped: string): string {
+  // "VARCHAR2(36)" 같은 형태로 미리 길이가 박혀 있으면 (현재는 없음) root 만 추출
+  const idx = mapped.indexOf("(");
+  return idx === -1 ? mapped : mapped.slice(0, idx);
+}
+
+function mapType(t: string, dialect: Dialect): string {
+  // Tibero / Altibase / Goldilocks 는 Oracle 호환 방언 — 동일 매핑 사용.
+  // 사용자 가이드에서는 별도 섹션으로 노출하되 출력 SQL 은 Oracle 형식과 동일.
+  if (dialect === "tibero" || dialect === "altibase" || dialect === "goldilocks") {
+    return mapType(t, "oracle");
+  }
+
+  if (dialect === "cubrid") {
+    switch (t) {
+      case "VARCHAR":
+      case "VARCHAR2":
+      case "NVARCHAR":
+      case "NVARCHAR2":
+        return "VARCHAR";
+      case "INT":
+      case "INTEGER":
+      case "MEDIUMINT":
+        return "INTEGER";
+      case "TINYINT":
+      case "SMALLINT":
+        return "SMALLINT";
+      case "BIGINT":
+        return "BIGINT";
+      case "BOOLEAN":
+      case "BOOL":
+        return "SMALLINT";
+      case "DECIMAL":
+      case "NUMERIC":
+      case "NUMBER":
+        return "NUMERIC";
+      case "TEXT":
+      case "MEDIUMTEXT":
+      case "LONGTEXT":
+      case "CLOB":
+      case "NTEXT":
+        return "STRING";
+      case "BLOB":
+      case "BYTEA":
+      case "LONGBLOB":
+      case "MEDIUMBLOB":
+        return "BLOB";
+      case "DATETIME":
+        return "DATETIME";
+      case "TIMESTAMP":
+        return "TIMESTAMP";
+      case "DATE":
+        return "DATE";
+      case "FLOAT":
+      case "REAL":
+        return "FLOAT";
+      case "DOUBLE":
+        return "DOUBLE";
+      default:
+        return t;
+    }
+  }
+
+  if (dialect === "oracle") {
+    switch (t) {
+      case "VARCHAR":
+      case "VARCHAR2":
+        return "VARCHAR2";
+      case "NVARCHAR":
+      case "NVARCHAR2":
+        return "NVARCHAR2";
+      case "INT":
+      case "INTEGER":
+      case "MEDIUMINT":
+      case "SMALLINT":
+      case "TINYINT":
+        return "NUMBER(10)";
+      case "BIGINT":
+        return "NUMBER(19)";
+      case "BOOLEAN":
+      case "BOOL":
+        return "NUMBER(1)";
+      case "DECIMAL":
+      case "NUMERIC":
+      case "NUMBER":
+        return "NUMBER";
+      case "TEXT":
+      case "MEDIUMTEXT":
+      case "LONGTEXT":
+      case "CLOB":
+      case "NTEXT":
+        return "CLOB";
+      case "BLOB":
+      case "BYTEA":
+      case "LONGBLOB":
+      case "MEDIUMBLOB":
+        return "BLOB";
+      case "DATETIME":
+      case "TIMESTAMP":
+        return "TIMESTAMP";
+      case "DATE":
+        return "DATE";
+      case "FLOAT":
+        return "BINARY_FLOAT";
+      case "DOUBLE":
+      case "REAL":
+        return "BINARY_DOUBLE";
+      default:
+        return t;
+    }
+  }
+
+  if (dialect === "mysql") {
+    switch (t) {
+      case "VARCHAR2":
+      case "NVARCHAR2":
+        return "VARCHAR";
+      case "NVARCHAR":
+        return "VARCHAR";
+      case "NUMBER":
+        return "DECIMAL";
+      case "CLOB":
+      case "NTEXT":
+        return "TEXT";
+      case "BLOB":
+      case "BYTEA":
+        return "BLOB";
+      case "DATETIME":
+        return "DATETIME";
+      case "TIMESTAMP":
+        return "TIMESTAMP";
+      case "DATE":
+        return "DATE";
+      case "BOOLEAN":
+      case "BOOL":
+        return "TINYINT(1)";
+      default:
+        return t;
+    }
+  }
+
+  // postgres
+  switch (t) {
+    case "VARCHAR2":
+    case "NVARCHAR":
+    case "NVARCHAR2":
+      return "VARCHAR";
+    case "NUMBER":
+      return "NUMERIC";
+    case "CLOB":
+    case "NTEXT":
+    case "MEDIUMTEXT":
+    case "LONGTEXT":
+      return "TEXT";
+    case "BLOB":
+    case "LONGBLOB":
+    case "MEDIUMBLOB":
+      return "BYTEA";
+    case "DATETIME":
+      return "TIMESTAMP";
+    case "TIMESTAMP":
+      return "TIMESTAMP";
+    case "DATE":
+      return "DATE";
+    case "TINYINT":
+    case "SMALLINT":
+      return "SMALLINT";
+    case "MEDIUMINT":
+    case "INT":
+    case "INTEGER":
+      return "INTEGER";
+    case "BIGINT":
+      return "BIGINT";
+    case "BOOLEAN":
+    case "BOOL":
+      return "BOOLEAN";
+    case "DOUBLE":
+      return "DOUBLE PRECISION";
+    case "FLOAT":
+    case "REAL":
+      return "REAL";
+    default:
+      return t;
+  }
+}

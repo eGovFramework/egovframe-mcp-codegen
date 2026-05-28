@@ -1,0 +1,36 @@
+#UI resource#
+list.{{entityNameLower}}=List {{entityName}}
+button.search=Search
+button.list=List
+button.modify=Modify
+button.create=Create
+button.reset=Reset
+button.delete=Delete
+search.choose=Select Search
+search.keyword=Search Keyword
+search.error=Please enter a search keyword.
+{{#each attributes}}
+title.{{../entityNameLower}}.{{ccName}}={{#if fkParent}}{{fkParent.entityName}}{{else}}{{pcName}}{{/if}}
+{{/each}}
+title.{{entityNameLower}}.sample={{entityName}} List
+nav.{{entityNameLower}}={{entityName}}
+input.input=Please Enter
+input.yes=Yes
+input.no=No
+page.prev=Prev
+page.next=Next
+
+# confirm message #
+info.nodata.msg=No data found.
+fail.common.msg=An error has occurred!
+add.confirm=Do you want to create?
+add.confirm.success=Created successfully.
+modify.confirm=Do you want to modify?
+modify.confirm.success=Modified successfully.
+delete.confirm=Do you want to delete?
+delete.confirm.success=Deleted successfully.
+{{#each nonPkAttributes}}
+{{#if (eq javaType "java.lang.String")}}
+confirm.required.{{../entityNameLower}}.{{ccName}}={{pcName}} is required.
+{{/if}}
+{{/each}}

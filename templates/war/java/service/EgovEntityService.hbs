@@ -1,0 +1,15 @@
+package {{packageName}}.service;
+
+import java.util.List;
+
+public interface Egov{{entityName}}Service {
+	String insert{{entityName}}({{entityName}}VO vo) throws Exception;
+	void update{{entityName}}({{entityName}}VO vo) throws Exception;
+	void delete{{entityName}}({{entityName}}VO vo) throws Exception;
+	{{entityName}}VO select{{entityName}}({{entityName}}VO vo) throws Exception;
+	List<?> select{{entityName}}List({{entityName}}DefaultVO searchVO) throws Exception;
+	int select{{entityName}}ListTotCnt({{entityName}}DefaultVO searchVO);
+{{#each uniqueFkParents}}
+	java.util.List<{{basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList();
+{{/each}}
+}

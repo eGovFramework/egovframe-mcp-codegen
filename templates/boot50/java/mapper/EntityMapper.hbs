@@ -1,0 +1,33 @@
+package {{packageName}}.service.impl;
+
+import java.util.List;
+{{#if hasFk}}
+
+import {{basePackage}}.cmm.vo.FkComboVO;
+{{/if}}
+
+import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
+
+import {{packageName}}.service.{{entityName}}VO;
+
+@EgovMapper("{{entityNameLower}}Mapper")
+public interface {{entityName}}Mapper {
+
+	void insert{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	void update{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	void delete{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	{{entityName}}VO select{{entityName}}({{entityName}}VO vo) throws Exception;
+
+	List<?> select{{entityName}}List({{entityName}}VO vo) throws Exception;
+
+	int select{{entityName}}ListTotCnt({{entityName}}VO vo);
+{{#each uniqueFkParents}}
+
+	/** FK lookup: 부모 {{fkParent.entityName}} 의 콤보 리스트 (value=PK, label=표시컬럼) */
+	List<FkComboVO> select{{fkParent.entityName}}ComboList();
+{{/each}}
+
+}

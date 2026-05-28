@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<!--
+	Query view '{{viewName}}' — 사용자 SQL 을 derived table 로 wrapping 해
+	페이징/검색을 외부에서 안전하게 적용합니다.
+
+	내부 SQL ({{viewName}} BASE) 의 모든 컬럼은 AS alias 로 명시되어 있어
+	외부 (외부 alias 'v') 에서 v.{alias} 로 안전하게 참조됩니다.
+-->
+<mapper namespace="{{packageName}}.impl.{{viewName}}Mapper">
+
+	<sql id="{{viewNameLower}}Base">
+		{{{sql}}}
+	</sql>
+
+	<select id="select{{viewName}}List" parameterType="{{packageName}}.{{viewName}}DefaultVO" resultType="{{packageName}}.{{viewName}}VO">
+			SELECT * FROM ( <include refid="{{viewNameLower}}Base"/> ) v
+			WHERE 1=1
+{{#if hasSearchable}}
+			<!--
+				LIKE 검색 portability — CONCAT 3-arg 는 HSQL/MySQL/MariaDB/PostgreSQL/CUBRID/GOLDILOCKS 에서 동작.
+				Oracle/Tibero/Altibase 에서는 CONCAT 가 2-arg only 라 ORA-00909 발생.
+				해당 vendor 로 전환 시: CONCAT('%', #{searchKeyword}, '%')  →  '%' || #{searchKeyword} || '%'
+				(자세한 가이드: docs/dialect-portability.md)
+			-->
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<choose>
+{{#each searchable}}
+					<when test="searchCondition == {{@index}}">
+						AND v.{{alias}} LIKE CONCAT('%', #{searchKeyword}, '%')
+					</when>
+{{/each}}
+				</choose>
+			</if>
+{{/if}}
+			ORDER BY {{{defaultOrderBy}}}
+			<!--
+				페이징 portability — 기본은 HSQL/MySQL/MariaDB/PostgreSQL/CUBRID/GOLDILOCKS 호환 LIMIT/OFFSET.
+				운영 DB 변경 시 아래 라인을 교체하세요 (자세한 가이드: docs/dialect-portability.md).
+
+				Oracle 12c+ / Tibero 7+ / Altibase 7+:
+				    OFFSET #{firstIndex} ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY
+				Oracle 11g 이하:
+				    위 SELECT 를 ROWNUM 서브쿼리로 감싸야 함 — 가이드 참고
+			-->
+			LIMIT #{recordCountPerPage} OFFSET #{firstIndex}
+	</select>
+
+	<select id="select{{viewName}}ListTotCnt" parameterType="{{packageName}}.{{viewName}}DefaultVO" resultType="int">
+			SELECT COUNT(*) FROM ( <include refid="{{viewNameLower}}Base"/> ) v
+			WHERE 1=1
+{{#if hasSearchable}}
+			<if test="searchKeyword != null and searchKeyword != ''">
+				<choose>
+{{#each searchable}}
+					<when test="searchCondition == {{@index}}">
+						AND v.{{alias}} LIKE CONCAT('%', #{searchKeyword}, '%')
+					</when>
+{{/each}}
+				</choose>
+			</if>
+{{/if}}
+	</select>
+
+</mapper>

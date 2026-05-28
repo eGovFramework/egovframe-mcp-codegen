@@ -1,0 +1,39 @@
+package {{packageName}}.impl;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import {{packageName}}.Egov{{viewName}}Service;
+import {{packageName}}.{{viewName}}DefaultVO;
+import {{packageName}}.{{viewName}}VO;
+import jakarta.annotation.Resource;
+
+@Service("{{viewNameLower}}Service")
+public class Egov{{viewName}}ServiceImpl extends EgovAbstractServiceImpl implements Egov{{viewName}}Service {
+
+	private static final Logger LOGGER = LoggerFactory.getLogger(Egov{{viewName}}ServiceImpl.class);
+
+	@Resource(name = "{{viewNameLower}}Mapper")
+	private {{viewName}}Mapper {{viewNameLower}}Mapper;
+
+	@Override
+	public List<{{viewName}}VO> select{{viewName}}List({{viewName}}DefaultVO searchVO) throws Exception {
+		// PII 노출 방지: searchKeyword 가 그대로 로그에 남지 않도록 VO 전체 dump 대신
+		// 비식별 필드(pageIndex, searchCondition) 만 로깅. 키워드 본문은 의도적으로 제외.
+		LOGGER.debug(
+			"select{{viewName}}List: pageIndex={}, searchCondition={}, hasKeyword={}",
+			searchVO.getPageIndex(),
+			searchVO.getSearchCondition(),
+			searchVO.getSearchKeyword() != null && !searchVO.getSearchKeyword().isEmpty());
+		return {{viewNameLower}}Mapper.select{{viewName}}List(searchVO);
+	}
+
+	@Override
+	public int select{{viewName}}ListTotCnt({{viewName}}DefaultVO searchVO) {
+		return {{viewNameLower}}Mapper.select{{viewName}}ListTotCnt(searchVO);
+	}
+}

@@ -1,0 +1,66 @@
+##############################################################################
+# eGovFrame DataSource 설정 가이드 (globals.properties)
+##############################################################################
+# 본 파일은 외부 DB 사용 시 연결 정보를 기록합니다.
+# 기본 프로파일(hsql)에서는 이 파일을 사용하지 않으므로 비워두어도 동작합니다.
+#
+# 운영 DB 사용 절차:
+#   1) 사용할 DB 섹션의 주석(#) 을 해제하고 값 채우기
+#   2) web.xml 의 <context-param>spring.profiles.active</context-param> 값 변경
+#      (또는 JVM 옵션 -Dspring.profiles.active=oracle)
+#   3) pom.xml 에서 해당 JDBC 드라이버 의존성 주석 해제
+#
+# 비밀번호 암호화: 기본은 평문(plain) 입니다.
+#   eGovFrame Crypto Simplify 도입 시 context-datasource.xml 의
+#   ${Globals.X.Password} 자리를
+#   #{egovPasswordResolver.resolvePassword('Globals.X.Password')} 형태로 변경하세요.
+#   참고: https://www.egovframe.go.kr/wiki/doku.php?id=egovframework:rte2:fdl:crypto_simplify_v3_8
+##############################################################################
+
+# --- Oracle ---
+#Globals.oracle.DriverClassName=oracle.jdbc.OracleDriver
+#Globals.oracle.Url=jdbc:oracle:thin:@localhost:1521:XE
+#Globals.oracle.UserName=scott
+#Globals.oracle.Password=tiger
+
+# --- MySQL ---
+#Globals.mysql.DriverClassName=com.mysql.cj.jdbc.Driver
+#Globals.mysql.Url=jdbc:mysql://localhost:3306/{{entityNameLower}}?serverTimezone=Asia/Seoul&useUnicode=true&characterEncoding=utf8
+#Globals.mysql.UserName=root
+#Globals.mysql.Password=password
+
+# --- MariaDB ---
+#Globals.maria.DriverClassName=org.mariadb.jdbc.Driver
+#Globals.maria.Url=jdbc:mariadb://localhost:3306/{{entityNameLower}}
+#Globals.maria.UserName=root
+#Globals.maria.Password=password
+
+# --- PostgreSQL ---
+#Globals.postgres.DriverClassName=org.postgresql.Driver
+#Globals.postgres.Url=jdbc:postgresql://localhost:5432/{{entityNameLower}}
+#Globals.postgres.UserName=postgres
+#Globals.postgres.Password=password
+
+# --- Tibero ---
+#Globals.tibero.DriverClassName=com.tmax.tibero.jdbc.TbDriver
+#Globals.tibero.Url=jdbc:tibero:thin:@localhost:8629:tibero
+#Globals.tibero.UserName=tibero
+#Globals.tibero.Password=tmax
+
+# --- Altibase ---
+#Globals.altibase.DriverClassName=Altibase.jdbc.driver.AltibaseDriver
+#Globals.altibase.Url=jdbc:Altibase://localhost:20300/mydb
+#Globals.altibase.UserName=sys
+#Globals.altibase.Password=manager
+
+# --- CUBRID ---
+#Globals.cubrid.DriverClassName=cubrid.jdbc.driver.CUBRIDDriver
+#Globals.cubrid.Url=jdbc:CUBRID:localhost:33000:demodb:::
+#Globals.cubrid.UserName=public
+#Globals.cubrid.Password=
+
+# --- GOLDILOCKS ---
+#Globals.goldilocks.DriverClassName=sunje.goldilocks.jdbc.GoldilocksDriver
+#Globals.goldilocks.Url=jdbc:goldilocks://127.0.0.1:22581/test
+#Globals.goldilocks.UserName=TEST
+#Globals.goldilocks.Password=test
