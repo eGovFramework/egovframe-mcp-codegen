@@ -50,7 +50,12 @@ const KNOWN_DATA_TYPES = new Set<string>([
  * 정규화 과정에서 실제 적용된 변경 1건.
  */
 export interface NormalizationChange {
-  kind: "identifier_case" | "identifier_quote" | "data_type_case" | "whitespace";
+  kind:
+    | "identifier_case"
+    | "identifier_quote"
+    | "data_type_case"
+    | "whitespace"
+    | "escape_sequence";
   before: string;
   after: string;
   /** 컬럼/제약 라인 번호 (DDL body 안에서 0-base). 메타 변경(전체 trim 등)은 생략 */
@@ -116,6 +121,16 @@ export function normalizeDdl(
 
   const changes: NormalizationChange[] = [];
   const issues: NormalizationIssue[] = [];
+
+  // 0) 리터럴 escape 시퀀스 교정 (헤더/본문 파싱보다 먼저).
+  //    모델이 줄바꿈을 정상적인 줄바꿈(`\n`)이 아니라 이중 escape (`\\n`) 하면,
+  //    JSON 파싱 후 DDL 문자열에는 백슬래시+n 두 글자가 그대로 들어와
+  //    아래 공백 정리/컬럼 정규식을 빠져나가
+  //    컬럼명이 `\n` 으로 오인되는 손상을 일으킨다.
+  //    파서가 보기 전에 실제 문자로 되돌린다.
+  const repaired = repairEscapeSequences(ddl);
+  ddl = repaired.ddl;
+  changes.push(...repaired.changes);
 
   // 1) 테이블 헤더와 컬럼 본문 분리
   const headerMatch = /^\s*CREATE\s+(?:MEMORY\s+)?TABLE\s+([`"]?)(\w+)\1\s*\(/i.exec(
@@ -187,6 +202,43 @@ export function normalizeDdl(
 // ---------------------------------------------------------------------------
 // 내부 구현
 // ---------------------------------------------------------------------------
+
+/**
+ * 리터럴 escape 시퀀스(`\n`·`\r`·`\t`)를 실제 제어문자로 되돌린다.
+ *
+ * 배경
+ * ----
+ * 도구 인자는 JSON 문자열로 전달된다. 모델이 줄바꿈을 올바르게 `\n` 으로 적으면
+ * JSON 파서가 실제 줄바꿈(LF)으로 풀어 주지만, **이중 escape (`\\n`)** 로 적으면
+ * 파싱 결과에 백슬래시(`\`)+`n` 두 글자가 텍스트로 남는다. 이 텍스트는 공백이 아니라
+ * 일반 정규화(`\s+` 정리, 컬럼 정규식)를 빠져나가 컬럼명을 오염시킨다.
+ *
+ * 규칙(보수적)
+ * - 백슬래시 1개 이상 + `n`/`r` → 실제 줄바꿈(`\n`)
+ * - 백슬래시 1개 이상 + `t` → 실제 탭(`\t`)
+ *   (`\\+` 로 quad-escape 된 `\\\\n` 같은 형태까지 함께 흡수한다.)
+ * - 변환된 실제 공백은 이후 `\s+` 정리 단계에서 일관되게 다듬어진다.
+ *
+ * DDL 본문에 정상적인 백슬래시가 들어오는 경우는 사실상 없으므로 오탐 위험은 무시할 수준이다.
+ * 적용된 교정은 `escape_sequence` change 로 보고해 사용자가 깨진 입력을 인지하게 한다.
+ */
+export function repairEscapeSequences(ddl: string): {
+  ddl: string;
+  changes: NormalizationChange[];
+} {
+  const changes: NormalizationChange[] = [];
+  const out = ddl.replace(/\\+([nrt])/g, (_match, letter: string) => {
+    changes.push({
+      kind: "escape_sequence",
+      // before: 화면에 보이던 깨진 텍스트(백슬래시+문자). after: 사람이 읽을 라벨
+      //   (실제 제어문자를 리포트에 그대로 쏟지 않도록 라벨로 치환).
+      before: `\\${letter}`,
+      after: letter === "t" ? "(탭)" : "(줄바꿈)",
+    });
+    return letter === "t" ? "\t" : "\n";
+  });
+  return { ddl: out, changes };
+}
 
 /**
  * 괄호 안 콤마를 보호하면서 top-level 콤마로 split.
