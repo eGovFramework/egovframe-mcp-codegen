@@ -11,6 +11,7 @@ import { describe, it, expect } from "vitest";
 import {
   formatNormalizationReport,
   normalizeDdl,
+  repairEscapeSequences,
 } from "../../src/utils/ddlNormalizer.js";
 import { parseDDL } from "../../src/utils/scaffold/ddlParser.js";
 
@@ -111,6 +112,79 @@ describe("normalizeDdl — 변환 규칙", () => {
     const parsed = parseDDL(normalizedDdl);
     expect(parsed.attributes).toHaveLength(1);
     expect(parsed.attributes[0].dataType).toBe("DECIMAL");
+  });
+});
+
+describe("repairEscapeSequences — 리터럴 escape 교정", () => {
+  it("리터럴 \\n / \\t 를 실제 제어문자로 되돌리고 change 로 보고한다", () => {
+    // TS 소스의 "\\n" = 런타임 문자열의 백슬래시+n (이중 escape 가 만들어낸 깨진 텍스트)
+    const { ddl, changes } = repairEscapeSequences("a\\nb\\tc");
+    expect(ddl).toBe("a\nb\tc");
+    expect(ddl).not.toContain("\\");
+    expect(changes.map((c) => c.kind)).toEqual([
+      "escape_sequence",
+      "escape_sequence",
+    ]);
+  });
+
+  it("quad-escape (\\\\n) 처럼 백슬래시가 여러 개여도 흡수한다", () => {
+    // 런타임 문자열: 백슬래시 2개 + n
+    const { ddl, changes } = repairEscapeSequences("a\\\\nb");
+    expect(ddl).toBe("a\nb");
+    expect(changes).toHaveLength(1);
+  });
+
+  it("정상 텍스트(백슬래시 없음)는 건드리지 않는다", () => {
+    const { ddl, changes } = repairEscapeSequences("MBR_NO VARCHAR(20)");
+    expect(ddl).toBe("MBR_NO VARCHAR(20)");
+    expect(changes).toHaveLength(0);
+  });
+});
+
+describe("normalizeDdl — 이중 escape 된 DDL 복구", () => {
+  // 모델이 줄바꿈을 `\\n` 으로 이중 escape 한 경우 (문서의 MEMBER 케이스 재현).
+  // TS 소스의 "\\n" 은 런타임에서 백슬래시+n 두 글자가 된다.
+  const BROKEN_MEMBER =
+    "CREATE MEMORY TABLE MEMBER (\\n" +
+    "  MBR_NO VARCHAR(20) NOT NULL,\\n" +
+    "  MBR_NM VARCHAR(100) NOT NULL,\\n" +
+    "  MBR_EML_ADDR VARCHAR(320),\\n" +
+    "  MBR_JOIN_DT DATETIME,\\n" +
+    "  PRIMARY KEY (MBR_NO)\\n" +
+    ")";
+
+  it("정규화 결과에 리터럴 \\n 텍스트가 남지 않는다", () => {
+    const { normalizedDdl } = normalizeDdl(BROKEN_MEMBER);
+    expect(normalizedDdl).not.toContain("\\");
+  });
+
+  it("교정 후 컬럼·PK 가 올바르게 파싱된다 (\\n 이 컬럼명으로 오인되지 않음)", () => {
+    const { normalizedDdl } = normalizeDdl(BROKEN_MEMBER);
+    const parsed = parseDDL(normalizedDdl);
+    // parseDDL 은 테이블명을 PascalCase 로 정규화한다 (MEMBER → Member). escape 교정과 무관.
+    expect(parsed.tableName).toBe("Member");
+    expect(parsed.attributes.map((a) => a.columnName)).toEqual([
+      "MBR_NO",
+      "MBR_NM",
+      "MBR_EML_ADDR",
+      "MBR_JOIN_DT",
+    ]);
+    expect(parsed.pkAttributes.map((a) => a.columnName)).toEqual(["MBR_NO"]);
+  });
+
+  it("escape_sequence change 가 report 에 기록된다", () => {
+    const { report } = normalizeDdl(BROKEN_MEMBER);
+    const escapeChanges = report.changes.filter(
+      (c) => c.kind === "escape_sequence",
+    );
+    expect(escapeChanges.length).toBeGreaterThanOrEqual(1);
+    const summary = formatNormalizationReport(report);
+    expect(summary).toMatch(/escape_sequence/);
+  });
+
+  it("정상 DDL 에는 escape_sequence change 가 생기지 않는다 (오탐 방지)", () => {
+    const { report } = normalizeDdl(SNAKE_DDL);
+    expect(report.changes.some((c) => c.kind === "escape_sequence")).toBe(false);
   });
 });
 
