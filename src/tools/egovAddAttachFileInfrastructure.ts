@@ -29,6 +29,7 @@ import Handlebars from "handlebars";
 import { z } from "zod";
 
 import { resolveManifest, type ResolvedFileMapping } from "../utils/scaffold/manifestLoader.js";
+import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import {
   detectProjectStack,
   detectBasePackage,
@@ -478,6 +479,7 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
       filesSkipped.push(c.mapping.output);
       continue;
     }
+    assertInsideProject(projectDir, c.absPath);
     await fs.ensureDir(path.dirname(c.absPath));
     await fs.writeFile(c.absPath, c.renderedContent, "utf-8");
     filesCreated.push(c.mapping.output);

@@ -29,6 +29,7 @@ import {
   registerScaffoldHelpers,
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { detectProjectStack } from "../utils/scaffold/projectDetector.js";
+import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { resolveStack } from "../utils/scaffold/stackMatrix.js";
 
 /** 컬럼 타입 — Java 필드 타입과 화면 렌더링 분기에 모두 사용된다. */
@@ -52,39 +53,83 @@ const ColumnSpecSchema = z.object({
   format: z.string().optional(),
 });
 
-export const AddQueryViewInputSchema = z.object({
-  projectPath: z.string().min(1, { error: "projectPath 가 필요합니다." }),
-  packageName: z
-    .string()
-    .min(1)
-    .regex(/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/, {
-      error:
-        "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.academic.report').",
-    }),
-  viewName: z
-    .string()
-    .min(1)
-    .regex(/^[A-Z][a-zA-Z0-9]*$/, {
-      error: "viewName 은 PascalCase 여야 합니다 (예: 'StudentEnrollmentReport').",
-    }),
-  /** SELECT 본문. LIMIT/OFFSET/외부 WHERE 검색절은 도구가 wrapping 으로 추가하므로 포함하지 말 것. */
-  sql: z
-    .string()
-    .min(1)
-    .refine((s) => /^\s*SELECT\b/i.test(s), {
-      error: "sql 은 SELECT 문이어야 합니다.",
-    }),
-  columns: z
-    .array(ColumnSpecSchema)
-    .min(1, { error: "columns 는 최소 1개 필요합니다." }),
-  /** 검색 dropdown 에 노출될 컬럼 alias 들. 빈 배열이면 검색 UI 자체를 숨긴다. */
-  searchable: z.array(z.string()).optional().default([]),
-  /** 출력 컬럼 alias 기준의 ORDER BY 절. 기본 첫 컬럼 DESC. */
-  defaultOrderBy: z.string().optional(),
-  description: z.string().optional().default(""),
-  autoApplyMenu: z.boolean().optional().default(true),
-  autoApplyMessages: z.boolean().optional().default(true),
-});
+export const AddQueryViewInputSchema = z
+  .object({
+    projectPath: z.string().min(1, { error: "projectPath 가 필요합니다." }),
+    packageName: z
+      .string()
+      .min(1)
+      .regex(/^[a-zA-Z_][a-zA-Z0-9_]*(\.[a-zA-Z_][a-zA-Z0-9_]*)+$/, {
+        error:
+          "packageName 은 Java 패키지 규약을 따라야 합니다 (예: 'egovframework.example.academic.report').",
+      }),
+    viewName: z
+      .string()
+      .min(1)
+      .regex(/^[A-Z][a-zA-Z0-9]*$/, {
+        error: "viewName 은 PascalCase 여야 합니다 (예: 'StudentEnrollmentReport').",
+      }),
+    /** SELECT 본문. LIMIT/OFFSET/외부 WHERE 검색절은 도구가 wrapping 으로 추가하므로 포함하지 말 것. */
+    sql: z
+      .string()
+      .min(1)
+      .refine((s) => /^\s*SELECT\b/i.test(s), {
+        error: "sql 은 SELECT 문이어야 합니다.",
+      }),
+    columns: z
+      .array(ColumnSpecSchema)
+      .min(1, { error: "columns 는 최소 1개 필요합니다." }),
+    /** 검색 dropdown 에 노출될 컬럼 alias 들. 빈 배열이면 검색 UI 자체를 숨긴다. */
+    searchable: z.array(z.string()).optional().default([]),
+    /** 출력 컬럼 alias 기준의 ORDER BY 절. 기본 첫 컬럼 DESC. */
+    defaultOrderBy: z.string().optional(),
+    description: z.string().optional().default(""),
+    autoApplyMenu: z.boolean().optional().default(true),
+    autoApplyMessages: z.boolean().optional().default(true),
+  })
+  .superRefine((val, ctx) => {
+    // sql 은 mapper XML 의 CDATA 섹션에 렌더되므로 CDATA 종료 시퀀스는 산출물을 깨뜨린다.
+    if (val.sql.includes("]]>")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["sql"],
+        message: "sql 에 ']]>' 시퀀스를 포함할 수 없습니다 (mapper XML 의 CDATA 섹션을 종료시킴).",
+      });
+    }
+
+    const aliases = new Set(val.columns.map((c) => c.alias));
+
+    // searchable 은 columns 에 선언된 alias 만 허용 — 오타를 조용히 무시하지 않는다.
+    for (const s of val.searchable) {
+      if (!aliases.has(s)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["searchable"],
+          message: `searchable 의 '${s}' 는 columns 에 선언되지 않은 alias 입니다 (선언된 alias: ${[...aliases].join(", ")}).`,
+        });
+      }
+    }
+
+    // defaultOrderBy 는 'alias [ASC|DESC]' 콤마 나열만 허용 — 생성된 SQL 로 임의 식이 흘러가는 것을 차단.
+    if (val.defaultOrderBy?.trim()) {
+      for (const part of val.defaultOrderBy.split(",").map((p) => p.trim())) {
+        const m = /^([a-z][a-zA-Z0-9]*)(\s+(?:ASC|DESC|asc|desc))?$/.exec(part);
+        if (!m) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["defaultOrderBy"],
+            message: `defaultOrderBy 의 '${part}' 가 올바르지 않습니다. 'alias [ASC|DESC]' 를 콤마로 나열하세요 (예: 'studentName DESC, deptName').`,
+          });
+        } else if (!aliases.has(m[1])) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["defaultOrderBy"],
+            message: `defaultOrderBy 의 '${m[1]}' 는 columns 에 선언되지 않은 alias 입니다.`,
+          });
+        }
+      }
+    }
+  });
 
 export type AddQueryViewInput = z.infer<typeof AddQueryViewInputSchema>;
 
@@ -269,7 +314,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     }
     const tmpl = await fs.readFile(templateAbs, "utf-8");
     const rendered = Handlebars.compile(tmpl)(ctx);
-    const out = path.join(projectDir, t.output);
+    const out = assertInsideProject(projectDir, path.join(projectDir, t.output));
     await fs.ensureDir(path.dirname(out));
     await writeFile(out, rendered, "utf-8");
     result.written.push(t.output);

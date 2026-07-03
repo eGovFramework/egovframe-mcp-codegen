@@ -321,6 +321,93 @@ describe("egov_add_query_view — 학적 도메인 StudentEnrollmentReport", () 
     expect(vo).toMatch(/private Boolean active;/);
   });
 
+  it("sql 에 < 비교 연산자가 있어도 mapper XML 이 CDATA 로 보호된다", async () => {
+    await egovAddQueryView({
+      projectPath: projectDir,
+      packageName: "egovframework.example.academic.report",
+      viewName: "MinorStudentReport",
+      sql: "SELECT s.student_id AS studentId FROM STUDENT s WHERE s.age < 19 AND s.credits <> 0",
+      columns: [{ alias: "studentId", label: "학번" }],
+    });
+
+    const xml = await fs.readFile(
+      path.join(
+        projectDir,
+        "src/main/resources/egovframework/sqlmap/report/mappers/EgovMinorStudentReport_MinorStudentReport_SQL.xml",
+      ),
+      "utf-8",
+    );
+    expect(xml).toMatch(/<!\[CDATA\[/);
+    expect(xml).toMatch(/s\.age < 19/);
+    expect(xml).toMatch(/s\.credits <> 0/);
+  });
+
+  it("sql 에 ']]>' 시퀀스가 있으면 입력 검증에서 거부된다", async () => {
+    await expect(
+      egovAddQueryView({
+        projectPath: projectDir,
+        packageName: "egovframework.example.academic.report",
+        viewName: "BrokenReport",
+        sql: "SELECT 1 AS id FROM STUDENT WHERE note = ']]>'",
+        columns: [{ alias: "id", label: "ID" }],
+      }),
+    ).rejects.toThrow(/\]\]>/);
+  });
+
+  it("defaultOrderBy 에 alias 목록 형식이 아닌 값이 오면 거부된다", async () => {
+    await expect(
+      egovAddQueryView({
+        projectPath: projectDir,
+        packageName: "egovframework.example.academic.report",
+        viewName: "InjectionReport",
+        sql: "SELECT 1 AS id FROM STUDENT",
+        columns: [{ alias: "id", label: "ID" }],
+        defaultOrderBy: "id; DROP TABLE STUDENT",
+      }),
+    ).rejects.toThrow(/defaultOrderBy/);
+  });
+
+  it("defaultOrderBy 가 columns 에 없는 alias 를 참조하면 거부된다", async () => {
+    await expect(
+      egovAddQueryView({
+        projectPath: projectDir,
+        packageName: "egovframework.example.academic.report",
+        viewName: "UnknownAliasReport",
+        sql: "SELECT 1 AS id FROM STUDENT",
+        columns: [{ alias: "id", label: "ID" }],
+        defaultOrderBy: "unknownCol DESC",
+      }),
+    ).rejects.toThrow(/unknownCol/);
+  });
+
+  it("defaultOrderBy 는 복수 alias + ASC/DESC 조합을 허용한다", async () => {
+    const out = await egovAddQueryView({
+      projectPath: projectDir,
+      packageName: "egovframework.example.academic.report",
+      viewName: "MultiOrderReport",
+      sql: "SELECT 1 AS id, 'x' AS name FROM STUDENT",
+      columns: [
+        { alias: "id", label: "ID" },
+        { alias: "name", label: "이름" },
+      ],
+      defaultOrderBy: "name ASC, id DESC",
+    });
+    expect(out).toMatch(/추가 완료/);
+  });
+
+  it("searchable 에 columns 에 없는 alias 가 있으면 조용히 무시하지 않고 거부한다", async () => {
+    await expect(
+      egovAddQueryView({
+        projectPath: projectDir,
+        packageName: "egovframework.example.academic.report",
+        viewName: "TypoSearchReport",
+        sql: "SELECT 1 AS id FROM STUDENT",
+        columns: [{ alias: "id", label: "ID" }],
+        searchable: ["idd"],
+      }),
+    ).rejects.toThrow(/idd/);
+  });
+
   it("같은 viewName 으로 다시 호출하면 충돌로 거부된다", async () => {
     await egovAddQueryView({
       projectPath: projectDir,

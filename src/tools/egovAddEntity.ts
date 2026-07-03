@@ -28,6 +28,7 @@ import {
   type ScaffoldParams,
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { resolveManifest } from "../utils/scaffold/manifestLoader.js";
+import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { decideMigrationStrategy } from "../utils/scaffold/migrationStrategy.js";
 import {
   detectAttachFileInfra,
@@ -461,7 +462,7 @@ async function renderEntityFiles(
   const written: string[] = [];
   for (const mapping of mappings) {
     const templatePath = path.join(templateBasePath, mapping.template);
-    const fullOutputPath = path.join(projectDir, mapping.output);
+    const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, mapping.output));
 
     if (!(await fs.pathExists(templatePath))) {
       throw new Error(`템플릿을 찾을 수 없습니다: ${templatePath}`);

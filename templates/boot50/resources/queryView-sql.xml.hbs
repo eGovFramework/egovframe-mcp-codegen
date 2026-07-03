@@ -10,7 +10,9 @@
 <mapper namespace="{{packageName}}.impl.{{viewName}}Mapper">
 
 	<sql id="{{viewNameLower}}Base">
+		<![CDATA[
 		{{{sql}}}
+		]]>
 	</sql>
 
 	<select id="select{{viewName}}List" parameterType="{{packageName}}.{{viewName}}DefaultVO" resultType="{{packageName}}.{{viewName}}VO">

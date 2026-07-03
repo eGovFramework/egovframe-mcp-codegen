@@ -8,6 +8,7 @@ import { resolveStack, type StackEntry } from "./stackMatrix.js";
 import { resolveManifest, type ResolvedFileMapping } from "./manifestLoader.js";
 import { dialectFullType, type Dialect } from "./dialectTypes.js";
 import { emitSkillFiles, emitDocFiles } from "./skillsEmitter.js";
+import { assertInsideProject } from "./pathGuard.js";
 import { osJunkCopyFilter } from "../fsCopyFilter.js";
 
 export interface ScaffoldParams {
@@ -352,7 +353,7 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
   for (const mapping of manifest) {
     try {
       const templatePath = path.join(templateBasePath, mapping.template);
-      const fullOutputPath = path.join(projectDir, mapping.output);
+      const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, mapping.output));
 
       if (!(await fs.pathExists(templatePath))) {
         console.error(`Template not found: ${templatePath}`);
