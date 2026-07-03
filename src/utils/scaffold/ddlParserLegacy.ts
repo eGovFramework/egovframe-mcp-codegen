@@ -15,7 +15,7 @@
  * 내부적으로 호출된다.
  */
 import { getJavaClassName } from "./dataTypes.js"
-import type { Column, ParsedDDL } from "./ddlParser.js"
+import type { Column, ParsedDDLCore } from "./ddlParser.js"
 import { computeIsLongText, computeIsYnFlag } from "./ddlParser.js"
 
 const DATE_JAVA_TYPES = new Set([
@@ -34,7 +34,7 @@ function convertCamelcaseToPascalcase(name: string): string {
 	return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
-export function parseDDLLegacy(ddl: string): ParsedDDL {
+export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 	ddl = ddl.replace(/\s+/g, " ").trim()
 
 	const tableNameMatch = RegExp(/^\s*CREATE\s+(?:MEMORY\s+)?TABLE\s+[`]?(\w+)[`]?/i).exec(ddl)

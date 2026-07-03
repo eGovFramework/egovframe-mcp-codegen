@@ -22,7 +22,7 @@
 // default import 후 구조 분해한다. (Node.js ESM-CJS interop)
 import nodeSqlParser from "node-sql-parser";
 import { getJavaClassName } from "./dataTypes.js";
-import type { Column, ParsedDDL } from "./ddlParser.js";
+import type { Column, ParsedDDLCore } from "./ddlParser.js";
 import { computeIsLongText, computeIsYnFlag, renderDefaultValue } from "./ddlParser.js";
 
 const { Parser } = nodeSqlParser as unknown as {
@@ -129,7 +129,7 @@ function extractInlineFk(
 /**
  * AST 경로로 DDL 을 파싱한다. 실패하면 throw — 라우터가 fallback 한다.
  */
-export function parseDDLWithAst(ddl: string): ParsedDDL {
+export function parseDDLWithAst(ddl: string): ParsedDDLCore {
   // node-sql-parser 는 `;` 가 없어도 동작하지만 일부 다중 문장 케이스에서
   // 안전을 위해 trim 만 해 두고 입력은 변경하지 않는다.
   const trimmed = ddl.trim();

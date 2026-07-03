@@ -65,6 +65,14 @@ export interface ScaffoldContext {
   tableName: string;
   attributes: Column[];
   pkAttributes: Column[];
+  /**
+   * DDL 파싱에 사용된 파서 경로. "legacy" 면 AST(MySQL dialect) 파싱이 실패해
+   * 정규식 파서로 폴백한 것 — 입력 DDL 이 비표준일 가능성이 있어 도구 결과
+   * 메시지에서 사용자에게 안내한다.
+   */
+  ddlParserUsed: "ast" | "legacy";
+  /** DDL 파싱 경고 목록 (legacy 폴백 사유 등). 정상 경로에서는 빈 배열. */
+  ddlWarnings: string[];
   nonPkAttributes: Column[];
   searchableAttributes: Column[];
   hasCompositePk: boolean;
@@ -296,6 +304,8 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     tableName: rawTableName,
     attributes: parsed.attributes,
     pkAttributes: parsed.pkAttributes,
+    ddlParserUsed: parsed.parserUsed,
+    ddlWarnings: parsed.warnings,
     nonPkAttributes,
     searchableAttributes,
     hasCompositePk: parsed.pkAttributes.length > 1,
@@ -438,6 +448,8 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
     frameworkVersion,
     entityName: ctx.entityName,
     tableName: ctx.tableName,
+    ddlParserUsed: ctx.ddlParserUsed,
+    ddlWarnings: ctx.ddlWarnings,
     fileCount: generatedFiles.length,
     files: generatedFiles,
   }, null, 2);

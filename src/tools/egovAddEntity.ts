@@ -957,7 +957,18 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       );
     }
 
-    // 9) 정규화 보고서 첨부 (변경/경고가 있을 때만)
+    // 9) DDL 파서 폴백 안내 — AST(MySQL) 파싱 실패로 legacy 정규식 파서가 쓰인 경우.
+    //    산출물은 정상 생성되지만 입력 DDL 이 비표준일 수 있음을 사용자가 알아야 한다.
+    if (ctx.ddlParserUsed === "legacy") {
+      lines.push(
+        ``,
+        `⚠️  DDL 파서 폴백 안내:`,
+        ...ctx.ddlWarnings.map((w) => `   - ${w}`),
+        `   생성된 코드가 의도와 다르면 DDL 을 표준 MySQL 문법으로 정리한 뒤 다시 실행해 보세요.`,
+      );
+    }
+
+    // 10) 정규화 보고서 첨부 (변경/경고가 있을 때만)
     if (normalizationReport) {
       const summary = formatNormalizationReport(normalizationReport);
       if (summary) {

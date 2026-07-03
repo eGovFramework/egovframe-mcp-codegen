@@ -356,6 +356,35 @@ describe("parseDDL — passing edge cases (회귀 보호용)", () => {
   });
 });
 
+describe("parseDDL — parserUsed & warnings", () => {
+  it("표준 MySQL DDL 은 parserUsed='ast' 이고 warnings 는 빈 배열이다", () => {
+    const r = parseDDL(
+      `CREATE TABLE board (board_id VARCHAR(36) PRIMARY KEY, title VARCHAR(200))`,
+    );
+    expect(r.parserUsed).toBe("ast");
+    expect(r.warnings).toEqual([]);
+  });
+
+  it("CREATE MEMORY TABLE (HSQLDB) 은 parserUsed='legacy' 이고 폴백 경고가 담긴다", () => {
+    const r = parseDDL(
+      `CREATE MEMORY TABLE board (id VARCHAR(36) PRIMARY KEY, title VARCHAR(200))`,
+    );
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.warnings.length).toBeGreaterThan(0);
+    // 사용자가 "내 DDL 이 비표준이구나" 를 알 수 있는 문구여야 한다.
+    expect(r.warnings.join("\n")).toMatch(/legacy 정규식 파서/);
+    expect(r.warnings.join("\n")).toMatch(/표준/);
+  });
+
+  it("legacy 폴백 경고에는 AST 실패 사유가 포함된다", () => {
+    const r = parseDDL(
+      `CREATE MEMORY TABLE board (id VARCHAR(36) PRIMARY KEY)`,
+    );
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.warnings.join("\n")).toMatch(/AST/);
+  });
+});
+
 describe("parseDDLWithDiagnostics — 경로 추적", () => {
   it("MySQL 표준 DDL 은 ast 경로로 처리된다", async () => {
     const { parseDDLWithDiagnostics } = await import(

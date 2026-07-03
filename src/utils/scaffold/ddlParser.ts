@@ -188,19 +188,37 @@ export function computeIsYnFlag(
   return /_YN$/i.test(columnName);
 }
 
-export interface ParsedDDL {
+/**
+ * 두 내부 파서(AST/Legacy) 가 공통으로 돌려주는 순수 파싱 결과.
+ * 어느 경로가 쓰였는지는 내부 파서가 알 수 없으므로 라우터(`parseDDL`) 가
+ * `ParsedDDL` 로 확장해 채운다.
+ */
+export interface ParsedDDLCore {
   tableName: string;
   attributes: Column[];
   pkAttributes: Column[];
 }
 
+export interface ParsedDDL extends ParsedDDLCore {
+  /**
+   * 어떤 파서가 최종 결과를 만들었는지.
+   * - "ast":    node-sql-parser (MySQL dialect) — 정상 경로.
+   * - "legacy": AST 가 실패해 정규식 파서로 폴백 — 입력 DDL 이 비표준일 가능성.
+   */
+  parserUsed: "ast" | "legacy";
+  /**
+   * 사용자에게 노출할 경고 목록. legacy 폴백이 발생하면 그 사실과 AST 실패
+   * 사유가 담긴다. 정상(ast) 경로에서는 빈 배열.
+   */
+  warnings: string[];
+}
+
 /**
- * 파싱 경로별 진단 정보를 함께 돌려주는 변형. 현재는 `parseDDL` 의 단순 호출이
- * 회귀를 가장 적게 만드는 형태라 메인 export 는 ParsedDDL 만 돌려준다.
- * 이 변형은 추후 진단/로깅 용도로 외부에서 사용할 수 있도록 export 한다.
+ * 파싱 경로별 진단 정보를 함께 돌려주는 변형. `parseDDL` 이 이 결과를 바탕으로
+ * `parserUsed` / `warnings` 를 채우며, 원시 진단이 필요한 곳은 직접 사용할 수 있다.
  */
 export interface ParseDDLDiagnostics {
-  parsed: ParsedDDL;
+  parsed: ParsedDDLCore;
   /** 어떤 경로가 최종 결과를 만들었는지 */
   source: "ast" | "legacy";
   /** AST 가 실패했다면 그 이유 */
@@ -208,7 +226,16 @@ export interface ParseDDLDiagnostics {
 }
 
 export function parseDDL(ddl: string): ParsedDDL {
-  return parseDDLWithDiagnostics(ddl).parsed;
+  const { parsed, source, astError } = parseDDLWithDiagnostics(ddl);
+  const warnings: string[] = [];
+  if (source === "legacy") {
+    warnings.push(
+      `입력 DDL 이 표준 SQL(MySQL dialect) 로 파싱되지 않아 legacy 정규식 파서로 처리되었습니다. ` +
+        `비표준 문법(HSQLDB CREATE MEMORY TABLE, Oracle VARCHAR2/NUMBER, PostgreSQL JSONB 등)이 ` +
+        `포함된 것으로 보입니다. (AST 파싱 실패 사유: ${astError ?? "알 수 없음"})`,
+    );
+  }
+  return { ...parsed, parserUsed: source, warnings };
 }
 
 export function parseDDLWithDiagnostics(ddl: string): ParseDDLDiagnostics {
