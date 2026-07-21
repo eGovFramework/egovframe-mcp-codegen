@@ -177,7 +177,7 @@
     },
     {
       "path": "src/main/resources/db/boarddb.sql",
-      "sha256": "becb03c4ec2d517373934fca4f4866f99b5d67559fcb485f07e6f9999da57c8f"
+      "sha256": "d691eb377f901c9ad646f5591af783002763340a23d2b47856f033acb2c57845"
     },
     {
       "path": "src/main/resources/db/migrations/altibase/boarddb.sql",

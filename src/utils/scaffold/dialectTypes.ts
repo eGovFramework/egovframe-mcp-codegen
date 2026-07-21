@@ -12,6 +12,7 @@
  *   - "cubrid"     : CUBRID — 자체 방언 (VARCHAR / INTEGER / STRING 등)
  *   - "mysql"      : MySQL / MariaDB (호환)
  *   - "postgres"   : PostgreSQL
+ *   - "hsql"       : HSQLDB 기본 모드 — 임베디드 부트 시드 전용
  *
  * 목적: 사용자가 어떤 형태의 DDL (HSQL, Oracle, PostgreSQL ...) 을 입력하든
  *       방언별 마이그레이션 가이드 SQL 을 일관되게 생성하기 위해 단일 진실원본을
@@ -25,7 +26,10 @@ export type Dialect =
   | "goldilocks"
   | "cubrid"
   | "mysql"
-  | "postgres";
+  | "postgres"
+  // 임베디드 시드(src/main/resources/db/*.sql) 전용 — 운영 DB 마이그레이션
+  // fan-out 대상이 아니므로 manifestLoader 의 SUPPORTED_DIALECTS 에는 추가 금지.
+  | "hsql";
 
 /** 길이 정보가 의미있는 타입군. 이 외에는 (N) 을 붙이지 않는다. */
 const LENGTH_AWARE = new Set([
@@ -69,6 +73,54 @@ function mapType(t: string, dialect: Dialect): string {
   // 사용자 가이드에서는 별도 섹션으로 노출하되 출력 SQL 은 Oracle 형식과 동일.
   if (dialect === "tibero" || dialect === "altibase" || dialect === "goldilocks") {
     return mapType(t, "oracle");
+  }
+
+  if (dialect === "hsql") {
+    // 임베디드 부트 시드용. Spring EmbeddedDatabaseBuilder(HSQL) 는 호환 플래그
+    // 없는 기본 모드(jdbc:hsqldb:mem)로 뜨므로, 기본 모드가 거부하는 타입만
+    // 지원 타입으로 치환하고 나머지는 입력을 보존한다.
+    // 아래 매핑은 HSQLDB 2.7.2/2.7.3/2.7.4 에서 CREATE TABLE 실측으로 확정.
+    switch (t) {
+      case "VARCHAR2":
+      case "NVARCHAR":
+      case "NVARCHAR2":
+        return "VARCHAR";
+      case "NCHAR":
+        return "CHAR";
+      case "TEXT":
+      case "TINYTEXT":
+      case "MEDIUMTEXT":
+      case "LONGTEXT":
+      case "NTEXT":
+      case "CLOB":
+      case "NCLOB":
+        // 기본 설정(sql.longvar_is_lob=false)에서 VARCHAR(16M) 으로 동작 —
+        // MyBatis 문자열 매핑과 궁합이 좋아 CLOB 대신 LONGVARCHAR 를 쓴다.
+        return "LONGVARCHAR";
+      case "NUMBER":
+        return "NUMERIC";
+      case "MEDIUMINT":
+        return "INTEGER";
+      case "SMALLSERIAL":
+        return "SMALLINT";
+      case "SERIAL":
+        return "INTEGER";
+      case "BIGSERIAL":
+        return "BIGINT";
+      case "BOOL":
+        return "BOOLEAN";
+      case "ENUM":
+      case "SET":
+        // 파서가 java.lang.String 으로 매핑하는 열거 타입 — 시드에서는 넉넉한
+        // VARCHAR 로 수용한다 (길이가 박혀 있으므로 (LEN) 재부착 없음).
+        return "VARCHAR(255)";
+      case "BYTEA":
+      case "LONGBLOB":
+      case "MEDIUMBLOB":
+        return "BLOB";
+      default:
+        return t;
+    }
   }
 
   if (dialect === "cubrid") {
