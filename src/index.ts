@@ -331,6 +331,12 @@ server.registerTool(
         .describe(
           "true (기본) 면 모든 출력 파일이 *내용까지 동일하게* 이미 존재할 때 no-op + 성공으로 처리 (멱등). false 면 한 파일이라도 존재할 시 거부 — 강제 신규 설치 의도일 때만 사용. 내용이 다른 파일이 있으면 본 옵션과 무관하게 항상 거부.",
         ),
+      autoMergeHsqlSeed: z
+        .boolean()
+        .optional()
+        .describe(
+          "true (기본) 면 HSQL 임베디드 부트 시드(src/main/resources/db/*.sql)에 COMTNFILE/COMTNFILEDETAIL/COMTECOPSEQ DDL 을 자동 append — EgovConfigDatasource 의 hsql 분기는 단일 시드 파일만 .addScript() 로 로드하므로 그 안에 머지해야 부팅 시 첨부 테이블이 생성됩니다. 안전 조건: 시드 후보가 정확히 1개일 때만 append 하고, 0개 또는 2개 이상이면 별도 파일(src/main/resources/db/attach-file.sql) 생성으로 fallback 하며 결과 메시지에 사유를 알립니다 (egov_add_entity 의 autoApplyMigration 과 대칭). 사용자가 '시드 SQL 은 내가 직접 머지할게', '시드 자동 머지 끄고' 같은 표현을 쓰면 false — 이때는 시드를 손대지 않고 별도 파일도 만들지 않으며 필요한 DDL 안내만 합니다.",
+        ),
     },
   },
   async (args) => {
