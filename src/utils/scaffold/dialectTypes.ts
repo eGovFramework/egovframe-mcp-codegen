@@ -53,16 +53,15 @@ export function dialectFullType(
 ): string {
   const t = String(rawType || "").toUpperCase();
   const mapped = mapType(t, dialect);
-  if (LENGTH_AWARE.has(rootType(mapped)) && maxLength > 0) {
+  // 매핑 결과에 길이가 이미 박혀 있으면 (NUMBER(10), TINYINT(1) 등) 완결된
+  // 타입이다 — INT(11) 처럼 입력에 표시 폭이 딸려 와도 재부착하지 않는다.
+  if (mapped.includes("(")) {
+    return mapped;
+  }
+  if (LENGTH_AWARE.has(mapped) && maxLength > 0) {
     return `${mapped}(${maxLength})`;
   }
   return mapped;
-}
-
-function rootType(mapped: string): string {
-  // "VARCHAR2(36)" 같은 형태로 미리 길이가 박혀 있으면 (현재는 없음) root 만 추출
-  const idx = mapped.indexOf("(");
-  return idx === -1 ? mapped : mapped.slice(0, idx);
 }
 
 function mapType(t: string, dialect: Dialect): string {

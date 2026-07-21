@@ -93,6 +93,30 @@ describe("dialectFullType — CUBRID 매핑", () => {
   });
 });
 
+describe("dialectFullType — 길이 박힌 매핑과 LENGTH_AWARE 충돌 방지", () => {
+  // MySQL 계열 DDL 의 INT(11) 처럼 정수 타입에 표시 폭이 붙어 오면
+  // maxLength > 0 으로 전달된다. Oracle 매핑 결과 NUMBER(10) 에 길이를
+  // 다시 붙여 NUMBER(10)(11) 같은 비정상 타입이 되면 안 된다.
+  it.each([
+    ["INT", 11, "oracle", "NUMBER(10)"],
+    ["TINYINT", 4, "oracle", "NUMBER(10)"],
+    ["SMALLINT", 6, "oracle", "NUMBER(10)"],
+    ["BIGINT", 20, "oracle", "NUMBER(19)"],
+    ["BOOLEAN", 1, "oracle", "NUMBER(1)"],
+    ["INT", 11, "tibero", "NUMBER(10)"],
+    ["INT", 11, "altibase", "NUMBER(10)"],
+    ["INT", 11, "goldilocks", "NUMBER(10)"],
+    ["BOOLEAN", 1, "mysql", "TINYINT(1)"],
+  ])("%s(maxLength=%i) → %s: 길이가 이미 박힌 매핑에 (LEN) 재부착 금지", (raw, len, dialect, expected) => {
+    expect(dialectFullType(raw, len as number, dialect as Parameters<typeof dialectFullType>[2])).toBe(expected);
+  });
+
+  it("길이가 박히지 않은 LENGTH_AWARE 매핑은 여전히 (LEN) 부착", () => {
+    expect(dialectFullType("DECIMAL", 10, "oracle")).toBe("NUMBER(10)");
+    expect(dialectFullType("VARCHAR", 36, "oracle")).toBe("VARCHAR2(36)");
+  });
+});
+
 describe("dialectFullType — 엣지 케이스", () => {
   it("소문자 입력도 동일하게 동작 (정규화)", () => {
     expect(dialectFullType("varchar", 36, "oracle")).toBe("VARCHAR2(36)");
