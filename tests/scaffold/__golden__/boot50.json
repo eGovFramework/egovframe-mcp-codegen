@@ -1,7 +1,7 @@
 {
   "scenario": "boot50",
   "fileCount": 61,
-  "staticFileCount": 589,
+  "staticFileCount": 588,
   "files": [
     {
       "path": ".claude/skills/egovframe-attach-file-pattern/SKILL.md",
