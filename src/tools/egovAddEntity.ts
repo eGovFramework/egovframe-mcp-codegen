@@ -876,7 +876,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         `   파일 끝에 다음이 append 되었습니다:`,
         `     - CREATE MEMORY TABLE ${ctx.tableName}(...)`,
         `     - INSERT INTO IDS VALUES('${ctx.entityNameUpper}', 1)`,
-        `   재기동 시 H2 가 시드를 다시 로드하면 자동 반영됩니다.`,
+        `   재기동 시 HSQLDB 가 시드를 다시 로드하면 자동 반영됩니다.`,
       );
     } else if (migrationDecision.fallbackReason) {
       // autoApplyMigration=true 였으나 안전 조건 미충족
@@ -887,7 +887,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         `   📄 ${migrationOutput}`,
         `   적용 방법 (택일):`,
         `     (a) 기존 시드 SQL 파일 (예: src/main/resources/db/*.sql) 끝에 위 파일 내용을 추가`,
-        `     (b) H2 콘솔/DBeaver 등에서 별도로 직접 실행`,
+        `     (b) HSQL Database Manager/DBeaver 등에서 별도로 직접 실행`,
         `   적용 후 IDS 에 '${ctx.entityNameUpper}' row 가 존재해야 egov${ctx.entityName}IdGnrService 빈이 정상 동작합니다.`,
       );
     } else {
@@ -899,7 +899,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         `     📄 ${migrationOutput}`,
         `   적용 방법 (택일):`,
         `     (a) 기존 시드 SQL 파일 (예: src/main/resources/db/*.sql) 끝에 위 파일 내용을 추가`,
-        `     (b) H2 콘솔/DBeaver 등에서 별도로 직접 실행`,
+        `     (b) HSQL Database Manager/DBeaver 등에서 별도로 직접 실행`,
         `   적용 후 IDS 에 '${ctx.entityNameUpper}' row 가 존재해야 egov${ctx.entityName}IdGnrService 빈이 정상 동작합니다.`,
       );
     }

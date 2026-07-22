@@ -118,7 +118,7 @@ server.registerTool(
         .boolean()
         .optional()
         .describe(
-          "true (기본) 면 생성된 엔티티 마이그레이션 DDL(CREATE TABLE + INSERT INTO IDS) 을 기존 시드 SQL 파일 끝에 자동으로 append 하여, 사용자가 별도로 복사·붙여넣기 할 필요가 없게 합니다. 안전 조건: src/main/resources/db/ 디렉터리에 사용자 시드 *.sql 파일이 정확히 1개 있을 때만 동작합니다 (add-{entity}-tables.sql 같은 이전 마이그레이션 파일은 자동 제외). 0개 또는 2개 이상이면 안전을 위해 자동 append 를 포기하고 별도 파일(add-{entity}-tables.sql) 생성으로 fallback 하며 결과 메시지에 사유를 알립니다. 사용자가 'DB 시드는 내가 직접 적용할게', '시드 SQL 자동 머지 끄고', '마이그레이션 파일만 따로 만들어줘' 같은 표현을 쓰면 false 로 설정하세요. 주의: 시드 파일에 동일 엔티티의 DDL/IDS row 가 이미 있는 경우에도 그대로 append 되므로 H2 init 시 'already exists' 가 날 수 있습니다 — 첫 호출에만 사용하거나 사용자가 시드 파일 상태를 인지하고 켜야 합니다.",
+          "true (기본) 면 생성된 엔티티 마이그레이션 DDL(CREATE TABLE + INSERT INTO IDS) 을 기존 시드 SQL 파일 끝에 자동으로 append 하여, 사용자가 별도로 복사·붙여넣기 할 필요가 없게 합니다. 안전 조건: src/main/resources/db/ 디렉터리에 사용자 시드 *.sql 파일이 정확히 1개 있을 때만 동작합니다 (add-{entity}-tables.sql 같은 이전 마이그레이션 파일은 자동 제외). 0개 또는 2개 이상이면 안전을 위해 자동 append 를 포기하고 별도 파일(add-{entity}-tables.sql) 생성으로 fallback 하며 결과 메시지에 사유를 알립니다. 사용자가 'DB 시드는 내가 직접 적용할게', '시드 SQL 자동 머지 끄고', '마이그레이션 파일만 따로 만들어줘' 같은 표현을 쓰면 false 로 설정하세요. 주의: 시드 파일에 동일 엔티티의 DDL/IDS row 가 이미 있는 경우에도 그대로 append 되므로 HSQLDB init 시 'already exists' 가 날 수 있습니다 — 첫 호출에만 사용하거나 사용자가 시드 파일 상태를 인지하고 켜야 합니다.",
         ),
       autoApplyMessages: z
         .boolean()
