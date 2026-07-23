@@ -32,6 +32,7 @@ import {
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { detectProjectStack } from "../utils/scaffold/projectDetector.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
+import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
 import { resolveStack } from "../utils/scaffold/stackMatrix.js";
 import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
 import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
@@ -310,7 +311,8 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
 
   const fileStatuses: { output: string; status: "missing" | "identical" | "different" }[] = [];
   for (const r of renderedFiles) {
-    const abs = path.join(projectDir, r.output);
+    // 비교(읽기) 단계에도 경로 가드 적용 — 심층 방어 (쓰기 단계와 동일 기준).
+    const abs = assertInsideProject(projectDir, path.join(projectDir, r.output));
     if (await fs.pathExists(abs)) {
       const existing = await fs.readFile(abs, "utf-8");
       fileStatuses.push({
@@ -399,13 +401,18 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   }
 
   // 5) 파일 쓰기 (위 단계에서 대상 파일이 모두 없음을 확인했으므로 전량 신규 생성)
+  //    쓰기 시작 후 OS 레벨 중간 실패(권한/디스크 풀) 시 이미 쓰인 파일을 원상 복구한다.
   const result: RenderResult = { written: [], appendedMessageFiles: [] };
-  for (const r of renderedFiles) {
-    const out = assertInsideProject(projectDir, path.join(projectDir, r.output));
-    await fs.ensureDir(path.dirname(out));
-    await writeFile(out, r.content, "utf-8");
-    result.written.push(r.output);
-  }
+  const journal = new FileWriteJournal();
+  await withWriteRollback(projectDir, journal, async () => {
+    for (const r of renderedFiles) {
+      const out = assertInsideProject(projectDir, path.join(projectDir, r.output));
+      await journal.recordBeforeWrite(out);
+      await fs.ensureDir(path.dirname(out));
+      await writeFile(out, r.content, "utf-8");
+      result.written.push(r.output);
+    }
+  });
 
   // 6) 메뉴 자동 통합 — nav fragment 재생성 (autoApplyMenu)
   if (params.autoApplyMenu) {

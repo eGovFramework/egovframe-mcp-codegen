@@ -30,6 +30,7 @@ import { z } from "zod";
 
 import { resolveManifest, type ResolvedFileMapping } from "../utils/scaffold/manifestLoader.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
+import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
 import {
   detectProjectStack,
   detectBasePackage,
@@ -371,7 +372,8 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     });
 
     if (m.mode === "create") {
-      const abs = path.join(projectDir, m.output);
+      // 비교(읽기) 단계에도 경로 가드 적용 — 심층 방어 (쓰기 단계와 동일 기준).
+      const abs = assertInsideProject(projectDir, path.join(projectDir, m.output));
       let status: PreflightStatus = "missing";
       if (await fs.pathExists(abs)) {
         const existing = await fs.readFile(abs, "utf-8");
@@ -383,7 +385,8 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
         throw new Error(`매니페스트 오류: append-idempotent 인데 appendTarget 누락 (${m.output}).`);
       }
       // appendTarget.glob 은 정적 경로 (Phase A 에서는 wildcard 없이 정확한 파일 1개).
-      const absTarget = path.join(projectDir, m.appendTarget.glob);
+      // 매니페스트 유래 경로이므로 읽기 단계부터 경로 가드를 적용한다 — 심층 방어.
+      const absTarget = assertInsideProject(projectDir, path.join(projectDir, m.appendTarget.glob));
       let targetMissing = false;
       let existing = "";
       if (await fs.pathExists(absTarget)) {
@@ -506,82 +509,103 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     );
   }
 
-  // 8) 적용 — 파일 쓰기 + append
+  // 8) 적용 — 파일 쓰기 + append. create/append/HSQL 시드를 하나의 저널로 묶어,
+  //    쓰기 시작 후 OS 레벨 중간 실패(권한/디스크 풀) 시 이미 반영된 항목을 전부
+  //    원상 복구한다 (신규 파일 삭제, append 대상은 원본 내용 복원).
   const filesCreated: string[] = [];
   const filesSkipped: string[] = [];
   const filesAppended: { path: string; addedKeys: string[] }[] = [];
   const filesAppendSkipped: { path: string; reason: string }[] = [];
 
-  for (const c of creates) {
-    if (c.status === "identical") {
-      filesSkipped.push(c.mapping.output);
-      continue;
-    }
-    assertInsideProject(projectDir, c.absPath);
-    await fs.ensureDir(path.dirname(c.absPath));
-    await fs.writeFile(c.absPath, c.renderedContent, "utf-8");
-    filesCreated.push(c.mapping.output);
-  }
-
-  for (const a of appends) {
-    if (!params.autoApplyProperties) {
-      filesAppendSkipped.push({
-        path: path.relative(projectDir, a.absTargetPath),
-        reason: "autoApplyProperties=false 로 호출되어 속성 자동 append 를 건너뜁니다.",
-      });
-      continue;
-    }
-    if (a.alreadyMatches) {
-      filesSkipped.push(path.relative(projectDir, a.absTargetPath));
-      continue;
-    }
-    if (a.targetMissing) {
-      // target 파일 자체가 없으면 새로 만들어서 쓴다 (디렉터리는 생성).
-      await fs.ensureDir(path.dirname(a.absTargetPath));
-      await fs.writeFile(a.absTargetPath, a.renderedContent, "utf-8");
-    } else {
-      // 끝에 빈 줄 보장 후 append.
-      await fs.appendFile(a.absTargetPath, "\n" + a.renderedContent);
-    }
-    filesAppended.push({
-      path: path.relative(projectDir, a.absTargetPath),
-      addedKeys: extractPropertiesKeys(a.renderedContent).map((k) => k.key),
-    });
-  }
-
-  // 8-b) HSQL 시드 머지 실행
-  let hsqlSeedResult:
+  type HsqlSeedApplyResult =
     | { kind: "append"; seedRelPath: string }
     | { kind: "alreadyMerged"; seedRelPath: string }
     | { kind: "fallbackCreate"; relPath: string; reason?: string }
     | { kind: "fallbackIdentical"; relPath: string; reason?: string }
-    | { kind: "disabled" } = { kind: "disabled" };
-  if (hsqlSeedPlan.kind === "append") {
-    await fs.appendFile(hsqlSeedPlan.seedAbsPath, "\n" + hsqlSeedPlan.rendered);
-    hsqlSeedResult = {
-      kind: "append",
-      seedRelPath: path.relative(projectDir, hsqlSeedPlan.seedAbsPath),
-    };
-  } else if (hsqlSeedPlan.kind === "alreadyMerged") {
-    hsqlSeedResult = {
-      kind: "alreadyMerged",
-      seedRelPath: path.relative(projectDir, hsqlSeedPlan.seedAbsPath),
-    };
-  } else if (hsqlSeedPlan.kind === "fallbackCreate") {
-    await fs.ensureDir(path.dirname(hsqlSeedPlan.absPath));
-    await fs.writeFile(hsqlSeedPlan.absPath, hsqlSeedPlan.rendered, "utf-8");
-    hsqlSeedResult = {
-      kind: "fallbackCreate",
-      relPath: hsqlSeedPlan.relPath,
-      reason: hsqlSeedPlan.reason,
-    };
-  } else if (hsqlSeedPlan.kind === "fallbackIdentical") {
-    hsqlSeedResult = {
-      kind: "fallbackIdentical",
-      relPath: hsqlSeedPlan.relPath,
-      reason: hsqlSeedPlan.reason,
-    };
-  }
+    | { kind: "disabled" };
+
+  const journal = new FileWriteJournal();
+  const hsqlSeedResult = await withWriteRollback(
+    projectDir,
+    journal,
+    async (): Promise<HsqlSeedApplyResult> => {
+    for (const c of creates) {
+      if (c.status === "identical") {
+        filesSkipped.push(c.mapping.output);
+        continue;
+      }
+      assertInsideProject(projectDir, c.absPath);
+      await journal.recordBeforeWrite(c.absPath);
+      await fs.ensureDir(path.dirname(c.absPath));
+      await fs.writeFile(c.absPath, c.renderedContent, "utf-8");
+      filesCreated.push(c.mapping.output);
+    }
+
+    for (const a of appends) {
+      if (!params.autoApplyProperties) {
+        filesAppendSkipped.push({
+          path: path.relative(projectDir, a.absTargetPath),
+          reason: "autoApplyProperties=false 로 호출되어 속성 자동 append 를 건너뜁니다.",
+        });
+        continue;
+      }
+      if (a.alreadyMatches) {
+        filesSkipped.push(path.relative(projectDir, a.absTargetPath));
+        continue;
+      }
+      assertInsideProject(projectDir, a.absTargetPath);
+      await journal.recordBeforeWrite(a.absTargetPath);
+      if (a.targetMissing) {
+        // target 파일 자체가 없으면 새로 만들어서 쓴다 (디렉터리는 생성).
+        await fs.ensureDir(path.dirname(a.absTargetPath));
+        await fs.writeFile(a.absTargetPath, a.renderedContent, "utf-8");
+      } else {
+        // 끝에 빈 줄 보장 후 append.
+        await fs.appendFile(a.absTargetPath, "\n" + a.renderedContent);
+      }
+      filesAppended.push({
+        path: path.relative(projectDir, a.absTargetPath),
+        addedKeys: extractPropertiesKeys(a.renderedContent).map((k) => k.key),
+      });
+    }
+
+    // 8-b) HSQL 시드 머지 실행
+    if (hsqlSeedPlan.kind === "append") {
+      assertInsideProject(projectDir, hsqlSeedPlan.seedAbsPath);
+      await journal.recordBeforeWrite(hsqlSeedPlan.seedAbsPath);
+      await fs.appendFile(hsqlSeedPlan.seedAbsPath, "\n" + hsqlSeedPlan.rendered);
+      return {
+        kind: "append",
+        seedRelPath: path.relative(projectDir, hsqlSeedPlan.seedAbsPath),
+      };
+    }
+    if (hsqlSeedPlan.kind === "alreadyMerged") {
+      return {
+        kind: "alreadyMerged",
+        seedRelPath: path.relative(projectDir, hsqlSeedPlan.seedAbsPath),
+      };
+    }
+    if (hsqlSeedPlan.kind === "fallbackCreate") {
+      assertInsideProject(projectDir, hsqlSeedPlan.absPath);
+      await journal.recordBeforeWrite(hsqlSeedPlan.absPath);
+      await fs.ensureDir(path.dirname(hsqlSeedPlan.absPath));
+      await fs.writeFile(hsqlSeedPlan.absPath, hsqlSeedPlan.rendered, "utf-8");
+      return {
+        kind: "fallbackCreate",
+        relPath: hsqlSeedPlan.relPath,
+        reason: hsqlSeedPlan.reason,
+      };
+    }
+    if (hsqlSeedPlan.kind === "fallbackIdentical") {
+      return {
+        kind: "fallbackIdentical",
+        relPath: hsqlSeedPlan.relPath,
+        reason: hsqlSeedPlan.reason,
+      };
+    }
+    return { kind: "disabled" };
+  },
+  );
 
   // 9) 결과 메시지
   const egovLabel = detected.stackVersion === "5.0" ? "eGovFrame 5.0" : "eGovFrame 4.3";

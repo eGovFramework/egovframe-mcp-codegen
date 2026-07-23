@@ -31,6 +31,7 @@ import {
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { resolveManifest } from "../utils/scaffold/manifestLoader.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
+import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
 import { decideMigrationStrategy } from "../utils/scaffold/migrationStrategy.js";
 import {
   detectAttachFileInfra,
@@ -491,19 +492,24 @@ async function renderEntityFilesInMemory(
 /**
  * `renderEntityFilesInMemory` 의 결과를 실제 파일로 쓴다.
  * 사전 충돌 검사(내용 비교) 통과 시점 이후에만 호출된다.
+ * 쓰기 시작 후 OS 레벨 중간 실패(권한/디스크 풀) 시 이미 쓰인 파일을 원상 복구한다.
  */
 async function writeRenderedEntityFiles(
   projectDir: string,
   rendered: RenderedEntityFile[],
 ): Promise<string[]> {
-  const written: string[] = [];
-  for (const r of rendered) {
-    const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, r.output));
-    await fs.ensureDir(path.dirname(fullOutputPath));
-    await writeFile(fullOutputPath, r.content, "utf-8");
-    written.push(r.output);
-  }
-  return written;
+  const journal = new FileWriteJournal();
+  return withWriteRollback(projectDir, journal, async () => {
+    const written: string[] = [];
+    for (const r of rendered) {
+      const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, r.output));
+      await journal.recordBeforeWrite(fullOutputPath);
+      await fs.ensureDir(path.dirname(fullOutputPath));
+      await writeFile(fullOutputPath, r.content, "utf-8");
+      written.push(r.output);
+    }
+    return written;
+  });
 }
 
 export async function egovAddEntity(rawParams: unknown): Promise<string> {
@@ -738,7 +744,8 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
 
     const fileStatuses: { output: string; status: "missing" | "identical" | "different" }[] = [];
     for (const r of renderedFiles) {
-      const abs = path.join(projectDir, r.output);
+      // 비교(읽기) 단계에도 경로 가드 적용 — 심층 방어 (쓰기 단계와 동일 기준).
+      const abs = assertInsideProject(projectDir, path.join(projectDir, r.output));
       if (await fs.pathExists(abs)) {
         const existing = await fs.readFile(abs, "utf-8");
         fileStatuses.push({
