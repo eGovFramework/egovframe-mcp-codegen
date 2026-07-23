@@ -408,7 +408,23 @@ describe("egov_add_query_view — 학적 도메인 StudentEnrollmentReport", () 
     ).rejects.toThrow(/idd/);
   });
 
-  it("같은 viewName 으로 다시 호출하면 충돌로 거부된다", async () => {
+  it("같은 인자로 다시 호출하면(렌더 결과 동일) 멱등 성공 — 변경 없음", async () => {
+    const args = {
+      projectPath: projectDir,
+      packageName: "egovframework.example.academic.report",
+      viewName: "StudentEnrollmentReport",
+      sql: "SELECT 1 AS id FROM STUDENT",
+      columns: [{ alias: "id", label: "ID" }],
+    };
+    await egovAddQueryView(args);
+
+    const out = await egovAddQueryView(args);
+    expect(out).toMatch(/이미 동일한 내용으로 생성되어 있습니다/);
+    expect(out).toMatch(/변경 사항 없음/);
+    expect(out).toMatch(/후속 단계는 건너뛰었습니다/);
+  });
+
+  it("같은 viewName 인데 산출물 내용이 다르면(변경된 컬럼) 충돌로 거부된다", async () => {
     await egovAddQueryView({
       projectPath: projectDir,
       packageName: "egovframework.example.academic.report",
@@ -423,7 +439,8 @@ describe("egov_add_query_view — 학적 도메인 StudentEnrollmentReport", () 
         packageName: "egovframework.example.academic.report",
         viewName: "StudentEnrollmentReport",
         sql: "SELECT 1 AS id FROM STUDENT",
-        columns: [{ alias: "id", label: "ID" }],
+        // 컬럼 라벨이 달라 렌더 결과가 달라짐 — 부분/전체 내용 상이로 원자적 거부
+        columns: [{ alias: "id", label: "학번" }],
       }),
     ).rejects.toThrow(/충돌로 거부/);
   });

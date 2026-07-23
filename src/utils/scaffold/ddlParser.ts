@@ -20,6 +20,8 @@
 
 import { parseDDLWithAst } from "./ddlParserAst.js";
 import { parseDDLLegacy } from "./ddlParserLegacy.js";
+import { NON_MYSQL_TYPE_HINTS } from "./dialectTypes.js";
+import { nonRetryable } from "./toolMessages.js";
 
 export interface Column {
   ccName: string;
@@ -223,16 +225,84 @@ export interface ParseDDLDiagnostics {
   source: "ast" | "legacy";
   /** AST 가 실패했다면 그 이유 */
   astError?: string;
+  /**
+   * AST 실패 사유에 `node-sql-parser`(pegjs) 구문 위치가 있었다면 그 line/column
+   * (1-base). 없으면 undefined — `astError` 가 AST 레벨 의미 오류(예: "No valid
+   * columns found in DDL")일 때는 구문 위치가 없다.
+   */
+  astErrorLocation?: { line: number; column: number };
+}
+
+/**
+ * `node-sql-parser`(pegjs) 구문 에러의 line/column 위치와 그 줄의 원문(앞뒤 공백
+ * 트리밍)을 "N행 M열: <원문>" 형태로 만든다. 사용자 자신이 입력한 DDL 을 그대로
+ * 돌려주는 것이므로 내부 SQL 노출 금지 규칙에 해당하지 않는다.
+ * 위치 정보가 없으면 undefined.
+ */
+function buildLocationSnippet(
+  ddl: string,
+  location: { line: number; column: number } | undefined,
+): string | undefined {
+  if (!location) return undefined;
+  const lines = ddl.split(/\r\n|\r|\n/);
+  const lineText = lines[location.line - 1]?.trim();
+  const pos = `${location.line}행 ${location.column}열`;
+  return lineText ? `${pos}: ${lineText}` : pos;
+}
+
+/**
+ * 입력 DDL 에서 잘 알려진 비-MySQL 방언 타입 토큰(`NON_MYSQL_TYPE_HINTS`)을
+ * 스캔해, 발견되면 "Oracle 등 타 DBMS 방언으로 보입니다" 힌트 문장을 만든다.
+ * 아무 토큰도 없으면 undefined.
+ */
+function buildForeignDialectHint(ddl: string): string | undefined {
+  const upper = ddl.toUpperCase();
+  const found = Object.keys(NON_MYSQL_TYPE_HINTS).filter((token) =>
+    new RegExp(`\\b${token}\\b`).test(upper),
+  );
+  if (found.length === 0) return undefined;
+  const conversions = found.map((t) => `${t} → ${NON_MYSQL_TYPE_HINTS[t]}`).join(", ");
+  return (
+    `Oracle 등 타 DBMS 방언으로 보입니다 — ${conversions} 변환 또는 ` +
+    `normalizeDdl 옵션 활용을 검토하세요.`
+  );
+}
+
+/**
+ * AST/Legacy 두 경로 모두 실패했을 때의 최종 에러를 만든다. 같은 인자로
+ * 재호출해도 항상 같은 이유로 실패하므로 `nonRetryable` 로 감싸 재시도 루프를
+ * 차단한다.
+ */
+function buildParseFailureError(
+  ddl: string,
+  astError: string | undefined,
+  astErrorLocation: { line: number; column: number } | undefined,
+  legacyError: string,
+): Error {
+  const locationSnippet = buildLocationSnippet(ddl, astErrorLocation);
+  const astPart = locationSnippet
+    ? `AST(MySQL) 경로: ${astError ?? "n/a"} (${locationSnippet})`
+    : `AST(MySQL) 경로: ${astError ?? "n/a"}`;
+
+  const messageParts = [`DDL 파싱 실패. ${astPart} / Legacy 경로: ${legacyError}`];
+  const dialectHint = buildForeignDialectHint(ddl);
+  if (dialectHint) messageParts.push(dialectHint);
+
+  return nonRetryable(messageParts.join(" "));
 }
 
 export function parseDDL(ddl: string): ParsedDDL {
-  const { parsed, source, astError } = parseDDLWithDiagnostics(ddl);
+  const { parsed, source, astError, astErrorLocation } = parseDDLWithDiagnostics(ddl);
   const warnings: string[] = [];
   if (source === "legacy") {
+    const locationSnippet = buildLocationSnippet(ddl, astErrorLocation);
+    const astErrorText = locationSnippet
+      ? `${astError ?? "알 수 없음"} (${locationSnippet})`
+      : astError ?? "알 수 없음";
     warnings.push(
       `입력 DDL 이 표준 SQL(MySQL dialect) 로 파싱되지 않아 legacy 정규식 파서로 처리되었습니다. ` +
         `비표준 문법(HSQLDB CREATE MEMORY TABLE, Oracle VARCHAR2/NUMBER, PostgreSQL JSONB 등)이 ` +
-        `포함된 것으로 보입니다. (AST 파싱 실패 사유: ${astError ?? "알 수 없음"})`,
+        `포함된 것으로 보입니다. (AST 파싱 실패 사유: ${astErrorText})`,
     );
   }
   return { ...parsed, parserUsed: source, warnings };
@@ -240,6 +310,7 @@ export function parseDDL(ddl: string): ParsedDDL {
 
 export function parseDDLWithDiagnostics(ddl: string): ParseDDLDiagnostics {
   let astError: string | undefined;
+  let astErrorLocation: { line: number; column: number } | undefined;
   try {
     const parsed = parseDDLWithAst(ddl);
     // 안전 검사: AST 가 컬럼 0개를 돌려주면 legacy 로 한 번 더 시도한다.
@@ -249,16 +320,18 @@ export function parseDDLWithDiagnostics(ddl: string): ParseDDLDiagnostics {
     astError = "AST produced 0 columns";
   } catch (e) {
     astError = e instanceof Error ? e.message : String(e);
+    astErrorLocation =
+      typeof e === "object" && e !== null
+        ? (e as { location?: { line: number; column: number } }).location
+        : undefined;
   }
 
   try {
     const parsed = parseDDLLegacy(ddl);
-    return { parsed, source: "legacy", astError };
+    return { parsed, source: "legacy", astError, astErrorLocation };
   } catch (legacyErr) {
     // 둘 다 실패하면 사용자에게 두 경로 정보를 모두 노출한다.
     const legacyMsg = legacyErr instanceof Error ? legacyErr.message : String(legacyErr);
-    throw new Error(
-      `DDL 파싱 실패. AST(MySQL) 경로: ${astError ?? "n/a"} / Legacy 경로: ${legacyMsg}`,
-    );
+    throw buildParseFailureError(ddl, astError, astErrorLocation, legacyMsg);
   }
 }

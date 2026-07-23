@@ -31,6 +31,36 @@ export type Dialect =
   // fan-out 대상이 아니므로 manifestLoader 의 SUPPORTED_DIALECTS 에는 추가 금지.
   | "hsql";
 
+/**
+ * "명백히 비 MySQL 방언" 데이터 타입 토큰 → MySQL 호환 대체 타입 힌트.
+ *
+ * `ddlParser.ts` 가 AST/Legacy 두 경로 모두 파싱에 실패했을 때, 입력 DDL 에 이
+ * 토큰들이 등장하는지 스캔해 "Oracle 등 타 DBMS 방언으로 보입니다" 진단 힌트를
+ * 만드는 데 사용한다. 이 파일의 방언별 `mapType()` 매핑에 등장하는 소스 타입
+ * 어휘(VARCHAR2/NVARCHAR2/NUMBER/CLOB/BYTEA 등)에, `mapType()` 출력에만 등장해
+ * 소스 키로는 없는 Oracle 전용 확장 타입(BINARY_DOUBLE/BINARY_FLOAT/RAW 등)을
+ * 더해 구성했다.
+ */
+export const NON_MYSQL_TYPE_HINTS: Record<string, string> = {
+  VARCHAR2: "VARCHAR",
+  NVARCHAR2: "VARCHAR",
+  NVARCHAR: "VARCHAR",
+  NCHAR: "CHAR",
+  NUMBER: "DECIMAL",
+  BINARY_DOUBLE: "DOUBLE",
+  BINARY_FLOAT: "FLOAT",
+  CLOB: "TEXT",
+  NCLOB: "TEXT",
+  NTEXT: "TEXT",
+  RAW: "VARBINARY",
+  LONG: "LONGTEXT",
+  BYTEA: "BLOB",
+  JSONB: "JSON",
+  SERIAL: "INT AUTO_INCREMENT",
+  BIGSERIAL: "BIGINT AUTO_INCREMENT",
+  SMALLSERIAL: "SMALLINT AUTO_INCREMENT",
+};
+
 /** 길이 정보가 의미있는 타입군. 이 외에는 (N) 을 붙이지 않는다. */
 const LENGTH_AWARE = new Set([
   "VARCHAR",

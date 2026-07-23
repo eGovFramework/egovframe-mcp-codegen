@@ -15,7 +15,9 @@
  *   alias `s.`, `o.` 등이 아님).
  * - **메뉴 통합**: autoApplyMenu 기본 true. 일반 entity 와 동일한 nav fragment 에
  *   포함되어 사용자가 따로 손대지 않아도 메뉴에 나타난다.
- * - **충돌 정책**: 일반 entity 와 동일 — 기존 산출물 중 하나라도 있으면 전체 거부.
+ * - **충돌 정책**: 일반 entity 와 동일 — 렌더 결과를 기존 산출물과 내용까지 비교한다.
+ *   전부 존재 + 내용 동일이면 아무 것도 쓰지 않고 "변경 없음" 성공(멱등), 일부만 존재하거나
+ *   내용이 다르면 원자적으로 전체 거부(어떤 파일도 쓰지 않음).
  */
 
 import path from "node:path";
@@ -31,6 +33,8 @@ import {
 import { detectProjectStack } from "../utils/scaffold/projectDetector.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { resolveStack } from "../utils/scaffold/stackMatrix.js";
+import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
+import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
 
 /** 컬럼 타입 — Java 필드 타입과 화면 렌더링 분기에 모두 사용된다. */
 const COLUMN_TYPES = ["String", "Date", "Timestamp", "Number", "Boolean"] as const;
@@ -166,7 +170,7 @@ interface RenderResult {
 export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   const parsed = AddQueryViewInputSchema.safeParse(rawParams);
   if (!parsed.success) {
-    throw new Error(formatZodError(parsed.error));
+    throw nonRetryable(formatZodError(parsed.error));
   }
   const params = parsed.data;
 
@@ -176,7 +180,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
 
   // 단계 1: boot50 만 지원 — 그 외 스택은 명확한 에러로 거부
   if (!(detected.projectType === "boot" && detected.stackVersion === "5.0")) {
-    throw new Error(
+    throw nonRetryable(
       `egov_add_query_view 는 현재 eGovFrame 5.0 Boot 프로젝트만 지원합니다 ` +
         `(감지된 스택: ${detected.reason}). 다른 스택 지원은 향후 작업으로 계획되어 있습니다.`,
     );
@@ -289,35 +293,118 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     },
   ];
 
-  // 4) 사전 충돌 검사 — 하나라도 있으면 전체 거부
+  // 4) 렌더링(메모리) — 파일을 쓰기 전에 기존 산출물과 내용을 비교해 멱등 여부를 판단한다.
+  //    (add_entity 와 동일 패턴: 렌더와 쓰기를 분리해 "존재 여부" 가 아니라 "내용까지 동일한지"
+  //    로 충돌을 판정한다.)
   registerScaffoldHelpers();
-  const conflicts: string[] = [];
-  for (const t of targets) {
-    const abs = path.join(projectDir, t.output);
-    if (await fs.pathExists(abs)) conflicts.push(t.output);
-  }
-  if (conflicts.length > 0) {
-    throw new Error(
-      `Query view '${viewName}' 추가가 충돌로 거부되었습니다. ` +
-        `다음 파일이 이미 존재합니다 (${conflicts.length}개):\n` +
-        conflicts.map((f) => `  - ${f}`).join("\n") +
-        `\n\n기존 파일을 보존하기 위해 어떤 파일도 작성되지 않았습니다.`,
-    );
-  }
-
-  // 5) 렌더링 + 쓰기
-  const result: RenderResult = { written: [], appendedMessageFiles: [] };
+  const renderedFiles: { output: string; content: string }[] = [];
   for (const t of targets) {
     const templateAbs = path.join(templateBase, t.template);
     if (!(await fs.pathExists(templateAbs))) {
       throw new Error(`템플릿을 찾을 수 없습니다: ${templateAbs}`);
     }
     const tmpl = await fs.readFile(templateAbs, "utf-8");
-    const rendered = Handlebars.compile(tmpl)(ctx);
-    const out = assertInsideProject(projectDir, path.join(projectDir, t.output));
+    const content = Handlebars.compile(tmpl)(ctx);
+    renderedFiles.push({ output: t.output, content });
+  }
+
+  const fileStatuses: { output: string; status: "missing" | "identical" | "different" }[] = [];
+  for (const r of renderedFiles) {
+    const abs = path.join(projectDir, r.output);
+    if (await fs.pathExists(abs)) {
+      const existing = await fs.readFile(abs, "utf-8");
+      fileStatuses.push({
+        output: r.output,
+        status: existing === r.content ? "identical" : "different",
+      });
+    } else {
+      fileStatuses.push({ output: r.output, status: "missing" });
+    }
+  }
+  const existingStatuses = fileStatuses.filter((s) => s.status !== "missing");
+
+  // 4-a) 완전 멱등 — 대상 파일이 전부 존재하고 내용까지 렌더 결과와 정확히 동일하면
+  //   아무 파일도 쓰지 않고 "변경 없음" 성공으로 종료한다. autoApplyMenu/autoApplyMessages
+  //   후속 단계도 실행하지 않는다 — 이미 이전 호출에서 반영되었을 것이므로 nav fragment/메시지
+  //   번들에 중복 적용될 위험을 피한다.
+  if (
+    renderedFiles.length > 0 &&
+    existingStatuses.length === fileStatuses.length &&
+    existingStatuses.every((s) => s.status === "identical")
+  ) {
+    // 4-a-메타) columns[].label 등은 위 8개 렌더 대상 파일 어디에도 나타나지 않고 오직
+    //   메시지 번들 append 블록(buildMessageKeys)에만 반영된다. 8개 파일이 전부 동일하다는
+    //   이유만으로 "변경 없음" 을 반환하면, label 만 바뀐 재호출이 조용히 무시되는 silent
+    //   no-op 이 된다. 메시지 번들에 이미 반영된 이전 블록과 새로 계산한 블록을 비교해
+    //   다르면(=메타 변경이 있으면) 8개 파일 동일 여부와 무관하게 충돌로 거부한다.
+    const messageConflicts = await findMessageBlockConflicts(projectDir, viewName, ctx);
+    if (messageConflicts.length > 0) {
+      throw retryAfterAction(
+        `Query view '${viewName}' 추가가 충돌로 거부되었습니다. ` +
+          `산출물 파일(VO/Mapper/Service/Controller/XML/HTML) ${fileStatuses.length}개는 기존 내용과 동일하지만, ` +
+          `columns 메타(label 등 — 렌더 대상 파일에는 나타나지 않고 메시지 번들 append 블록에만 반영되는 값)가 ` +
+          `이전 호출과 다릅니다.\n` +
+          `충돌이 감지된 메시지 번들 파일 (${messageConflicts.length}개):\n${messageConflicts.map((f) => `  - ${f}`).join("\n")}\n\n` +
+          `기존 파일을 보존하기 위해 어떤 파일도 작성되지 않았습니다. ` +
+          `다른 viewName 으로 호출하거나, 메시지 번들의 기존 title.${viewNameLower}.* 키를 직접 정리한 뒤 다시 시도하세요.`,
+      );
+    }
+
+    return (
+      `ℹ️ Query view '${viewName}' 은(는) 이미 동일한 내용으로 생성되어 있습니다. 변경 사항 없음.\n\n` +
+      `📁 프로젝트: ${projectDir}\n` +
+      `📦 패키지: ${params.packageName}\n` +
+      `📄 대상 파일 수: ${fileStatuses.length} (모두 기존 내용과 동일)\n\n` +
+      `대상 파일:\n${fileStatuses.map((s) => `  - ${s.output}`).join("\n")}\n\n` +
+      `⏭️  autoApplyMenu / autoApplyMessages 후속 단계는 건너뛰었습니다 ` +
+      `(이미 이전 호출에서 반영되었을 것으로 간주해 중복 적용을 방지합니다).` +
+      completionFooter()
+    );
+  }
+
+  // 4-b) 부분 충돌 — 하나라도 존재하면(내용 동일/상이 무관) 원자적으로 거부하고
+  //   어떤 파일도 쓰지 않는다. 존재하는 파일을 내용 동일/상이로 구분해 안내한다.
+  if (existingStatuses.length > 0) {
+    const identical = existingStatuses.filter((s) => s.status === "identical").map((s) => s.output);
+    const different = existingStatuses.filter((s) => s.status === "different").map((s) => s.output);
+    const sections: string[] = [];
+    if (different.length > 0) {
+      sections.push(
+        `  내용 상이 (${different.length}개):\n${different.map((f) => `    - ${f}`).join("\n")}`,
+      );
+    }
+    if (identical.length > 0) {
+      sections.push(
+        `  내용 동일 (${identical.length}개):\n${identical.map((f) => `    - ${f}`).join("\n")}`,
+      );
+    }
+    throw retryAfterAction(
+      `Query view '${viewName}' 추가가 충돌로 거부되었습니다. ` +
+        `다음 파일이 이미 존재합니다 (${existingStatuses.length}개):\n` +
+        sections.join("\n") +
+        `\n\n기존 파일을 보존하기 위해 어떤 파일도 작성되지 않았습니다. ` +
+        `다른 viewName 으로 호출하거나, 충돌 파일을 직접 정리한 뒤 다시 시도하세요.`,
+    );
+  }
+
+  // 4-c) 생성 결과 자체 검증 — 디스크에 쓰기 전에 Handlebars 잔존 토큰 / XML 태그 균형을
+  //   점검한다. 실패하면 어떤 파일도 쓰지 않고 nonRetryable 로 거부한다.
+  const validationIssues = validateRenderedFiles(
+    renderedFiles.map((r) => ({ relPath: r.output, content: r.content })),
+  );
+  if (validationIssues.length > 0) {
+    throw nonRetryable(
+      `생성 결과 자체 검증 실패 — 생성기 내부 문제일 수 있습니다.\n${validationIssues.map((v) => `  - ${v}`).join("\n")}`,
+    );
+  }
+
+  // 5) 파일 쓰기 (위 단계에서 대상 파일이 모두 없음을 확인했으므로 전량 신규 생성)
+  const result: RenderResult = { written: [], appendedMessageFiles: [] };
+  for (const r of renderedFiles) {
+    const out = assertInsideProject(projectDir, path.join(projectDir, r.output));
     await fs.ensureDir(path.dirname(out));
-    await writeFile(out, rendered, "utf-8");
-    result.written.push(t.output);
+    await writeFile(out, r.content, "utf-8");
+    result.written.push(r.output);
   }
 
   // 6) 메뉴 자동 통합 — nav fragment 재생성 (autoApplyMenu)
@@ -336,22 +423,14 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   // 7) 메시지 키 자동 추가 (autoApplyMessages) — list.{viewLower}, title.{viewLower}.{alias}, nav.{viewLower}
   if (params.autoApplyMessages) {
     const messageKeys = buildMessageKeys(ctx);
-    const msgDir = path.join(
-      projectDir,
-      "src/main/resources/egovframework/message",
-    );
-    const targetFiles = [
-      "message-common.properties",
-      "message-common_ko.properties",
-      "message-common_en.properties",
-    ];
+    const msgDir = messageBundleDir(projectDir);
     const allExist = (
       await Promise.all(
-        targetFiles.map((f) => fs.pathExists(path.join(msgDir, f))),
+        MESSAGE_BUNDLE_FILENAMES.map((f) => fs.pathExists(path.join(msgDir, f))),
       )
     ).every(Boolean);
     if (allExist) {
-      for (const f of targetFiles) {
+      for (const f of MESSAGE_BUNDLE_FILENAMES) {
         const abs = path.join(msgDir, f);
         await fs.appendFile(abs, "\n" + messageKeys);
         result.appendedMessageFiles.push(path.relative(projectDir, abs));
@@ -387,7 +466,9 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     );
   }
 
-  return lines.join("\n");
+  lines.push(``, `✅ 자체 검증 통과 (검사한 파일 ${renderedFiles.length}개)`);
+
+  return lines.join("\n") + completionFooter();
 }
 
 /**
@@ -436,6 +517,26 @@ async function regenerateNavWithQueryView(
   return fragmentRel;
 }
 
+/** 메시지 번들(properties) 3종 — locale 별로 동일한 append 블록을 갖는다. */
+const MESSAGE_BUNDLE_FILENAMES = [
+  "message-common.properties",
+  "message-common_ko.properties",
+  "message-common_en.properties",
+] as const;
+
+function messageBundleDir(projectDir: string): string {
+  return path.join(projectDir, "src/main/resources/egovframework/message");
+}
+
+/**
+ * 특정 query view 의 메시지 append 블록을 여는 마커 라인. `buildMessageKeys` 가 쓰는
+ * 블록의 첫 줄이자, `extractMessageBlockForView` 가 기존 파일에서 해당 뷰의 블록을
+ * 찾아내는 데 쓰는 고유 식별자다 (viewName 이 블록마다 유일하다는 전제).
+ */
+function messageBlockMarker(viewName: string): string {
+  return `# === query view '${viewName}' keys (egov_add_query_view 가 append) ===`;
+}
+
 /**
  * Query view 의 메시지 키들을 properties 라인 문자열로 만든다.
  * autoApplyMessages 가 활성일 때 모든 lang properties 파일 끝에 append 된다.
@@ -446,7 +547,7 @@ function buildMessageKeys(ctx: {
   columns: { alias: string; label: string }[];
 }): string {
   const lines = [
-    `# === query view '${ctx.viewName}' keys (egov_add_query_view 가 append) ===`,
+    messageBlockMarker(ctx.viewName),
     `list.${ctx.viewNameLower}=${ctx.viewName}`,
     `title.${ctx.viewNameLower}.sample=${ctx.viewName}`,
     `nav.${ctx.viewNameLower}=${ctx.viewName}`,
@@ -455,4 +556,46 @@ function buildMessageKeys(ctx: {
     ),
   ];
   return lines.join("\n") + "\n";
+}
+
+/**
+ * 기존 메시지 번들 파일 내용에서 특정 viewName 의 append 블록만 잘라낸다.
+ * 마커를 찾지 못하면(아직 한 번도 append 된 적 없음) `null` 을 반환한다 — 이 경우는
+ * "비교할 이전 값이 없음" 을 의미하므로 충돌로 취급하지 않는다.
+ */
+function extractMessageBlockForView(content: string, viewName: string): string | null {
+  const marker = messageBlockMarker(viewName);
+  const start = content.indexOf(marker);
+  if (start === -1) return null;
+  // 다른 query view 의 블록 마커가 뒤에 나오면 그 직전까지만 이 뷰의 블록으로 간주한다.
+  const nextMarker = content.indexOf("\n# === query view '", start + marker.length);
+  const raw = nextMarker === -1 ? content.slice(start) : content.slice(start, nextMarker);
+  return raw.trimEnd();
+}
+
+/**
+ * columns[].label 등 렌더 대상 8개 파일에는 나타나지 않고 메시지 번들 append 블록에만
+ * 반영되는 메타가 이전 호출과 달라졌는지 확인한다. 메시지 번들 파일이 없거나, 있어도
+ * 해당 viewName 의 블록이 아직 append 된 적 없으면(첫 호출 등) 비교할 대상이 없으므로
+ * 충돌로 보지 않는다 — 오직 "이전에 append 된 블록과 지금 다시 계산한 블록이 다른"
+ * 경우만 충돌 파일 목록에 포함한다.
+ */
+async function findMessageBlockConflicts(
+  projectDir: string,
+  viewName: string,
+  ctx: { viewNameLower: string; viewName: string; columns: { alias: string; label: string }[] },
+): Promise<string[]> {
+  const newBlock = buildMessageKeys(ctx).trimEnd();
+  const msgDir = messageBundleDir(projectDir);
+  const conflicts: string[] = [];
+  for (const f of MESSAGE_BUNDLE_FILENAMES) {
+    const abs = path.join(msgDir, f);
+    if (!(await fs.pathExists(abs))) continue;
+    const content = await fs.readFile(abs, "utf-8");
+    const existingBlock = extractMessageBlockForView(content, viewName);
+    if (existingBlock !== null && existingBlock !== newBlock) {
+      conflicts.push(path.relative(projectDir, abs));
+    }
+  }
+  return conflicts;
 }

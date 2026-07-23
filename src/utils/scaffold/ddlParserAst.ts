@@ -127,6 +127,29 @@ function extractInlineFk(
 }
 
 /**
+ * `parseDDLWithAst` 가 던지는 에러. `node-sql-parser`(pegjs 기반)의 구문 에러
+ * 위치(line/column, 1-base)가 있으면 `location` 에 실어 라우터(`ddlParser.ts`)
+ * 가 "N행 M열" 진단 메시지를 만드는 데 재사용할 수 있게 한다.
+ */
+export interface AstParseError extends Error {
+  location?: { line: number; column: number };
+}
+
+/**
+ * `node-sql-parser`(pegjs 기반)가 던지는 SyntaxError 에서 `{ line, column }`
+ * 위치 정보를 추출한다. pegjs 에러는 `location.start.{line,column}` 형태이며,
+ * 이 모양이 아니면(=일반 Error 등) undefined 를 돌려준다.
+ */
+function extractPegjsLocation(e: unknown): { line: number; column: number } | undefined {
+  if (typeof e !== "object" || e === null) return undefined;
+  const loc = (e as { location?: { start?: { line?: unknown; column?: unknown } } })
+    .location;
+  const line = loc?.start?.line;
+  const column = loc?.start?.column;
+  return typeof line === "number" && typeof column === "number" ? { line, column } : undefined;
+}
+
+/**
  * AST 경로로 DDL 을 파싱한다. 실패하면 throw — 라우터가 fallback 한다.
  */
 export function parseDDLWithAst(ddl: string): ParsedDDLCore {
@@ -141,9 +164,12 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
   try {
     ast = parser.astify(trimmed, MYSQL_OPT);
   } catch (e) {
-    throw new Error(
+    const err = new Error(
       `AST parse failed: ${e instanceof Error ? e.message : String(e)}`,
-    );
+    ) as AstParseError;
+    const location = extractPegjsLocation(e);
+    if (location) err.location = location;
+    throw err;
   }
 
   const node = Array.isArray(ast) ? ast[0] : ast;

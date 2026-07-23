@@ -11,6 +11,7 @@ import {
   normalizeDdl,
   type NormalizationReport,
 } from "../utils/ddlNormalizer.js";
+import { completionFooter, nonRetryable } from "../utils/scaffold/toolMessages.js";
 
 /**
  * 입력 검증 스키마.
@@ -84,7 +85,7 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
   // 1) 입력 검증 (Zod)
   const parsed = ScaffoldInputSchema.safeParse(rawParams);
   if (!parsed.success) {
-    throw new Error(formatZodError(parsed.error));
+    throw nonRetryable(formatZodError(parsed.error));
   }
   const params = parsed.data;
 
@@ -169,7 +170,13 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
       }
     }
 
-    return lines.join("\n");
+    // 6) 자체 검증 결과 안내 — scaffoldGenerator 가 쓰기 후 검증을 이미 통과했으므로(실패 시
+    //    예외가 던져져 여기 도달하지 않는다) 검사한 파일 수만 보고한다.
+    const selfValidatedFileCount =
+      typeof result.selfValidatedFileCount === "number" ? result.selfValidatedFileCount : 0;
+    lines.push(``, `✅ 자체 검증 통과 (검사한 파일 ${selfValidatedFileCount}개)`);
+
+    return lines.join("\n") + completionFooter();
   } catch (error) {
     console.error("Error in egovScaffoldProject:", error);
     throw new Error(

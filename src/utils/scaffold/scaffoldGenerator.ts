@@ -10,6 +10,8 @@ import { dialectFullType, type Dialect } from "./dialectTypes.js";
 import { emitSkillFiles, emitDocFiles } from "./skillsEmitter.js";
 import { assertInsideProject } from "./pathGuard.js";
 import { osJunkCopyFilter } from "../fsCopyFilter.js";
+import { validateRenderedFiles } from "./outputValidator.js";
+import { nonRetryable } from "./toolMessages.js";
 
 export interface ScaffoldParams {
   projectName: string;
@@ -359,6 +361,8 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
 
   const generatedFiles: string[] = [];
   const manifest = getFileManifest(ctx);
+  // Handlebars 로 렌더링된(=템플릿에서 그대로 복사되지 않은) 파일만 자체 검증 대상으로 모은다.
+  const renderedManifestFiles: { relPath: string; content: string }[] = [];
 
   for (const mapping of manifest) {
     try {
@@ -379,10 +383,24 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
       await fs.ensureDir(path.dirname(fullOutputPath));
       await writeFile(fullOutputPath, rendered, "utf-8");
       generatedFiles.push(mapping.output);
+      renderedManifestFiles.push({ relPath: mapping.output, content: rendered });
     } catch (error) {
       console.error(`Failed to generate ${mapping.output}:`, error);
       throw new Error(`Failed to generate ${mapping.output}: ${error}`);
     }
+  }
+
+  // 생성 결과 자체 검증 — egov_add_entity/egov_add_query_view/egov_add_attach_file_infrastructure
+  // 와 달리 이 함수는 렌더링과 동시에 파일을 디스크에 쓰므로(render-then-write 분리가 침습적),
+  // "쓰기 전" 이 아니라 "쓰기 후, 성공 반환 전" 검증으로 대체한다. 실패 시 이 시점까지 쓰여진
+  // 파일은 롤백하지 않고, 그 사실을 에러 메시지에 명시해 호출자가 정리 방법을 알 수 있게 한다.
+  const validationIssues = validateRenderedFiles(renderedManifestFiles);
+  if (validationIssues.length > 0) {
+    throw nonRetryable(
+      `생성 결과 자체 검증 실패 — 생성기 내부 문제일 수 있습니다.\n${validationIssues.map((v) => `  - ${v}`).join("\n")}\n\n` +
+        `⚠️  egov_scaffold_project 는 파일을 렌더링과 동시에 디스크에 쓰므로, 이 실패 시점까지 이미 일부 파일이 ` +
+        `'${projectDir}' 에 작성된 상태입니다 (롤백되지 않음). 해당 디렉터리를 직접 정리한 뒤 다시 시도하세요.`,
+    );
   }
 
   // Static assets copy — 디렉터리명은 호환성 매트릭스의 stack.staticAssets 에서 가져온다.
@@ -452,5 +470,6 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
     ddlWarnings: ctx.ddlWarnings,
     fileCount: generatedFiles.length,
     files: generatedFiles,
+    selfValidatedFileCount: renderedManifestFiles.length,
   }, null, 2);
 }

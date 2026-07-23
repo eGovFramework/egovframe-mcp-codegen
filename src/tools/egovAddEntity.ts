@@ -9,8 +9,10 @@
  * ---------
  * - **projectType/stackVersion 은 입력받지 않는다.** 기존 pom.xml 에서 자동 감지한다.
  *   비표준 구조는 명확한 에러로 거부한다 (override 옵션 없음).
- * - **충돌 시 무조건 거부.** force 옵션 없음. 사전 검사에서 타깃 경로 중 하나라도
- *   존재하면 모든 충돌 파일 목록을 반환하고 종료한다 (어떤 파일도 쓰지 않는다).
+ * - **충돌 시 원자적 거부, 완전 동일 재호출은 멱등 성공.** force 옵션 없음. 렌더 결과를
+ *   기존 산출물과 내용까지 비교해 (a) 전부 존재 + 내용 동일 → 아무 것도 쓰지 않고 "변경 없음"
+ *   성공, (b) 일부만 존재하거나 내용이 다르면 → 모든 충돌 파일 목록(내용 동일/상이 구분)을
+ *   반환하고 종료한다 (어떤 파일도 쓰지 않는다).
  * - **부수 효과 최소화.** CRUD 산출물(`scope: "entity"` 매니페스트 항목)만 추가한다.
  *   pom.xml, application.properties, sql-mapper-config.xml, 정적 자원 등은 건드리지 않는다.
  */
@@ -45,6 +47,8 @@ import {
   normalizeDdl,
   type NormalizationReport,
 } from "../utils/ddlNormalizer.js";
+import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
+import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
 
 /**
  * 입력 검증 스키마. `egov_scaffold_project` 와 다른 점:
@@ -172,7 +176,7 @@ function formatZodError(err: z.ZodError): string {
 
 /**
  * 마이그레이션 SQL 템플릿을 렌더링해 문자열로 돌려준다.
- * 별도 파일 출력 흐름은 manifest 경로를 통해 renderEntityFiles 가 처리하므로,
+ * 별도 파일 출력 흐름은 manifest 경로를 통해 renderEntityFilesInMemory/writeRenderedEntityFiles 가 처리하므로,
  * 이 함수는 appendToSeed 모드에서 한 번만 호출된다.
  */
 async function renderMigrationContent(
@@ -449,21 +453,27 @@ async function applyMenuFragment(args: {
   };
 }
 
+/** 렌더 결과 1건 — 파일로 쓰기 전 메모리 상태. */
+interface RenderedEntityFile {
+  output: string;
+  content: string;
+}
+
 /**
- * 매니페스트의 entity-scope 항목들을 렌더링해 실제 파일로 쓴다.
- * 사전 충돌 검사 통과 시점 이후에 호출된다.
+ * 매니페스트의 entity-scope 항목들을 메모리에서 렌더링한다 (파일 쓰기는 하지 않는다).
+ *
+ * 충돌 검사를 "경로 존재 여부" 가 아니라 "렌더 결과와 내용까지 동일한지" 기준으로 하기
+ * 위해, 렌더링과 파일 쓰기를 분리했다 — 호출자가 렌더 결과를 먼저 기존 파일과 비교한 뒤
+ * 안전할 때만 `writeRenderedEntityFiles` 를 호출한다.
  */
-async function renderEntityFiles(
+async function renderEntityFilesInMemory(
   templateBasePath: string,
-  projectDir: string,
   ctx: Record<string, unknown>,
   mappings: { template: string; output: string; dialect?: string }[],
-): Promise<string[]> {
-  const written: string[] = [];
+): Promise<RenderedEntityFile[]> {
+  const rendered: RenderedEntityFile[] = [];
   for (const mapping of mappings) {
     const templatePath = path.join(templateBasePath, mapping.template);
-    const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, mapping.output));
-
     if (!(await fs.pathExists(templatePath))) {
       throw new Error(`템플릿을 찾을 수 없습니다: ${templatePath}`);
     }
@@ -472,11 +482,26 @@ async function renderEntityFiles(
     const compiled = Handlebars.compile(templateContent);
     // dialect 가 매핑에 채워져 있으면 방언별 fan-out 항목 — 템플릿이 `{{dialect}}` 분기에 사용.
     const renderCtx = mapping.dialect ? { ...ctx, dialect: mapping.dialect } : ctx;
-    const rendered = compiled(renderCtx);
+    const content = compiled(renderCtx);
+    rendered.push({ output: mapping.output, content });
+  }
+  return rendered;
+}
 
+/**
+ * `renderEntityFilesInMemory` 의 결과를 실제 파일로 쓴다.
+ * 사전 충돌 검사(내용 비교) 통과 시점 이후에만 호출된다.
+ */
+async function writeRenderedEntityFiles(
+  projectDir: string,
+  rendered: RenderedEntityFile[],
+): Promise<string[]> {
+  const written: string[] = [];
+  for (const r of rendered) {
+    const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, r.output));
     await fs.ensureDir(path.dirname(fullOutputPath));
-    await writeFile(fullOutputPath, rendered, "utf-8");
-    written.push(mapping.output);
+    await writeFile(fullOutputPath, r.content, "utf-8");
+    written.push(r.output);
   }
   return written;
 }
@@ -485,7 +510,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
   // 1) 입력 검증
   const parsed = AddEntityInputSchema.safeParse(rawParams);
   if (!parsed.success) {
-    throw new Error(formatZodError(parsed.error));
+    throw nonRetryable(formatZodError(parsed.error));
   }
   const params = parsed.data;
 
@@ -500,7 +525,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     if (params.withAttachment) {
       const infra = detectAttachFileInfra(projectDir);
       if (!infra.present) {
-        throw new Error(
+        throw retryAfterAction(
           `withAttachment=true 로 호출되었으나 프로젝트에 첨부파일 인프라가 설치되어 있지 않습니다.\n` +
             `먼저 \`egov_add_attach_file_infrastructure\` 도구를 호출해 인프라를 설치한 뒤 다시 시도하세요.\n\n` +
             `누락된 항목:\n` +
@@ -561,7 +586,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       const pkLen = pk.maxLength;
       // maxLength 가 정의된 String PK 만 검증 (NUMBER 등 비문자 PK 는 자동 채번 부적합 — 별도 케이스).
       if (typeof pkLen === "number" && pkLen > 0 && pkLen < requiredLen) {
-        throw new Error(
+        throw nonRetryable(
           `PK 컬럼 길이 부족: '${pk.columnName} ${pk.dataType}(${pkLen})' 인데 자동 채번 형식은 ` +
             `'${ctx.tableName}-NNNNN' (${requiredLen}자) 입니다.\n` +
             `해결 방향 두 가지:\n` +
@@ -704,31 +729,88 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     //   추가로 push 할 필요 없음. 첫 엔티티만 isPrimaryEntity=true 라서 IDS CREATE TABLE 을
     //   포함하고, 그 이후 엔티티는 INSERT INTO IDS 만 포함한다 (템플릿 분기).
 
-    // 6) 충돌 사전 검사 — 하나라도 존재하면 어떤 파일도 쓰지 않고 거부
-    const conflicts: string[] = [];
-    for (const m of mappings) {
-      const abs = path.join(projectDir, m.output);
+    // 6) 렌더링(메모리) — 파일을 쓰기 전에 기존 산출물과 내용을 비교해 멱등 여부를 판단한다.
+    const renderedFiles = await renderEntityFilesInMemory(
+      templateBasePath,
+      ctx as unknown as Record<string, unknown>,
+      mappings,
+    );
+
+    const fileStatuses: { output: string; status: "missing" | "identical" | "different" }[] = [];
+    for (const r of renderedFiles) {
+      const abs = path.join(projectDir, r.output);
       if (await fs.pathExists(abs)) {
-        conflicts.push(m.output);
+        const existing = await fs.readFile(abs, "utf-8");
+        fileStatuses.push({
+          output: r.output,
+          status: existing === r.content ? "identical" : "different",
+        });
+      } else {
+        fileStatuses.push({ output: r.output, status: "missing" });
       }
     }
-    if (conflicts.length > 0) {
-      throw new Error(
+    const existingStatuses = fileStatuses.filter((s) => s.status !== "missing");
+
+    // 6-a) 완전 멱등 — 대상 파일이 전부 존재하고 내용까지 렌더 결과와 정확히 동일하면
+    //   아무 파일도 쓰지 않고 "변경 없음" 성공으로 종료한다. autoApplyMigration/autoApplyMessages/
+    //   autoApplyMenu 같은 후속 단계도 실행하지 않는다 — 이미 이전(첫) 호출에서 반영되었을
+    //   것이므로 재실행하면 시드/메시지 번들에 중복 append 될 위험이 있다.
+    if (
+      renderedFiles.length > 0 &&
+      existingStatuses.length === fileStatuses.length &&
+      existingStatuses.every((s) => s.status === "identical")
+    ) {
+      return (
+        `ℹ️ 엔티티 '${params.entityName}' 은(는) 이미 동일한 내용으로 생성되어 있습니다. 변경 사항 없음.\n\n` +
+        `📁 프로젝트: ${projectDir}\n` +
+        `🏷️ 엔티티: ${ctx.entityName} (테이블: ${ctx.tableName})\n` +
+        `📄 대상 파일 수: ${fileStatuses.length} (모두 기존 내용과 동일)\n\n` +
+        `대상 파일:\n${fileStatuses.map((s) => `  - ${s.output}`).join("\n")}\n\n` +
+        `⏭️ autoApplyMigration / autoApplyMessages / autoApplyMenu 후속 단계는 건너뛰었습니다 ` +
+        `(이미 이전 호출에서 반영되었을 것으로 간주해 중복 적용을 방지합니다).` +
+        completionFooter()
+      );
+    }
+
+    // 6-b) 부분 충돌 — 하나라도 존재하면(내용 동일/상이 무관) 원자적으로 거부하고
+    //   어떤 파일도 쓰지 않는다. 존재하는 파일을 내용 동일/상이로 구분해 안내한다.
+    if (existingStatuses.length > 0) {
+      const identical = existingStatuses.filter((s) => s.status === "identical").map((s) => s.output);
+      const different = existingStatuses.filter((s) => s.status === "different").map((s) => s.output);
+      const sections: string[] = [];
+      if (different.length > 0) {
+        sections.push(
+          `  내용 상이 (${different.length}개):\n${different.map((f) => `    - ${f}`).join("\n")}`,
+        );
+      }
+      if (identical.length > 0) {
+        sections.push(
+          `  내용 동일 (${identical.length}개):\n${identical.map((f) => `    - ${f}`).join("\n")}`,
+        );
+      }
+      throw retryAfterAction(
         `엔티티 '${params.entityName}' 추가가 충돌로 거부되었습니다. ` +
-          `다음 파일이 이미 존재합니다 (${conflicts.length}개):\n` +
-          conflicts.map((f) => `  - ${f}`).join("\n") +
+          `다음 파일이 이미 존재합니다 (${existingStatuses.length}개):\n` +
+          sections.join("\n") +
           `\n\n기존 파일을 보존하기 위해 어떤 파일도 작성되지 않았습니다. ` +
           `다른 entityName 으로 호출하거나, 충돌 파일을 직접 정리한 뒤 다시 시도하세요.`,
       );
     }
 
-    // 7) 렌더링 + 파일 쓰기
-    const written = await renderEntityFiles(
-      templateBasePath,
-      projectDir,
-      ctx as unknown as Record<string, unknown>,
-      mappings,
+    // 6-c) 생성 결과 자체 검증 — 디스크에 쓰기 전에 Handlebars 잔존 토큰 / XML 태그 균형을
+    //   점검한다. 실패하면 어떤 파일도 쓰지 않고 nonRetryable 로 거부한다 — 재시도해도
+    //   같은 렌더 결과가 나오므로(생성기 내부 버그) 인자를 바꾸지 않는 재시도는 무의미하다.
+    const validationIssues = validateRenderedFiles(
+      renderedFiles.map((r) => ({ relPath: r.output, content: r.content })),
     );
+    if (validationIssues.length > 0) {
+      throw nonRetryable(
+        `생성 결과 자체 검증 실패 — 생성기 내부 문제일 수 있습니다.\n${validationIssues.map((v) => `  - ${v}`).join("\n")}`,
+      );
+    }
+
+    // 7) 파일 쓰기 (위 단계에서 대상 파일이 모두 없음을 확인했으므로 전량 신규 생성)
+    const written = await writeRenderedEntityFiles(projectDir, renderedFiles);
 
     // 7-a) appendToSeed 모드: 마이그레이션 템플릿을 별도 렌더링해 감지된 시드 파일 끝에 append.
     let appendedSeedRelPath: string | undefined;
@@ -976,7 +1058,9 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       }
     }
 
-    return lines.join("\n");
+    lines.push(``, `✅ 자체 검증 통과 (검사한 파일 ${renderedFiles.length}개)`);
+
+    return lines.join("\n") + completionFooter();
   } catch (error) {
     console.error("Error in egovAddEntity:", error);
     throw new Error(

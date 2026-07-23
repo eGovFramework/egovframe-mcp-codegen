@@ -39,6 +39,8 @@ import {
   registerScaffoldHelpers,
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { decideMigrationStrategy } from "../utils/scaffold/migrationStrategy.js";
+import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
+import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
 
 /** 첨부파일 인프라가 만들 HSQL 시드 fallback 출력 경로(프로젝트 상대). */
 const HSQL_SEED_FALLBACK_OUTPUT = "src/main/resources/db/attach-file.sql";
@@ -134,7 +136,7 @@ function manifestForStack(stackVersion: "5.0" | "4.3", projectType: "boot" | "wa
   if (stackVersion === "5.0" && projectType === "boot") {
     return "attach-file/manifests/boot50.json";
   }
-  throw new Error(
+  throw nonRetryable(
     `egov_add_attach_file_infrastructure 는 현재 eGovFrame 5.0 Boot 만 지원합니다 (감지: ${stackVersion} ${projectType}). ` +
       `4.3 Boot / 4.3 WAR 지원은 다음 페이즈에서 추가됩니다.`,
   );
@@ -298,13 +300,13 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
   // 1) 입력 검증
   const parsed = AddAttachFileInfrastructureInputSchema.safeParse(rawParams);
   if (!parsed.success) {
-    throw new Error(formatZodError(parsed.error));
+    throw nonRetryable(formatZodError(parsed.error));
   }
   const params = parsed.data;
 
   // 2) prefix + cipers 길이 검증 (CHAR(20) PK 일치)
   if (params.idGnrPrefix.length + params.idGnrCipers !== 20) {
-    throw new Error(
+    throw nonRetryable(
       `idGnrPrefix.length(${params.idGnrPrefix.length}) + idGnrCipers(${params.idGnrCipers}) 합이 정확히 20이어야 합니다 ` +
         `— COMTNFILE.ATCH_FILE_ID CHAR(20) PK 와 길이를 일치시키기 위함입니다.`,
     );
@@ -315,7 +317,7 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
   const detected = detectProjectStack(projectDir);
   const basePackage = detectBasePackage(projectDir);
   if (!basePackage) {
-    throw new Error(
+    throw nonRetryable(
       `프로젝트의 base package 를 감지하지 못했습니다 (${projectDir}). ` +
         `src/main/java/.../cmm/vo/FkComboVO.java 가 발견되어야 합니다 — egov_scaffold_project 로 만든 프로젝트인지 확인하세요.`,
     );
@@ -460,11 +462,47 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     );
   }
   if (conflicts.length > 0) {
-    throw new Error(
+    throw retryAfterAction(
       `첨부파일 인프라 설치가 충돌로 거부되었습니다 (${conflicts.length}건):\n` +
         conflicts.map((s) => `  - ${s}`).join("\n") +
         `\n\n기존 파일을 보존하기 위해 어떤 변경도 적용되지 않았습니다. ` +
-        `(skipIfPresent=true 로 호출하면 내용 일치 시 멱등 스킵됩니다.)`,
+        `(skipIfPresent=true 로 호출하면 내용 일치 시 멱등 스킵됩니다. 충돌 파일을 직접 정리한 뒤 다시 시도해도 됩니다.)`,
+    );
+  }
+
+  // 7-a) 생성 결과 자체 검증 — 실제로 새로 쓰여질(생성/append 될) 렌더 결과에 한해
+  //   Handlebars 잔존 토큰 / XML 태그 균형을 점검한다. 이미 동일 내용으로 존재해 skip 될
+  //   항목은 디스크에 아무 변화가 없으므로 검증 대상에서 제외한다. 실패하면 어떤 파일도
+  //   쓰거나 append 하지 않고 nonRetryable 로 거부한다.
+  const filesToValidate: { relPath: string; content: string }[] = [];
+  for (const c of creates) {
+    if (c.status === "missing") {
+      filesToValidate.push({ relPath: c.mapping.output, content: c.renderedContent });
+    }
+  }
+  if (params.autoApplyProperties) {
+    for (const a of appends) {
+      if (!a.alreadyMatches) {
+        filesToValidate.push({
+          relPath: path.relative(projectDir, a.absTargetPath),
+          content: a.renderedContent,
+        });
+      }
+    }
+  }
+  if (hsqlSeedPlan.kind === "append") {
+    filesToValidate.push({
+      relPath: path.relative(projectDir, hsqlSeedPlan.seedAbsPath),
+      content: hsqlSeedPlan.rendered,
+    });
+  } else if (hsqlSeedPlan.kind === "fallbackCreate") {
+    filesToValidate.push({ relPath: hsqlSeedPlan.relPath, content: hsqlSeedPlan.rendered });
+  }
+
+  const validationIssues = validateRenderedFiles(filesToValidate);
+  if (validationIssues.length > 0) {
+    throw nonRetryable(
+      `생성 결과 자체 검증 실패 — 생성기 내부 문제일 수 있습니다.\n${validationIssues.map((v) => `  - ${v}`).join("\n")}`,
     );
   }
 
@@ -637,7 +675,9 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     `     <th:block th:replace="~{_fragments/alertMessages :: messages}"></th:block>`,
     `   메시지 키는 message-common.properties 의 fail.common.fileSize.exceeded / fail.common.fileType.blocked`,
     `   가 자동 append 되었습니다. 추가 키가 필요하면 같은 파일에 직접 추가하세요.`,
+    ``,
+    `✅ 자체 검증 통과 (검사한 파일 ${filesToValidate.length}개)`,
   );
 
-  return lines.join("\n");
+  return lines.join("\n") + completionFooter();
 }
