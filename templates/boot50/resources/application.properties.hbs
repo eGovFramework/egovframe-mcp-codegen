@@ -45,6 +45,18 @@ egov.security.headers.cache-control=true
 egov.security.csrf=true
 egov.security.csrf-access-denied-url=/egovCSRFAccessDenied.do
 
+# === CORS (EgovConfigWebSecurity) ===
+# 공통컴포넌트(security 방식)는 CORS 설정이 없어 교차 출처 요청이 암묵 차단된다.
+# 기본값(enabled=false)은 같은 자세 — 다른 출처의 프런트엔드/API 소비자가
+# 필요할 때만 allowed-origins 에 출처를 나열하고 enabled=true 로 연다.
+# 주의: allow-credentials=true 와 allowed-origins=* 조합은 Spring 이 거부한다.
+egov.security.cors.enabled=false
+egov.security.cors.allowed-origins=
+egov.security.cors.allowed-methods=GET,POST
+egov.security.cors.allowed-headers=*
+egov.security.cors.allow-credentials=false
+egov.security.cors.max-age=1800
+
 # 인증 미도입 상태이므로 Spring Security 기본 계정 자동 생성(generated password 로그) 비활성.
 # 인증 도입 시 이 exclude 를 제거하고 UserDetailsService 를 구성한다.
 spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration

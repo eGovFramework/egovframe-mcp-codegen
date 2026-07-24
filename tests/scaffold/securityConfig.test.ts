@@ -3,10 +3,14 @@
  *
  * 공통컴포넌트 security 방식(egov-security-config.properties +
  * egovframe-rte-fdl-security 의 EgovSecurityConfiguration)을 참조해 생성
- * 프로젝트에 이식한 보안 기능을 문자열 수준에서 검증한다.
+ * 프로젝트에 이식한 보안 기능 4종을 문자열 수준에서 검증한다.
  *
  * - 보안 헤더: sniff / xframeOptions / xssProtection / cacheControl 대응
  *   프로퍼티(`egov.security.headers.*`)와 EgovConfigWebSecurity 의 헤더 매핑
+ * - CSRF: csrf / csrf-access-denied-url 프로퍼티, EgovCsrfControllerAdvice,
+ *   접근 거부 컨트롤러/뷰/메시지, 화면 hidden 토큰·meta 주입과 GET 유출 방지
+ * - StrictHttpFirewall: 암묵 기본값의 명시적 빈 선언과 400 거부 핸들러
+ * - CORS: egov.security.cors.* 화이트리스트 (기본 비활성)
  *
  * boot43/war43 미적용(Phase A: boot50 전용)은 각 스택의 골든 테스트가
  * 해시 동일성으로 보장하므로 여기서 별도 스캐폴드를 돌리지 않는다.
@@ -208,6 +212,41 @@ describe("StrictHttpFirewall — EgovConfigWebSecurity", () => {
     expect(config).toContain("public WebSecurityCustomizer webSecurityCustomizer(");
     expect(config).toContain("web.httpFirewall(");
     expect(config).toContain("web.requestRejectedHandler(");
+  });
+});
+
+describe("CORS — EgovConfigWebSecurity", () => {
+  const CONFIG_PATH =
+    "src/main/java/egovframework/example/config/EgovConfigWebSecurity.java";
+
+  it("기본값은 비활성 — 참조 구현(설정 전무 = 암묵 차단)과 동일한 자세다", () => {
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("${egov.security.cors.enabled:false}");
+    expect(config).toContain("http.cors(AbstractHttpConfigurer::disable)");
+  });
+
+  it("활성 시 화이트리스트 프로퍼티로 CorsConfigurationSource 를 구성한다", () => {
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("${egov.security.cors.allowed-origins:}");
+    expect(config).toContain("${egov.security.cors.allowed-methods:GET,POST}");
+    expect(config).toContain("${egov.security.cors.allowed-headers:*}");
+    expect(config).toContain("${egov.security.cors.allow-credentials:false}");
+    expect(config).toContain("${egov.security.cors.max-age:1800}");
+    expect(config).toContain("UrlBasedCorsConfigurationSource");
+    expect(config).toContain('registerCorsConfiguration("/**"');
+    expect(config).toMatch(/http\.cors\(cors -> cors\.configurationSource/);
+  });
+});
+
+describe("CORS — application.properties", () => {
+  it("cors 프로퍼티 기본값이 비활성 화이트리스트 방식으로 생성된다", () => {
+    const props = read("src/main/resources/application.properties");
+    expect(props).toContain("egov.security.cors.enabled=false");
+    expect(props).toContain("egov.security.cors.allowed-origins=");
+    expect(props).toContain("egov.security.cors.allowed-methods=GET,POST");
+    expect(props).toContain("egov.security.cors.allowed-headers=*");
+    expect(props).toContain("egov.security.cors.allow-credentials=false");
+    expect(props).toContain("egov.security.cors.max-age=1800");
   });
 });
 

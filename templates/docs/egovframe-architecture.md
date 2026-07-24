@@ -19,7 +19,7 @@
    - EgovConfigTransaction — 프로그래밍 방식 트랜잭션
    - EgovConfigAspect — 예외 전파 AOP
    - EgovConfigValidation — Bean Validation + 메시지 통합
-   - EgovConfigWebSecurity — Spring Security 보안 응답 헤더
+   - EgovConfigWebSecurity — Spring Security 보안 설정 (보안 헤더·CSRF·StrictHttpFirewall·CORS)
    - EgovConfigWeb — 메인 Web Config (Import 결합)
    - 핵심 클래스 Fully-Qualified Import 표
 2. [Pagination (페이징 처리) — KRDS 페이지네이션](#pagination-페이징-처리--krds-페이지네이션)
@@ -51,7 +51,7 @@ egovframework.example.config/
 ├── EgovConfigTransaction.java  # TransactionInterceptor, Advisor (Java Config)
 ├── EgovConfigAspect.java       # ExceptionTransfer, EgovAopExceptionTransfer
 ├── EgovConfigValidation.java   # LocalValidatorFactoryBean (messageSource 결합)
-├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 + 보안 응답 헤더
+├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 (보안 헤더·CSRF·방화벽·CORS)
 └── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 9개 결합
 ```
 
@@ -552,6 +552,25 @@ public class SampleVO extends SampleDefaultVO {
 > `@EgovNullCheck` 를 붙여 생성한다. **AI 에이전트가 사후에 VO 를 편집·확장할 때 비-String
 > 필드에 같은 어노테이션을 잘못 추가하지 않도록 반드시 주의할 것.** 필요한 경우 위 예시처럼
 > `@NotNull` (+ 도메인에 맞는 추가 제약) 으로 대체한다.
+
+---
+
+### EgovConfigWebSecurity — 보안 헤더·CSRF·StrictHttpFirewall·CORS
+
+공통컴포넌트(security 방식)의 `egov-security-config.properties` +
+`EgovSecurityConfiguration`(egovframe-rte-fdl-security) 구조를 참조한
+Spring Security 설정. 값은 `application.properties` 의 `egov.security.*` 로 주입된다.
+
+| 프로퍼티 그룹 | 기본값 | 내용 |
+|--------------|--------|------|
+| `egov.security.headers.*` | sniff=true, xframe-options=SAMEORIGIN, xss-protection=true, cache-control=true | 보안 응답 헤더 (공통컴포넌트 속성명과 동일 의미) |
+| `egov.security.csrf` / `csrf-access-denied-url` | true / `/egovCSRFAccessDenied.do` | CSRF 보호 + 검증 실패 안내 화면 포워드 (`EgovCsrfControllerAdvice` 가 `${_csrf}` 노출) |
+| `egov.security.cors.*` | enabled=false | 교차 출처 화이트리스트 (기본 비활성 = 공통컴포넌트와 동일한 차단 자세) |
+
+`StrictHttpFirewall` 과 400 거부 핸들러는 Spring Security 기본값을 명시적
+빈으로 드러낸 것으로 동작 변화는 없다. 인증 미도입 상태라 필터 체인은
+`anyRequest().permitAll()` 이며, 인증 도입 시 `requestMatchers(...)` 로 보호
+URL 을 좁힌다. 전체 구현은 생성된 `config/EgovConfigWebSecurity.java` 참조.
 
 ---
 

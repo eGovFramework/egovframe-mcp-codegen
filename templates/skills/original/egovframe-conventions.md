@@ -27,7 +27,7 @@ egovframework.example.config/
 ├── EgovConfigTransaction.java  # TransactionInterceptor, Advisor (Java Config)
 ├── EgovConfigAspect.java       # ExceptionTransfer, EgovAopExceptionTransfer
 ├── EgovConfigValidation.java   # LocalValidatorFactoryBean (messageSource 결합)
-├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 + 보안 응답 헤더
+├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 (보안 헤더·CSRF·방화벽·CORS)
 └── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 9개 결합
 ```
 
@@ -233,7 +233,7 @@ public class SampleDAO extends SqlSessionDaoSupport {
 
 **Target:** `@Configuration` Java Config (XML 설정은 v5.0 권장 외).
 
-**v5.0 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 8~9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
+**v5.0 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
 
 | Config 클래스 | 책임 |
 |--------------|------|
@@ -245,7 +245,7 @@ public class SampleDAO extends SqlSessionDaoSupport {
 | `EgovConfigTransaction` | `DataSourceTransactionManager`, `TransactionInterceptor`, `Advisor` |
 | `EgovConfigAspect` | `ExceptionTransfer`, `EgovAopExceptionTransfer`, `DefaultExceptionHandleManager` |
 | `EgovConfigValidation` | `LocalValidatorFactoryBean` (messageSource 와 결합) |
-| `EgovConfigWebSecurity` | Spring Security `SecurityFilterChain` + 보안 응답 헤더 (`egov.security.headers.*`) |
+| `EgovConfigWebSecurity` | Spring Security `SecurityFilterChain` — 보안 헤더·CSRF·StrictHttpFirewall·CORS (`egov.security.*`) |
 | `EgovConfigWeb` | `WebMvcConfigurer` 구현, Thymeleaf 엔진, ResourceHandlers, 위 Config 들을 `@Import` |
 
 **필수 포함 사항:**

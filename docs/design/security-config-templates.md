@@ -33,7 +33,7 @@
 | 보안 헤더 | 구현됨 | `sniff` / `xframeOptions` / `xssProtection` / `cacheControl` → `EgovSecurityConfiguration` 의 `http.headers()` 매핑 | `egov.security.headers.*` (application.properties) → `EgovConfigWebSecurity.configureSecurityHeaders()` — 동일한 분기 구조 (SAMEORIGIN / DISABLE / 그 외 DENY 등) |
 | CSRF | 구현됨 | `csrf=true` → `http.csrf(withDefaults())`, `EgovCsrfControllerAdvice`(`${_csrf}` 모델 노출), `csrfAccessDeniedUrl` 포워드(`EgovAccessDeniedHandler`), JSP hidden 필드 + AJAX 헤더 | `egov.security.csrf` → `http.csrf(withDefaults())`, 동명 `EgovCsrfControllerAdvice`, `egov.security.csrf-access-denied-url` 포워드 핸들러 + `/egovCSRFAccessDenied.do` 컨트롤러/뷰, Thymeleaf hidden 필드 + meta 태그 기반 fetch 헤더 |
 | StrictHttpFirewall | 구현됨 | 명시 설정 없음 — `FilterChainProxy` 기본값(StrictHttpFirewall)에 암묵 의존 | 암묵 기본값을 **명시적 빈**으로 문서화: `StrictHttpFirewall` + `HttpStatusRequestRejectedHandler`(400) + `WebSecurityCustomizer` |
-| CORS | 후속 커밋 | 설정 전무 — 교차 출처는 브라우저 동일출처정책과 CSRF 로 암묵 차단 | `egov.security.cors.*` — 기본 `enabled=false` (참조와 동일한 차단 자세). 필요 시 화이트리스트 origin 만 허용하는 `CorsConfigurationSource` 구성 |
+| CORS | 구현됨 | 설정 전무 — 교차 출처는 브라우저 동일출처정책과 CSRF 로 암묵 차단 | `egov.security.cors.*` — 기본 `enabled=false` (참조와 동일한 차단 자세). 필요 시 화이트리스트 origin 만 허용하는 `CorsConfigurationSource` 구성 |
 
 ## 참조 구현과 의도적으로 다르게 한 것
 
@@ -71,8 +71,6 @@
 
 ## 프로퍼티 카탈로그 (application.properties)
 
-각 항목은 해당 기능 커밋과 함께 생성 프로퍼티에 추가된다 (상태 열 기준).
-
 ```properties
 # [구현됨] 보안 헤더 (기본값 = 공통컴포넌트 egov-security-config.properties 와 동일)
 egov.security.headers.sniff=true
@@ -87,7 +85,7 @@ spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.ser
 egov.security.csrf=true
 egov.security.csrf-access-denied-url=/egovCSRFAccessDenied.do
 
-# [후속 커밋] CORS (기본 비활성 — 참조 구현과 동일한 차단 자세)
+# [구현됨] CORS (기본 비활성 — 참조 구현과 동일한 차단 자세)
 egov.security.cors.enabled=false
 egov.security.cors.allowed-origins=
 egov.security.cors.allowed-methods=GET,POST
@@ -101,5 +99,8 @@ egov.security.cors.max-age=1800
 - `tests/scaffold/securityConfig.test.ts` — 스캐폴드 1회 후 렌더링된
   pom / 설정 클래스 / 프로퍼티 / 화면 템플릿의 내용 검증 (기능별 describe).
 - 골든 테스트(`tests/scaffold/__golden__/boot50.json`)가 산출물 전체 해시를
-  고정한다. boot43 / war43 골든이 바뀌지 않는 것이 "boot50 전용" 의 회귀 방어.
+  고정한다. **보안 설정 템플릿(`templates/boot50/**`) 변경**에 대해 boot43 /
+  war43 골든이 바뀌지 않는 것이 "boot50 전용" 의 회귀 방어다 — 방출 문서/스킬
+  공용 템플릿(`templates/docs/`, `templates/skills/`) 변경은 세 골든에 모두
+  반영되는 예외.
 - 매니페스트 항목 수 검증(`manifestLoader.test.ts`)은 항목 추가 시 함께 갱신.
