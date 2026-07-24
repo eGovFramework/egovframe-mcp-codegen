@@ -32,7 +32,7 @@
 |---|---|---|---|
 | 보안 헤더 | 구현됨 | `sniff` / `xframeOptions` / `xssProtection` / `cacheControl` → `EgovSecurityConfiguration` 의 `http.headers()` 매핑 | `egov.security.headers.*` (application.properties) → `EgovConfigWebSecurity.configureSecurityHeaders()` — 동일한 분기 구조 (SAMEORIGIN / DISABLE / 그 외 DENY 등) |
 | CSRF | 구현됨 | `csrf=true` → `http.csrf(withDefaults())`, `EgovCsrfControllerAdvice`(`${_csrf}` 모델 노출), `csrfAccessDeniedUrl` 포워드(`EgovAccessDeniedHandler`), JSP hidden 필드 + AJAX 헤더 | `egov.security.csrf` → `http.csrf(withDefaults())`, 동명 `EgovCsrfControllerAdvice`, `egov.security.csrf-access-denied-url` 포워드 핸들러 + `/egovCSRFAccessDenied.do` 컨트롤러/뷰, Thymeleaf hidden 필드 + meta 태그 기반 fetch 헤더 |
-| StrictHttpFirewall | 후속 커밋 | 명시 설정 없음 — `FilterChainProxy` 기본값(StrictHttpFirewall)에 암묵 의존 | 암묵 기본값을 **명시적 빈**으로 문서화: `StrictHttpFirewall` + `HttpStatusRequestRejectedHandler`(400) + `WebSecurityCustomizer` |
+| StrictHttpFirewall | 구현됨 | 명시 설정 없음 — `FilterChainProxy` 기본값(StrictHttpFirewall)에 암묵 의존 | 암묵 기본값을 **명시적 빈**으로 문서화: `StrictHttpFirewall` + `HttpStatusRequestRejectedHandler`(400) + `WebSecurityCustomizer` |
 | CORS | 후속 커밋 | 설정 전무 — 교차 출처는 브라우저 동일출처정책과 CSRF 로 암묵 차단 | `egov.security.cors.*` — 기본 `enabled=false` (참조와 동일한 차단 자세). 필요 시 화이트리스트 origin 만 허용하는 `CorsConfigurationSource` 구성 |
 
 ## 참조 구현과 의도적으로 다르게 한 것
@@ -52,8 +52,9 @@
    생성 코드는 if/else 로 한 번만 포워드하고 403 상태를 설정한다.
 3. **StrictHttpFirewall 명시화** — 참조는 Spring Security 기본값에 암묵
    의존하지만, 생성 코드는 빈으로 명시해 기본 차단 정책
-   (인코딩된 슬래시·백슬래시·`%25`·세미콜론 거부 등)을 코드에 드러내고
-   거부 시 500 스택 노출 대신 400 응답을 준다.
+   (인코딩된 슬래시·백슬래시·`%25`·세미콜론 거부 등)과 400 거부 응답
+   (FilterChainProxy 기본 핸들러와 동일)을 코드에 드러낸다. 동작은 기본값과
+   같고, 정책 변경 지점을 명시하는 것이 목적이다.
 4. **폼 토큰 주입 방식** — 생성되는 Thymeleaf 화면은 `th:action` 없이
    jQuery 로 action 을 지정해 submit 하므로 Thymeleaf 의 자동 hidden 필드
    주입이 동작하지 않는다. 공통컴포넌트 JSP 와 같은 방식으로 명시적 hidden

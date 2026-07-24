@@ -180,6 +180,37 @@ describe("CSRF — EgovConfigWebSecurity", () => {
   });
 });
 
+describe("StrictHttpFirewall — EgovConfigWebSecurity", () => {
+  const CONFIG_PATH =
+    "src/main/java/egovframework/example/config/EgovConfigWebSecurity.java";
+
+  it("암묵 기본값이던 StrictHttpFirewall 을 명시적 빈으로 드러낸다", () => {
+    // 참조 구현은 FilterChainProxy 기본값에 암묵 의존 — 생성 코드는 정책을 코드로 명시한다.
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("public StrictHttpFirewall httpFirewall()");
+    expect(config).toContain("new StrictHttpFirewall()");
+  });
+
+  it("기본 차단 정책(인코딩된 구분자 거부)을 기본값 그대로 명시한다", () => {
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("setAllowUrlEncodedSlash(false)");
+    expect(config).toContain("setAllowBackSlash(false)");
+    expect(config).toContain("setAllowUrlEncodedPercent(false)");
+    expect(config).toContain("setAllowSemicolon(false)");
+    expect(config).toContain("setAllowUrlEncodedPeriod(false)");
+    expect(config).toContain("setAllowUrlEncodedDoubleSlash(false)");
+  });
+
+  it("암묵 기본값이던 400 거부 핸들러를 명시적 빈으로 드러낸다", () => {
+    const config = read(CONFIG_PATH);
+    // FilterChainProxy 기본 핸들러와 동일 (HttpStatusRequestRejectedHandler, 기본 400)
+    expect(config).toContain("new HttpStatusRequestRejectedHandler()");
+    expect(config).toContain("public WebSecurityCustomizer webSecurityCustomizer(");
+    expect(config).toContain("web.httpFirewall(");
+    expect(config).toContain("web.requestRejectedHandler(");
+  });
+});
+
 describe("CSRF — 토큰 노출 (EgovCsrfControllerAdvice)", () => {
   it("공통컴포넌트와 동명의 @ControllerAdvice 가 ${_csrf} 모델 속성을 노출한다", () => {
     const advice = read(

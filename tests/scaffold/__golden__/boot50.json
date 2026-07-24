@@ -149,7 +149,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigWebSecurity.java",
-      "sha256": "e3c437992867aa69abea1714bc341fcc8416d3125369eb733dca56a8dc0e7715"
+      "sha256": "feaefdab1e3f55ca2a8cb2e48bb64f07e1f30a5d119ee97f319ba75014863743"
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovNavModelAdvice.java",
