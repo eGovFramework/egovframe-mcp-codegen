@@ -638,6 +638,30 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 
 - **연관**: `egovframe-conventions` Skill → Validation Layer / `docs/egovframe-architecture.md` → EgovConfigValidation
 
+### 2.13 POST 요청만 403 / `egovCSRFAccessDenied` 화면 표시
+
+- **Symptom**: 목록 조회(GET)는 정상인데 등록/수정/삭제 등 POST 요청만 403 이 되거나
+  "잘못된 접근입니다. (CSRF 토큰이 유효하지 않습니다)" 화면(`/egovCSRFAccessDenied.do`)으로
+  넘어간다.
+
+- **Cause**: 5.0 Boot 산출물은 CSRF 보호가 **기본 활성**(`egov.security.csrf=true`)이다.
+  생성 화면은 `th:action` 없이 스크립트로 action 을 지정해 submit 하므로 Thymeleaf 의
+  자동 hidden 필드 주입이 동작하지 않는다 — 생성된 화면에는 명시적 `_csrf` hidden
+  필드와 meta 태그가 이미 들어 있지만, **사후에 추가한 커스텀 POST 폼/fetch 에 토큰을
+  빠뜨리면** CsrfFilter 가 요청을 거부한다. 첨부파일 업로드에서 파일이
+  `spring.servlet.multipart.max-file-size` 를 초과한 경우에도 multipart 파싱 실패로
+  토큰을 읽지 못해 같은 화면이 나타날 수 있다 (용량 초과 안내 대신 CSRF 화면).
+
+- **Fix**: 생성 화면의 패턴을 복제한다 —
+  폼에는 `<input type="hidden" id="csrfField" th:if="${_csrf != null}"
+  th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />`,
+  AJAX/fetch 는 `<meta name="_csrf">` / `<meta name="_csrf_header">` 를 읽어 요청
+  헤더로 전송한다. GET 으로 submit 하는 폼은 hidden 필드를 `disabled` 처리해 토큰의
+  URL 유출을 막는다. 문제 격리가 필요하면 `egov.security.csrf=false` 로 일시 비활성.
+
+- **연관**: `docs/egovframe-architecture.md` → EgovConfigWebSecurity / 생성된
+  `config/EgovConfigWebSecurity.java`, `cmm/web/EgovCsrfControllerAdvice.java`
+
 ---
 
 ## 3. 체크리스트 (생성 직후 1회 기동용)
@@ -673,7 +697,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 - [ ] `EgovIdGnrStrategyImpl` import 경로 = `.impl.strategy` 하위
 - [ ] Thymeleaf 표현식: `#egovPaginationFormat.paginationFormat` → `#egovKrdsPaginationRenderer.renderPagination`
 
-### @Configuration 클래스 (8분할 권장)
+### @Configuration 클래스 (9분할 권장)
 - [ ] `EgovConfigCommon` — `leaveaTrace`, `messageSource` (다중 basename), `messageSourceAccessor`
 - [ ] `EgovConfigProperties` — `propertiesService` (Map 또는 Set<String>)
 - [ ] `EgovConfigDatasource` — `dataSource` Bean
@@ -682,12 +706,15 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 - [ ] `EgovConfigTransaction` — `txManager` + `txAdvice` + `txAdvisor` (Pointcut: `**impl.*Impl.*(..)`)
 - [ ] `EgovConfigAspect` — `ExceptionTransfer` + `EgovAopExceptionTransfer` + 핸들러
 - [ ] `EgovConfigValidation` — `LocalValidatorFactoryBean` + `setValidationMessageSource`
-- [ ] `EgovConfigWeb` — `@Import` 로 위 8개 결합 + Thymeleaf engine + `EgovPaginationDialect`
+- [ ] `EgovConfigWebSecurity` — `SecurityFilterChain` (보안 헤더·CSRF·StrictHttpFirewall·CORS, `egov.security.*` 프로퍼티 구동)
+- [ ] `EgovConfigWeb` — `@Import` 로 위 9개 결합 + Thymeleaf engine + `EgovPaginationDialect`
 
 ### application.properties
 - [ ] `spring.main.allow-bean-definition-overriding=true`
 - [ ] `mybatis.*` 설정 **없음** (Java Config 가 처리)
 - [ ] DataSource / `db/sampledb.sql` 구성 (IDS 테이블 포함)
+- [ ] `egov.security.*` 블록 — headers(sniff/xframe-options/xss-protection/cache-control), csrf(+csrf-access-denied-url), cors(기본 enabled=false)
+- [ ] `spring.autoconfigure.exclude=...security.servlet.UserDetailsServiceAutoConfiguration` (인증 미도입 상태의 generated password 차단)
 
 ### 리소스 파일
 - [ ] `classpath:/egovframework/sqlmap/example/sql-mapper-config.xml` — typeAliases 정의

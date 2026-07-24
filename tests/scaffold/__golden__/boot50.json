@@ -5,7 +5,7 @@
   "files": [
     {
       "path": ".claude/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+      "sha256": "605b2f90180a12d9cb1c8daec736d58104256a79910a0bd3298c7f794f32c6c7"
     },
     {
       "path": ".claude/skills/egovframe-conventions/SKILL.md",
@@ -13,11 +13,11 @@
     },
     {
       "path": ".claude/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
     },
     {
       "path": ".cline/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+      "sha256": "605b2f90180a12d9cb1c8daec736d58104256a79910a0bd3298c7f794f32c6c7"
     },
     {
       "path": ".cline/skills/egovframe-conventions/SKILL.md",
@@ -25,11 +25,11 @@
     },
     {
       "path": ".cline/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
     },
     {
       "path": ".continue/rules/egovframe-attach-file-pattern.md",
-      "sha256": "c2fb004e70af08269a67ea78f8f30ab618c0d4544dd9eead8e6c775c8a8382d0"
+      "sha256": "f79998d54940aaa3e23e6544466817cab8741b7b8afa9a64f8102207409fc767"
     },
     {
       "path": ".continue/rules/egovframe-conventions.md",
@@ -37,11 +37,11 @@
     },
     {
       "path": ".continue/rules/egovframe-troubleshooting.md",
-      "sha256": "03ffc52cdca646c2fb59c83f82689a3e248346a5248230025a3b4ba9d215e669"
+      "sha256": "63f127dbe2362157958d3a0b18ae999d39147703e8196423d8557f011a9fab36"
     },
     {
       "path": ".cursor/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+      "sha256": "605b2f90180a12d9cb1c8daec736d58104256a79910a0bd3298c7f794f32c6c7"
     },
     {
       "path": ".cursor/skills/egovframe-conventions/SKILL.md",
@@ -49,11 +49,11 @@
     },
     {
       "path": ".cursor/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
     },
     {
       "path": ".opencode/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "03f5494002a74f9130dadbd881bb417025346d58208dac3f9336b224f969492d"
+      "sha256": "605b2f90180a12d9cb1c8daec736d58104256a79910a0bd3298c7f794f32c6c7"
     },
     {
       "path": ".opencode/skills/egovframe-conventions/SKILL.md",
@@ -61,7 +61,7 @@
     },
     {
       "path": ".opencode/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "b10cc0b7db0f947203bf61c1d1fd42b9216b1654f6ae4691888885ba62f78665"
+      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
     },
     {
       "path": "docs/dialect-portability.md",

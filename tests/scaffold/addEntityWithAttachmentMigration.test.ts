@@ -57,6 +57,32 @@ afterEach(async () => {
   await fs.remove(tmpRoot);
 });
 
+describe("egov_add_entity — withAttachment 등록 화면과 CSRF 공존", () => {
+  it("multipart 폼에 CSRF hidden 필드와 fetch 헤더용 meta 배선이 함께 렌더링된다", async () => {
+    await egovAddEntity({
+      projectPath: projectDir,
+      packageName: "egovframework.example.member",
+      entityName: "Member",
+      ddl: MEMBER_DDL,
+      autoApplyMigration: false,
+      withAttachment: true,
+    });
+
+    const register = await fs.readFile(
+      path.join(
+        projectDir,
+        "src/main/resources/templates/thymeleaf/member/egovMemberRegister.html",
+      ),
+      "utf-8",
+    );
+    // CSRF 토큰은 multipart 본문 파트로 전송된다 — 내장 Tomcat 이 CsrfFilter 시점에
+    // 파트를 파싱해 주는 동작에 의존 (docs/design/security-config-templates.md 참조)
+    expect(register).toContain('enctype="multipart/form-data"');
+    expect(register).toContain('id="csrfField"');
+    expect(register).toContain('meta[name="_csrf_header"]');
+  });
+});
+
 describe("egov_add_entity — withAttachment 마이그레이션 SQL 분기", () => {
   it("[시드 append] autoApplyMigration=true + 시드 1개 → 시드에 append 된 Member 블록 안에 ATCH_FILE_ID 가 있어야 한다", async () => {
     const seedAbs = path.join(projectDir, "src/main/resources/db/boarddb.sql");

@@ -33,7 +33,7 @@ server.registerTool(
   {
     title: "Scaffold eGovFrame Project",
     description:
-      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. 기본은 eGovFrame 5.0 Boot(Jakarta+Thymeleaf Spring6+KRDS). stackVersion='4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용. CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다.",
+      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. 기본은 eGovFrame 5.0 Boot(Jakarta+Thymeleaf Spring6+KRDS). stackVersion='4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용. CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. 5.0 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다.",
     inputSchema: {
       projectName: z
         .string()

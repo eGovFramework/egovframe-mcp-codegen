@@ -150,6 +150,15 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
       lines.push(`  3. mvn spring-boot:run`, `  4. http://localhost:8080/ 접속`);
     }
 
+    if (isBoot50) {
+      lines.push(
+        ``,
+        `🔐 CSRF 보호가 기본 활성입니다 — 이후 추가하는 POST 폼/fetch 는 CSRF 토큰` +
+          `(hidden 필드 또는 meta 기반 헤더)을 포함해야 합니다. 토글: egov.security.csrf.` +
+          ` 상세: 생성된 docs/egovframe-architecture.md 의 EgovConfigWebSecurity 섹션.`,
+      );
+    }
+
     // 4) DDL 파서 폴백 안내 — AST(MySQL) 파싱 실패로 legacy 정규식 파서가 쓰인 경우.
     //    산출물은 정상 생성되지만 입력 DDL 이 비표준일 수 있음을 사용자가 알아야 한다.
     if (result.ddlParserUsed === "legacy") {

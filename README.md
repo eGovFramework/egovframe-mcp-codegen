@@ -25,6 +25,10 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 - `stackVersion: "4.3"` → eGovFrame 4.3 Boot (javax + Thymeleaf Spring5)
 - `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.0 조합은 거부)
 - CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
+- 5.0 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
+  (`EgovConfigWebSecurity`)을 기본 포함 — 보안 응답 헤더, CSRF 보호(기본 활성,
+  `egov.security.csrf` 로 토글), 명시적 StrictHttpFirewall, 프로퍼티 구동 CORS(기본 비활성).
+  4.3 Boot / WAR 산출물에는 적용되지 않음 (Phase A — `docs/design/security-config-templates.md`)
 - DDL 정규화(케이스/공백/인용부호) 기본 on — 의미를 바꾸지 않는 보수적 변환만 수행
 
 | 파라미터        | 타입    | 필수 | 설명                                                              |

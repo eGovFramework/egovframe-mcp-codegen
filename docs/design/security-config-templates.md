@@ -94,6 +94,18 @@ egov.security.cors.allow-credentials=false
 egov.security.cors.max-age=1800
 ```
 
+## 알려진 상호작용 — multipart 업로드와 CSRF
+
+`withAttachment` 화면의 등록/수정 폼은 `multipart/form-data` POST 이고, CSRF
+토큰은 multipart 본문 파트로 전송된다. CsrfFilter 시점에 토큰을 읽을 수 있는
+것은 Spring Boot 가 DispatcherServlet 에 `MultipartConfigElement` 를 등록해
+내장 Tomcat 이 `getParameter` 호출 시 파트를 파싱해 주기 때문이다 (컨테이너
+의존적 동작 — 내장 Tomcat 기준으로 검증됨). 부작용으로, 업로드 파일이
+`spring.servlet.multipart.max-file-size` 를 초과하면 파트 파싱이 실패해 토큰을
+읽지 못하므로 첨부파일 안내 화면(`cmm/uploadError`) 대신 CSRF 접근 거부
+화면이 표시된다. 이 증상은 방출되는 `egovframe-troubleshooting` 스킬 §2.13 에
+안내되어 있으며, 용량 초과를 CSRF 이전에 구분해 내는 개선은 후속 과제다.
+
 ## 테스트 전략
 
 - `tests/scaffold/securityConfig.test.ts` — 스캐폴드 1회 후 렌더링된
