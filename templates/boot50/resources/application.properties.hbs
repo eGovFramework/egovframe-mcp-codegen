@@ -24,3 +24,20 @@ spring.config.import=optional:classpath:/egovframework/egovProps/globals.propert
 # - jsessionid 가 매핑/리다이렉트를 깨는 함정 차단 (redirect 후 405 등)
 # - 보안: jsessionid 가 referer/로그/북마크로 유출되는 경로 차단
 server.servlet.session.tracking-modes=cookie
+
+# === 보안 응답 헤더 (EgovConfigWebSecurity) ===
+# 공통컴포넌트(security 방식) egov-security-config.properties 의
+# sniff / xframeOptions / xssProtection / cacheControl 대응 항목.
+# - sniff:          X-Content-Type-Options: nosniff
+# - xframe-options: SAMEORIGIN | DENY | DISABLE(헤더 제거)
+# - xss-protection: X-XSS-Protection (Spring Security 6 기본 "0")
+# - cache-control:  캐시 금지 헤더 (true=활성 — 정방향 의미). 정적 리소스 핸들러가
+#                   자체 Cache-Control 을 설정하므로 실효 범위는 동적 응답이다.
+egov.security.headers.sniff=true
+egov.security.headers.xframe-options=SAMEORIGIN
+egov.security.headers.xss-protection=true
+egov.security.headers.cache-control=true
+
+# 인증 미도입 상태이므로 Spring Security 기본 계정 자동 생성(generated password 로그) 비활성.
+# 인증 도입 시 이 exclude 를 제거하고 UserDetailsService 를 구성한다.
+spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration

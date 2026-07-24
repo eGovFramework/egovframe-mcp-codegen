@@ -19,6 +19,7 @@
    - EgovConfigTransaction — 프로그래밍 방식 트랜잭션
    - EgovConfigAspect — 예외 전파 AOP
    - EgovConfigValidation — Bean Validation + 메시지 통합
+   - EgovConfigWebSecurity — Spring Security 보안 응답 헤더
    - EgovConfigWeb — 메인 Web Config (Import 결합)
    - 핵심 클래스 Fully-Qualified Import 표
 2. [Pagination (페이징 처리) — KRDS 페이지네이션](#pagination-페이징-처리--krds-페이지네이션)
@@ -38,7 +39,7 @@
 
 ### v5.0 권장 — 책임별 @Configuration 분할
 
-v5.0 공식 템플릿은 모든 Bean 을 단일 클래스에 두지 않고 **8개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
+v5.0 공식 템플릿은 모든 Bean 을 단일 클래스에 두지 않고 **9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
 
 ```
 egovframework.example.config/
@@ -50,7 +51,8 @@ egovframework.example.config/
 ├── EgovConfigTransaction.java  # TransactionInterceptor, Advisor (Java Config)
 ├── EgovConfigAspect.java       # ExceptionTransfer, EgovAopExceptionTransfer
 ├── EgovConfigValidation.java   # LocalValidatorFactoryBean (messageSource 결합)
-└── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 8개 결합
+├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 + 보안 응답 헤더
+└── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 9개 결합
 ```
 
 ### 생성 필요 Bean 체크리스트
@@ -566,7 +568,8 @@ public class SampleVO extends SampleDefaultVO {
     EgovConfigMapper.class,
     EgovConfigProperties.class,
     EgovConfigTransaction.class,
-    EgovConfigValidation.class
+    EgovConfigValidation.class,
+    EgovConfigWebSecurity.class
 })
 public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware {
 

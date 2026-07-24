@@ -15,7 +15,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x / Spring Boot 3.x
 
 ### Bootstrap Bean 12종 (필수 — 빠지면 기동 실패)
 
-`EgovAbstractServiceImpl` 또는 `EgovPropertyServiceImpl` 를 쓰는 Boot 프로젝트는 다음 Bean 들을 반드시 `@Configuration` 클래스에 수동 등록한다. v5.0 공식 템플릿은 단일 클래스가 아닌 **8개 책임별 `@Configuration` 으로 분할** 후 `@Import` 로 결합한다.
+`EgovAbstractServiceImpl` 또는 `EgovPropertyServiceImpl` 를 쓰는 Boot 프로젝트는 다음 Bean 들을 반드시 `@Configuration` 클래스에 수동 등록한다. v5.0 공식 템플릿은 단일 클래스가 아닌 **9개 책임별 `@Configuration` 으로 분할** 후 `@Import` 로 결합한다.
 
 ```
 egovframework.example.config/
@@ -27,7 +27,8 @@ egovframework.example.config/
 ├── EgovConfigTransaction.java  # TransactionInterceptor, Advisor (Java Config)
 ├── EgovConfigAspect.java       # ExceptionTransfer, EgovAopExceptionTransfer
 ├── EgovConfigValidation.java   # LocalValidatorFactoryBean (messageSource 결합)
-└── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 8개 결합
+├── EgovConfigWebSecurity.java  # Spring Security 필터 체인 + 보안 응답 헤더
+└── EgovConfigWeb.java          # WebMvcConfigurer + @Import 로 위 9개 결합
 ```
 
 체크리스트 (이 Bean 들이 누락되면 `NoSuchBeanDefinitionException` / `BeanCreationException` 발생):
@@ -232,7 +233,7 @@ public class SampleDAO extends SqlSessionDaoSupport {
 
 **Target:** `@Configuration` Java Config (XML 설정은 v5.0 권장 외).
 
-**v5.0 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 7~8개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
+**v5.0 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 8~9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
 
 | Config 클래스 | 책임 |
 |--------------|------|
@@ -244,6 +245,7 @@ public class SampleDAO extends SqlSessionDaoSupport {
 | `EgovConfigTransaction` | `DataSourceTransactionManager`, `TransactionInterceptor`, `Advisor` |
 | `EgovConfigAspect` | `ExceptionTransfer`, `EgovAopExceptionTransfer`, `DefaultExceptionHandleManager` |
 | `EgovConfigValidation` | `LocalValidatorFactoryBean` (messageSource 와 결합) |
+| `EgovConfigWebSecurity` | Spring Security `SecurityFilterChain` + 보안 응답 헤더 (`egov.security.headers.*`) |
 | `EgovConfigWeb` | `WebMvcConfigurer` 구현, Thymeleaf 엔진, ResourceHandlers, 위 Config 들을 `@Import` |
 
 **필수 포함 사항:**
@@ -261,7 +263,8 @@ public class SampleDAO extends SqlSessionDaoSupport {
     EgovConfigMapper.class,
     EgovConfigProperties.class,
     EgovConfigTransaction.class,
-    EgovConfigValidation.class
+    EgovConfigValidation.class,
+    EgovConfigWebSecurity.class
 })
 public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware { ... }
 ```
@@ -511,6 +514,10 @@ Spring Boot 기본 스타터는 **Logback**, eGovFrame 은 **Log4j2** 를 전제
             <artifactId>spring-boot-starter-logging</artifactId>
         </exclusion>
     </exclusions>
+</dependency>
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
 </dependency>
 <dependency>
     <groupId>org.springframework.boot</groupId>

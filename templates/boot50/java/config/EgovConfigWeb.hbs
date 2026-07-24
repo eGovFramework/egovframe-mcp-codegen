@@ -38,7 +38,8 @@ import {{basePackage}}.pagination.EgovPaginationDialect;
 		EgovConfigMapper.class,
 		EgovConfigProperties.class,
 		EgovConfigTransaction.class,
-		EgovConfigValidation.class
+		EgovConfigValidation.class,
+		EgovConfigWebSecurity.class
 })
 public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware {
 
@@ -76,12 +77,18 @@ public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware 
 		return viewResolver;
 	}
 
+	/**
+	 * 정적 리소스 핸들러에는 cachePeriod 를 반드시 부여한다 — EgovConfigWebSecurity 의
+	 * Cache-Control 보안 헤더(no-store 계열)는 응답에 캐시 헤더가 없을 때만 쓰이므로,
+	 * 여기서 자체 Cache-Control 을 설정해야 정적 자산 캐싱이 유지된다.
+	 */
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
-		registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
-		registry.addResourceHandler("/images/**").addResourceLocations("classpath:/static/images/");
-		registry.addResourceHandler("/img/**").addResourceLocations("classpath:/static/img/");
-		registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/");
+		registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/").setCachePeriod(3600);
+		registry.addResourceHandler("/images/**").addResourceLocations("classpath:/static/images/").setCachePeriod(3600);
+		registry.addResourceHandler("/img/**").addResourceLocations("classpath:/static/img/").setCachePeriod(3600);
+		registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/").setCachePeriod(3600);
+		registry.addResourceHandler("/fonts/**").addResourceLocations("classpath:/static/fonts/").setCachePeriod(3600);
 		registry.addResourceHandler("/favicon.ico")
 				.addResourceLocations("classpath:/static/")
 				.setCachePeriod(3600);

@@ -13,6 +13,7 @@
     { "template": "boot50/java/config/EgovConfigProperties.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovConfigProperties.java" },
     { "template": "boot50/java/config/EgovConfigTransaction.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovConfigTransaction.java" },
     { "template": "boot50/java/config/EgovConfigValidation.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovConfigValidation.java" },
+    { "template": "boot50/java/config/EgovConfigWebSecurity.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovConfigWebSecurity.java" },
     { "template": "boot50/java/config/EgovNavModelAdvice.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovNavModelAdvice.java" },
     { "template": "boot50/java/cmm/FkComboVO.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/vo/FkComboVO.java" },
     { "template": "boot50/java/exception/EgovAopExceptionTransfer.hbs", "output": "src/main/java/{{basePackagePath}}/exception/EgovAopExceptionTransfer.java" },
