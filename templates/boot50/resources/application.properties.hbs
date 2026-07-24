@@ -38,6 +38,13 @@ egov.security.headers.xframe-options=SAMEORIGIN
 egov.security.headers.xss-protection=true
 egov.security.headers.cache-control=true
 
+# === CSRF 보호 (EgovConfigWebSecurity) ===
+# 공통컴포넌트 egov-security-config.properties 의 csrf / csrfAccessDeniedUrl 대응.
+# 화면 폼의 hidden 토큰과 meta 태그는 EgovCsrfControllerAdvice 가 노출하는
+# ${_csrf} 로 채워진다. 토큰 검증 실패 시 아래 URL 로 포워드된다.
+egov.security.csrf=true
+egov.security.csrf-access-denied-url=/egovCSRFAccessDenied.do
+
 # 인증 미도입 상태이므로 Spring Security 기본 계정 자동 생성(generated password 로그) 비활성.
 # 인증 도입 시 이 exclude 를 제거하고 UserDetailsService 를 구성한다.
 spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration

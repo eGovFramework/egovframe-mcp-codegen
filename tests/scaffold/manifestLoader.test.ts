@@ -33,7 +33,7 @@ describe("manifestLoader — 표준 매니페스트 로드", () => {
 
   it.each([
     ["manifests/boot43.json", "boot43", 39],
-    ["manifests/boot50.json", "boot50", 40],
+    ["manifests/boot50.json", "boot50", 43],
     ["manifests/war43.json", "war43", 41],
   ])(
     "%s 의 name=%s, files=%i 를 그대로 읽는다",

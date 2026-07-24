@@ -3,6 +3,9 @@
 <head>
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<!-- CSRF meta — AJAX 요청 헤더용. Spring Security 미사용 프로젝트에서는 렌더링되지 않는다. -->
+	<meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}">
+	<meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}">
 	<title th:text="#{title.{{entityNameLower}}.sample}"></title>
 
 	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}"/>
@@ -10,8 +13,11 @@
 	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
 	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
 	<script th:inline="javascript" defer>
+		// GET \uC81C\uCD9C \uC804\uC5D0\uB294 CSRF hidden \uD544\uB4DC\uB97C disabled \uCC98\uB9AC\uD55C\uB2E4 \u2014 disabled \uCEE8\uD2B8\uB864\uC740
+		// \uC9C1\uB82C\uD654\uB418\uC9C0 \uC54A\uC73C\uBBC0\uB85C \uD1A0\uD070\uC774 URL \uCFFC\uB9AC\uC2A4\uD2B8\uB9C1(\uBE0C\uB77C\uC6B0\uC800 \uC774\uB825\u00B7\uB85C\uADF8)\uC5D0 \uC720\uCD9C\uB418\uC9C0 \uC54A\uB294\uB2E4.
 		function {{entityNameLower}}Search() {
             if (notNullCheck($('#searchKeyword').val())) {
+				$('#csrfField').prop('disabled', true);
 				$('#listForm').attr('method', 'get').attr('action', contextPath + '/egov{{entityName}}List.do').submit();
             } else {
             	alert(/*[[#{search.error}]]*/'\uAC80\uC0C9\uC5B4\uB97C \uC785\uB825\uD574\uC8FC\uC138\uC694.');
@@ -20,15 +26,18 @@
 
 		function {{entityNameLower}}Pagination(pageIndex) {
         	$('#pageIndex').val(pageIndex);
+        	$('#csrfField').prop('disabled', true);
         	$('#listForm').attr('method', 'get').attr('action', contextPath + '/egov{{entityName}}List.do').submit();
         }
 
         function {{entityNameLower}}Create() {
+        	$('#csrfField').prop('disabled', false);
         	$('#listForm').attr('method', 'post').attr('action', contextPath + '/add{{entityName}}View.do').submit();
         }
 
         function {{entityNameLower}}Detail({{pkAttributes.0.ccName}}) {
             $('#{{pkAttributes.0.ccName}}').val({{pkAttributes.0.ccName}});
+            $('#csrfField').prop('disabled', false);
             $('#listForm').attr('method', 'post').attr('action', contextPath + '/update{{entityName}}View.do').submit();
         }
     </script>
@@ -46,6 +55,9 @@
 		<form id="listForm" th:object="{{{thExpr voName}}}">
 			<input type="hidden" th:id="{{pkAttributes.0.ccName}}" th:name="{{pkAttributes.0.ccName}}" />
 			<input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="1" />
+			<!-- 등록/상세 이동이 POST submit 이므로 CSRF 토큰을 함께 전송한다.
+			     GET 제출(검색·페이지네이션) 전에는 스크립트가 disabled 처리해 URL 유출을 막는다. -->
+			<input type="hidden" id="csrfField" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 
 			<div class="form-group">
 				<div class="search-wrap">

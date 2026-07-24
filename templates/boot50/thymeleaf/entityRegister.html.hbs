@@ -3,6 +3,9 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <!-- CSRF meta — AJAX(fetch) 요청 헤더용. Spring Security 미사용 프로젝트에서는 렌더링되지 않는다. -->
+    <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}">
+    <meta th:if="${_csrf != null}" name="_csrf_header" th:content="${_csrf.headerName}">
     <title th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="|{{entityName}} #{button.modify}|"></title>
     <title th:unless="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="|{{entityName}} #{button.create}|"></title>
 
@@ -57,7 +60,10 @@
             return EgovValidation.validateForm(form, rules);
         }
 
+    	// GET 제출 전에는 CSRF hidden 필드를 disabled 처리한다 — disabled 컨트롤은
+    	// 직렬화되지 않으므로 토큰이 URL 쿼리스트링(브라우저 이력·로그)에 유출되지 않는다.
     	function {{entityNameLower}}List() {
+            $('#csrfField').prop('disabled', true);
             $('#detailForm').attr('method', 'get').attr('action', contextPath + '/egov{{entityName}}List.do').submit();
         }
 
@@ -67,6 +73,7 @@
                 if (!validate{{entityName}}VO(frm)) {
 					return;
 				} else {
+					$('#csrfField').prop('disabled', false);
 					$('#detailForm').attr('method', 'post').attr('action', contextPath + '/add{{entityName}}.do').submit();
 				}
             }
@@ -78,6 +85,7 @@
                 if (!validate{{entityName}}VO(frm)) {
 					return;
 				} else {
+            		$('#csrfField').prop('disabled', false);
             		$('#detailForm').attr('method', 'post').attr('action', contextPath + '/update{{entityName}}.do').submit();
 				}
 			}
@@ -85,6 +93,7 @@
 
         function {{entityNameLower}}Delete() {
             if (confirm(/*[[#{delete.confirm}]]*/ '\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?')) {
+                $('#csrfField').prop('disabled', false);
                 $('#detailForm').attr('method', 'post').attr('action', contextPath + '/delete{{entityName}}.do').submit();
             }
         }
@@ -108,9 +117,16 @@
             const atchFileId = btn.getAttribute('data-atch-file-id');
             const fileSn = btn.getAttribute('data-file-sn');
             const body = 'atchFileId=' + encodeURIComponent(atchFileId) + '&fileSn=' + encodeURIComponent(fileSn);
+            const headers = { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' };
+            // CSRF 보호 활성 시 meta 태그의 토큰을 요청 헤더로 전송 (미활성이면 meta 가 없다)
+            const csrfHeaderMeta = document.querySelector('meta[name="_csrf_header"]');
+            const csrfTokenMeta = document.querySelector('meta[name="_csrf"]');
+            if (csrfHeaderMeta && csrfTokenMeta) {
+                headers[csrfHeaderMeta.content] = csrfTokenMeta.content;
+            }
             fetch(contextPath + '/delete{{entityName}}AttachFile.do', {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+                headers: headers,
                 body: body,
                 credentials: 'same-origin'
             }).then(function(res) {
@@ -139,6 +155,9 @@
 	<input type="hidden" th:id="searchCondition" th:name="searchCondition" th:value="{{{thExpr voName ".searchCondition"}}}" />
 	<input type="hidden" th:id="searchKeyword" th:name="searchKeyword" th:value="{{{thExpr voName ".searchKeyword"}}}" />
 	<input type="hidden" th:id="pageIndex" th:name="pageIndex" th:value="{{{thExpr voName ".pageIndex"}}}" />
+	<!-- 등록/수정/삭제가 POST submit 이므로 CSRF 토큰을 함께 전송한다.
+	     GET 제출(목록 복귀) 전에는 스크립트가 disabled 처리해 URL 유출을 막는다. -->
+	<input type="hidden" id="csrfField" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
 {{#if withAttachment}}
 	<!-- 첨부파일 그룹 키 (update 시 기존 값 보존). 신규 등록이면 빈 값 — Controller 에서 채번. -->
 	<input type="hidden" id="{{attachmentFieldName}}" name="{{attachmentFieldName}}" th:value="{{{thExpr voName "." attachmentFieldName}}}" />

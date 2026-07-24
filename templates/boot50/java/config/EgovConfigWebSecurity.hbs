@@ -1,26 +1,35 @@
 package {{basePackage}}.config;
 
+import java.io.IOException;
 import java.util.Locale;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.HeadersConfigurer;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.access.AccessDeniedHandler;
+import org.springframework.security.web.csrf.InvalidCsrfTokenException;
+import org.springframework.security.web.csrf.MissingCsrfTokenException;
+
+import jakarta.servlet.ServletException;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 
 /**
  * Spring Security 기반 웹 보안 설정.
  * <p>
  * 전자정부 표준프레임워크 공통컴포넌트(security 방식)의
  * {@code egov-security-config.properties} + {@code EgovSecurityConfiguration}
- * (egovframe-rte-fdl-security) 구조를 참조해, 동일한 프로퍼티 의미
- * (sniff / xframeOptions / xssProtection / cacheControl) 로 보안 응답 헤더를
- * 적용한다. 값은 {@code application.properties} 의 {@code egov.security.headers.*}
- * 에서 주입된다.
+ * (egovframe-rte-fdl-security) 구조를 참조해, 동일한 프로퍼티 의미로
+ * 보안 응답 헤더(sniff / xframeOptions / xssProtection / cacheControl)와
+ * CSRF 보호(csrf / csrfAccessDeniedUrl)를 적용한다. 값은
+ * {@code application.properties} 의 {@code egov.security.*} 에서 주입된다.
  * </p>
  */
 @Configuration
@@ -39,19 +48,66 @@ public class EgovConfigWebSecurity {
 	@Value("${egov.security.headers.cache-control:true}")
 	private boolean cacheControl;
 
+	@Value("${egov.security.csrf:true}")
+	private boolean csrf;
+
+	@Value("${egov.security.csrf-access-denied-url:/egovCSRFAccessDenied.do}")
+	private String csrfAccessDeniedUrl;
+
 	@Bean
 	public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 		// 스캐폴드 기본 상태는 인증 미도입 — 공통컴포넌트의 permitAllList 전체 허용에 해당.
 		// 인증 도입 시 requestMatchers(...) 로 보호 대상 URL 을 좁혀 나간다.
 		http.authorizeHttpRequests(authorize -> authorize.anyRequest().permitAll());
 
-		// CSRF 보호 비활성: 생성되는 화면의 폼에 hidden 토큰이 없는 상태에서
-		// 활성화하면 등록/수정/삭제 POST 가 전부 403 으로 거부된다.
-		http.csrf(AbstractHttpConfigurer::disable);
-
+		configureCsrf(http);
 		configureSecurityHeaders(http);
 
 		return http.build();
+	}
+
+	/**
+	 * 공통컴포넌트 egov-security-config.properties 의 csrf / csrfAccessDeniedUrl 대응.
+	 * <p>
+	 * csrf=true 면 Spring Security 기본 CSRF 보호(세션 저장소 + Xor 요청 핸들러)를
+	 * 켜고, 토큰 검증 실패 시 안내 화면으로 포워드한다. 화면의 hidden 필드/meta
+	 * 태그는 {@code EgovCsrfControllerAdvice} 가 노출하는 {@code ${_csrf}} 로 채워진다.
+	 * </p>
+	 */
+	private void configureCsrf(HttpSecurity http) throws Exception {
+		if (csrf) {
+			http.csrf(Customizer.withDefaults());
+			http.exceptionHandling(handling ->
+					handling.accessDeniedHandler(new EgovCsrfAccessDeniedHandler(csrfAccessDeniedUrl)));
+		} else {
+			http.csrf(AbstractHttpConfigurer::disable);
+		}
+	}
+
+	/**
+	 * CSRF 토큰 누락/불일치 시 csrfAccessDeniedUrl 로 포워드하는 접근 거부 핸들러.
+	 * 참조 구현(EgovAccessDeniedHandler)의 무조건 포워드 후 재포워드 결함은
+	 * if/else 단일 포워드로 교정했다.
+	 */
+	private static final class EgovCsrfAccessDeniedHandler implements AccessDeniedHandler {
+
+		private final String csrfAccessDeniedUrl;
+
+		private EgovCsrfAccessDeniedHandler(String csrfAccessDeniedUrl) {
+			this.csrfAccessDeniedUrl = csrfAccessDeniedUrl;
+		}
+
+		@Override
+		public void handle(HttpServletRequest request, HttpServletResponse response,
+				AccessDeniedException accessDeniedException) throws IOException, ServletException {
+			if (accessDeniedException instanceof MissingCsrfTokenException
+					|| accessDeniedException instanceof InvalidCsrfTokenException) {
+				response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+				request.getRequestDispatcher(csrfAccessDeniedUrl).forward(request, response);
+			} else {
+				response.sendError(HttpServletResponse.SC_FORBIDDEN);
+			}
+		}
 	}
 
 	/**

@@ -15,7 +15,10 @@ import { describe, it, expect, beforeAll } from "vitest";
 import * as fs from "fs";
 import * as path from "path";
 import * as os from "os";
+import { fileURLToPath } from "node:url";
 import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
+
+const TEST_DIR = path.dirname(fileURLToPath(import.meta.url));
 
 const BOARD_DDL = `CREATE TABLE tb_board (
   board_id    VARCHAR(20) NOT NULL,
@@ -101,13 +104,6 @@ describe("보안 헤더 — EgovConfigWebSecurity", () => {
     expect(config).toContain("XXssConfig::disable");
   });
 
-  it("폼 CSRF 토큰이 없는 스캐폴드 상태에서는 CSRF 보호를 비활성한다", () => {
-    // 이 줄이 사라진 채 starter-security 만 남으면 Spring Security 기본값(CSRF on)이
-    // 적용되어 생성 화면의 등록/수정/삭제 POST 가 전부 403 이 된다.
-    const config = read(CONFIG_PATH);
-    expect(config).toContain("http.csrf(AbstractHttpConfigurer::disable)");
-  });
-
   it("cacheControl 은 참조 라이브러리의 반전 의미를 바로잡아 true=활성이다", () => {
     const config = read(CONFIG_PATH);
     // true → CacheControlHeadersWriter 활성 (라이브러리 5.0.x 의 반전 버그를 이식하지 않음)
@@ -157,5 +153,131 @@ describe("보안 헤더 — EgovConfigWeb 연결", () => {
         "setCachePeriod",
       );
     }
+  });
+});
+
+describe("CSRF — EgovConfigWebSecurity", () => {
+  const CONFIG_PATH =
+    "src/main/java/egovframework/example/config/EgovConfigWebSecurity.java";
+
+  it("csrf 프로퍼티(기본 true)로 Spring Security 기본 CSRF 보호를 켠다 (참조: csrf=true)", () => {
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("${egov.security.csrf:true}");
+    expect(config).toContain("http.csrf(Customizer.withDefaults())");
+    // 비활성 경로도 유지 (csrf=false 시 참조 구현과 동일하게 완전 비활성)
+    expect(config).toContain("http.csrf(AbstractHttpConfigurer::disable)");
+  });
+
+  it("CSRF 예외는 csrf-access-denied-url 로 1회만 포워드한다 (참조의 이중 포워드 결함 교정)", () => {
+    const config = read(CONFIG_PATH);
+    expect(config).toContain("${egov.security.csrf-access-denied-url:/egovCSRFAccessDenied.do}");
+    expect(config).toContain("MissingCsrfTokenException");
+    expect(config).toContain("InvalidCsrfTokenException");
+    expect(config).toContain("accessDeniedHandler");
+    expect(config).toMatch(/getRequestDispatcher\(csrfAccessDeniedUrl\)\.forward/);
+    // 참조 EgovAccessDeniedHandler 처럼 무조건 포워드 후 재포워드하는 구조가 아니어야 한다
+    expect(config).toMatch(/\}\s*else\s*\{\s*\n\s*response\.sendError/);
+  });
+});
+
+describe("CSRF — 토큰 노출 (EgovCsrfControllerAdvice)", () => {
+  it("공통컴포넌트와 동명의 @ControllerAdvice 가 ${_csrf} 모델 속성을 노출한다", () => {
+    const advice = read(
+      "src/main/java/egovframework/example/cmm/web/EgovCsrfControllerAdvice.java",
+    );
+    expect(advice).toContain("@ControllerAdvice");
+    expect(advice).toContain('@ModelAttribute("_csrf")');
+    expect(advice).toContain("CsrfToken");
+    // csrf 비활성 시 null 반환 → 화면의 th:if 가드가 조용히 생략
+    expect(advice).toContain("${egov.security.csrf:true}");
+    expect(advice).toContain("return null;");
+  });
+});
+
+describe("CSRF — 접근 거부 화면", () => {
+  it("/egovCSRFAccessDenied.do 컨트롤러가 생성된다 (참조: EgovComIndexController)", () => {
+    const controller = read(
+      "src/main/java/egovframework/example/cmm/web/EgovCsrfAccessDeniedController.java",
+    );
+    expect(controller).toContain('@RequestMapping("/egovCSRFAccessDenied.do")');
+    expect(controller).toContain('"cmm/error/csrfAccessDenied"');
+  });
+
+  it("csrfAccessDenied 뷰와 메시지 키가 생성된다", () => {
+    const view = read(
+      "src/main/resources/templates/thymeleaf/cmm/error/csrfAccessDenied.html",
+    );
+    expect(view).toContain("#{fail.common.csrf}");
+
+    const msgKo = read(
+      "src/main/resources/egovframework/message/message-common.properties",
+    );
+    expect(msgKo).toContain("fail.common.csrf=");
+    const msgEn = read(
+      "src/main/resources/egovframework/message/message-common_en.properties",
+    );
+    expect(msgEn).toContain("fail.common.csrf=");
+  });
+});
+
+describe("CSRF — 화면 토큰 주입", () => {
+  // 생성 화면은 th:action 없이 jQuery 로 action 을 지정해 submit 하므로
+  // Thymeleaf 의 자동 hidden 필드 주입이 동작하지 않는다. 공통컴포넌트 JSP 처럼
+  // 명시적 hidden 필드 + meta 태그를 넣되, ${_csrf} null 가드로 Spring Security
+  // 가 없는 기존 프로젝트에 egov_add_entity 로 추가돼도 화면이 깨지지 않아야 한다.
+  const HIDDEN =
+    'th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"';
+
+  it("목록 화면 listForm 에 CSRF hidden 필드가 들어간다 (등록/상세 이동이 POST)", () => {
+    const list = read(
+      "src/main/resources/templates/thymeleaf/board/egovBoardList.html",
+    );
+    expect(list).toContain(HIDDEN);
+    expect(list).toContain('name="_csrf"');
+    expect(list).toContain('name="_csrf_header"');
+  });
+
+  it("등록/수정 화면 detailForm 에 CSRF hidden 필드와 meta 태그가 들어간다", () => {
+    const register = read(
+      "src/main/resources/templates/thymeleaf/board/egovBoardRegister.html",
+    );
+    expect(register).toContain(HIDDEN);
+    expect(register).toContain('name="_csrf"');
+    expect(register).toContain('name="_csrf_header"');
+  });
+
+  it("GET 제출 경로는 CSRF hidden 필드를 disabled 처리해 토큰의 URL 유출을 막는다", () => {
+    // 검색/페이지네이션/목록 복귀는 같은 폼을 method=get 으로 submit 한다.
+    // disabled 컨트롤은 직렬화되지 않으므로 토큰이 쿼리스트링에 실리지 않는다.
+    const disableOn = "$('#csrfField').prop('disabled', true);";
+    const enableOn = "$('#csrfField').prop('disabled', false);";
+    const count = (s: string, needle: string) => s.split(needle).length - 1;
+
+    const list = read(
+      "src/main/resources/templates/thymeleaf/board/egovBoardList.html",
+    );
+    expect(list).toContain('id="csrfField"');
+    expect(count(list, disableOn), "목록 화면 GET 경로(검색·페이지네이션) 2곳").toBe(2);
+    expect(count(list, enableOn), "목록 화면 POST 경로(등록·상세 이동) 2곳").toBe(2);
+
+    const register = read(
+      "src/main/resources/templates/thymeleaf/board/egovBoardRegister.html",
+    );
+    expect(register).toContain('id="csrfField"');
+    expect(count(register, disableOn), "등록 화면 GET 경로(목록 복귀) 1곳").toBe(1);
+    expect(count(register, enableOn), "등록 화면 POST 경로(등록·수정·삭제) 3곳").toBe(3);
+  });
+
+  it("첨부파일 삭제 fetch 는 meta 태그에서 읽은 CSRF 헤더를 전송한다 (템플릿 소스 검증)", () => {
+    // withAttachment 분기는 기본 스캐폴드에서 렌더링되지 않으므로 템플릿 소스로 검증한다.
+    const template = fs.readFileSync(
+      path.join(
+        TEST_DIR,
+        "../../templates/boot50/thymeleaf/entityRegister.html.hbs",
+      ),
+      "utf-8",
+    );
+    expect(template).toContain('meta[name="_csrf_header"]');
+    expect(template).toMatch(/headers\[csrfHeaderMeta\.content\]\s*=\s*csrfTokenMeta\.content/);
   });
 });

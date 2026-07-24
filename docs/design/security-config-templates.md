@@ -5,9 +5,7 @@
 
 > 이 문서는 4개 기능을 **개별 브랜치의 순차 커밋**으로 도입하는 시리즈의
 > 상위 설계다. 아래 대응 표의 "상태" 열이 커밋 시점 기준의 구현 여부를
-> 나타내며, 각 기능 커밋에서 갱신한다. CSRF 가 도입되기 전까지 생성 코드는
-> `http.csrf(AbstractHttpConfigurer::disable)` 로 CSRF 를 명시적으로 끈다
-> (폼 hidden 토큰이 없는 상태에서 켜면 등록/수정/삭제 POST 가 전부 403).
+> 나타내며, 각 기능 커밋에서 갱신한다.
 
 구현 방식은 전자정부 표준프레임워크 **공통컴포넌트 템플릿의 security 방식**
 (`Globals.Auth = security`) 을 참조 기준으로 삼는다. 공통컴포넌트 5.0.0 은
@@ -33,7 +31,7 @@
 | 기능 | 상태 | 공통컴포넌트 (security 방식) | 생성 코드 (boot50) |
 |---|---|---|---|
 | 보안 헤더 | 구현됨 | `sniff` / `xframeOptions` / `xssProtection` / `cacheControl` → `EgovSecurityConfiguration` 의 `http.headers()` 매핑 | `egov.security.headers.*` (application.properties) → `EgovConfigWebSecurity.configureSecurityHeaders()` — 동일한 분기 구조 (SAMEORIGIN / DISABLE / 그 외 DENY 등) |
-| CSRF | 후속 커밋 | `csrf=true` → `http.csrf(withDefaults())`, `EgovCsrfControllerAdvice`(`${_csrf}` 모델 노출), `csrfAccessDeniedUrl` 포워드(`EgovAccessDeniedHandler`), JSP hidden 필드 + AJAX 헤더 | `egov.security.csrf` → `http.csrf(withDefaults())`, 동명 `EgovCsrfControllerAdvice`, `egov.security.csrf-access-denied-url` 포워드 핸들러 + `/egovCSRFAccessDenied.do` 컨트롤러/뷰, Thymeleaf hidden 필드 + meta 태그 기반 fetch 헤더 |
+| CSRF | 구현됨 | `csrf=true` → `http.csrf(withDefaults())`, `EgovCsrfControllerAdvice`(`${_csrf}` 모델 노출), `csrfAccessDeniedUrl` 포워드(`EgovAccessDeniedHandler`), JSP hidden 필드 + AJAX 헤더 | `egov.security.csrf` → `http.csrf(withDefaults())`, 동명 `EgovCsrfControllerAdvice`, `egov.security.csrf-access-denied-url` 포워드 핸들러 + `/egovCSRFAccessDenied.do` 컨트롤러/뷰, Thymeleaf hidden 필드 + meta 태그 기반 fetch 헤더 |
 | StrictHttpFirewall | 후속 커밋 | 명시 설정 없음 — `FilterChainProxy` 기본값(StrictHttpFirewall)에 암묵 의존 | 암묵 기본값을 **명시적 빈**으로 문서화: `StrictHttpFirewall` + `HttpStatusRequestRejectedHandler`(400) + `WebSecurityCustomizer` |
 | CORS | 후속 커밋 | 설정 전무 — 교차 출처는 브라우저 동일출처정책과 CSRF 로 암묵 차단 | `egov.security.cors.*` — 기본 `enabled=false` (참조와 동일한 차단 자세). 필요 시 화이트리스트 origin 만 허용하는 `CorsConfigurationSource` 구성 |
 
@@ -61,7 +59,10 @@
    주입이 동작하지 않는다. 공통컴포넌트 JSP 와 같은 방식으로 명시적 hidden
    필드(`_csrf`)와 meta 태그(fetch 헤더용)를 넣는다. `${_csrf}` 가 null 이면
    렌더링되지 않으므로 Spring Security 를 제거한 프로젝트에서도 화면이 깨지지
-   않는다.
+   않는다. 같은 폼이 GET(검색·페이지네이션·목록 복귀)과 POST 를 겸용하므로,
+   GET 제출 경로에서는 스크립트가 hidden 필드를 `disabled` 처리해 토큰이
+   URL 쿼리스트링(브라우저 이력·접근 로그)으로 유출되지 않게 한다
+   (공통컴포넌트도 POST 폼에만 토큰을 둔다).
 5. **기본 계정 자동 생성 차단** — 인증 미도입 상태에서
    `spring-boot-starter-security` 가 만드는 generated password 로그를 막기
    위해 `UserDetailsServiceAutoConfiguration` 을 exclude 한다. 인증 도입 시
@@ -81,7 +82,7 @@ egov.security.headers.cache-control=true
 # [구현됨] 인증 미도입 상태의 기본 계정 자동 생성 차단
 spring.autoconfigure.exclude=org.springframework.boot.autoconfigure.security.servlet.UserDetailsServiceAutoConfiguration
 
-# [후속 커밋] CSRF
+# [구현됨] CSRF
 egov.security.csrf=true
 egov.security.csrf-access-denied-url=/egovCSRFAccessDenied.do
 

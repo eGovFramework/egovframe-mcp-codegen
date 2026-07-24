@@ -16,6 +16,8 @@
     { "template": "boot50/java/config/EgovConfigWebSecurity.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovConfigWebSecurity.java" },
     { "template": "boot50/java/config/EgovNavModelAdvice.hbs", "output": "src/main/java/{{basePackagePath}}/config/EgovNavModelAdvice.java" },
     { "template": "boot50/java/cmm/FkComboVO.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/vo/FkComboVO.java" },
+    { "template": "boot50/java/cmm/EgovCsrfControllerAdvice.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/web/EgovCsrfControllerAdvice.java" },
+    { "template": "boot50/java/cmm/EgovCsrfAccessDeniedController.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/web/EgovCsrfAccessDeniedController.java" },
     { "template": "boot50/java/exception/EgovAopExceptionTransfer.hbs", "output": "src/main/java/{{basePackagePath}}/exception/EgovAopExceptionTransfer.java" },
     { "template": "boot50/java/exception/EgovExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/exception/Egov{{entityName}}ExcepHndlr.java" },
     { "template": "boot50/java/exception/EgovOthersExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/exception/Egov{{entityName}}OthersExcepHndlr.java" },
@@ -39,6 +41,7 @@
     { "template": "boot50/thymeleaf/entityList.html.hbs", "output": "src/main/resources/templates/thymeleaf/{{entityModule}}/egov{{entityName}}List.html", "scope": "entity" },
     { "template": "boot50/thymeleaf/entityRegister.html.hbs", "output": "src/main/resources/templates/thymeleaf/{{entityModule}}/egov{{entityName}}Register.html", "scope": "entity" },
     { "template": "boot50/thymeleaf/egovSampleError.html.hbs", "output": "src/main/resources/templates/thymeleaf/{{entityModule}}/egovSampleError.html" },
+    { "template": "boot50/thymeleaf/cmm/error/csrfAccessDenied.html.hbs", "output": "src/main/resources/templates/thymeleaf/cmm/error/csrfAccessDenied.html" },
     { "template": "boot50/message/message-common.properties.hbs", "output": "src/main/resources/egovframework/message/message-common.properties" },
     { "template": "boot50/message/message-common.properties.hbs", "output": "src/main/resources/egovframework/message/message-common_ko.properties" },
     { "template": "boot50/message/message-common_en.properties.hbs", "output": "src/main/resources/egovframework/message/message-common_en.properties" }
