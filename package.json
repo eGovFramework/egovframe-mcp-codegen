@@ -11,6 +11,7 @@
     "build",
     "templates"
   ],
+  "bundleDependencies": true,
   "keywords": [
     "egovframe",
     "mcp",
@@ -19,6 +20,7 @@
   "scripts": {
     "build": "tsc && node -e \"require('fs').chmodSync('build/index.js', '755')\"",
     "prepare": "npm run build",
+    "pack:bundle": "bash scripts/pack-bundle.sh",
     "watch": "tsc --watch",
     "inspector": "npx @modelcontextprotocol/inspector build/index.js",
     "test": "npm run build && vitest run --reporter=basic",

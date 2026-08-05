@@ -50,3 +50,6 @@ AI.md
 .DS_Store
 ._*
 Thumbs.db
+
+# 플랫폼별 번들 tgz 산출물
+dist/
