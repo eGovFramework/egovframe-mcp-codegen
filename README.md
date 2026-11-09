@@ -42,6 +42,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | stackVersion  | string |      | `5.0` (기본) / `4.3`                                              |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
 | description   | string |      | 프로젝트 한 줄 설명                                                |
+| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (5.0 Boot 전용, 4.3/WAR 은 거부) |
 
 ### 2. `egov_add_entity`
 
@@ -49,7 +50,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 - `projectType` / `stackVersion` 은 기존 `pom.xml` 에서 자동 감지 (지정 불필요)
 - 생성될 파일 중 하나라도 충돌하면 **전체 거부** (덮어쓰기 옵션 없음)
-- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음
+- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (5.0 Boot 만 지원)
 
 | 파라미터              | 타입    | 필수 | 설명                                                                 |
 |---------------------|--------|------|----------------------------------------------------------------------|
