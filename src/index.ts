@@ -21,6 +21,13 @@ import { egovScaffoldProject } from "./tools/egovScaffoldProject.js";
 import { egovAddEntity } from "./tools/egovAddEntity.js";
 import { egovAddQueryView } from "./tools/egovAddQueryView.js";
 import { egovAddAttachFileInfrastructure } from "./tools/egovAddAttachFileInfrastructure.js";
+import {
+  attachmentCancelledMessage,
+  attachmentDecisionRequiredError,
+  describeAddEntityAttachmentPrompt,
+  describeScaffoldAttachmentPrompt,
+  resolveAttachmentDecision,
+} from "./utils/scaffold/attachmentDecision.js";
 
 const server = new McpServer({
   name: "egovframe-mcp-codegen",
@@ -74,13 +81,24 @@ server.registerTool(
         .boolean()
         .optional()
         .describe(
-          "true 면 첫 엔티티를 첨부파일(atchFileId) 연결 형태로 생성하고 첨부파일 인프라(EgovFileMngService, EgovConfigAttachFile, COMTNFILE 계열 테이블 등)를 프로젝트 생성 직후 함께 설치합니다. eGovFrame 5.0 Boot(projectType='boot', stackVersion='5.0') 에서만 지원하며 그 외 조합은 거부됩니다. 인프라 설치가 실패하면 프로젝트는 남고 egov_add_attach_file_infrastructure 로 복구할 수 있습니다. 기본 false.",
+          "첫 엔티티를 첨부파일(atchFileId) 연결 형태로 생성하고 첨부파일 인프라(EgovFileMngService, EgovConfigAttachFile, COMTNFILE 계열 테이블 등)를 프로젝트 생성 직후 함께 설치할지 여부. 사용자가 요청에서 첨부파일 포함 여부를 밝히지 않았다면 이 인자를 생략하세요 — 임의로 false 를 넣으면 안 됩니다. 생략하면 서버가 사용자에게 직접 확인합니다. true 이면 인프라를 자동으로 설치합니다. eGovFrame 5.0 Boot(projectType='boot', stackVersion='5.0') 에서만 지원하며 그 외 조합에 true 를 주면 거부됩니다. 인프라 설치가 실패하면 프로젝트는 남고 egov_add_attach_file_infrastructure 로 복구할 수 있습니다.",
         ),
     },
   },
   async (args) => {
     try {
-      const result = await egovScaffoldProject(args);
+      const prompt = describeScaffoldAttachmentPrompt(args);
+      const decision = await resolveAttachmentDecision({
+        server: server.server,
+        provided: args.withAttachment,
+        supported: prompt.supported,
+        message: prompt.message,
+      });
+      if (decision.kind === "needsUserDecision") throw attachmentDecisionRequiredError();
+      if (decision.kind === "cancelled") {
+        return { content: [{ type: "text", text: attachmentCancelledMessage() }] };
+      }
+      const result = await egovScaffoldProject({ ...args, withAttachment: decision.value });
       return { content: [{ type: "text", text: result }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -142,7 +160,7 @@ server.registerTool(
         .boolean()
         .optional()
         .describe(
-          "true 면 생성되는 엔티티가 eGov 표준 첨부파일(atchFileId) 와이어드 형태로 emit 됩니다. VO 에 atchFileId 필드 + getter/setter, DDL/마이그레이션 SQL 에 ATCH_FILE_ID CHAR(20) 컬럼, Mapper SQL 의 INSERT/UPDATE/SELECT 에 컬럼 포함, Controller 가 MultipartHttpServletRequest 핸들러로 분기 (parseFileInf → insertFileInfs → 도메인 INSERT, update 시 getMaxFileSN/updateFileInfs, delete 시 EgovFileMngService.deleteAllFileInf 호출), 등록 화면에 `<input type=\"file\" name=\"file_1\" multiple>` 추가. 사전조건: 프로젝트에 첨부파일 인프라가 설치되어 있어야 합니다 (EgovFileMngService.java + EgovConfigAttachFile.java 또는 context-idgn-File.xml). 미설치 시 명확한 가이드로 거부됩니다 — 먼저 `egov_add_attach_file_infrastructure` 도구를 호출하세요. 사용자가 '첨부파일 달린 엔티티', '파일 업로드 게시판', 'with attachments', '게시판에 파일' 같은 표현을 쓰면 true 로 설정하세요.",
+          "생성되는 엔티티를 eGov 표준 첨부파일(atchFileId) 와이어드 형태로 emit 할지 여부. true 이면 VO 에 atchFileId 필드 + getter/setter, DDL/마이그레이션 SQL 에 ATCH_FILE_ID CHAR(20) 컬럼, Mapper SQL 의 INSERT/UPDATE/SELECT 에 컬럼 포함, Controller 가 MultipartHttpServletRequest 핸들러로 분기 (parseFileInf → insertFileInfs → 도메인 INSERT, update 시 getMaxFileSN/updateFileInfs, delete 시 EgovFileMngService.deleteAllFileInf 호출), 등록 화면에 `<input type=\"file\" name=\"file_1\" multiple>` 추가. 사용자가 요청에서 첨부파일 포함 여부를 밝히지 않았다면 이 인자를 생략하세요 — 임의로 false 를 넣으면 안 됩니다. 생략하면 서버가 사용자에게 직접 확인합니다. true 이면 프로젝트에 첨부파일 인프라가 없을 때 자동으로 함께 설치합니다 (egov_add_attach_file_infrastructure 를 먼저 호출할 필요 없음). 사용자가 '첨부파일 달린 엔티티', '파일 업로드 게시판', 'with attachments', '게시판에 파일' 같은 표현을 쓰면 true 로 설정하세요.",
         ),
       attachmentFieldName: z
         .string()
@@ -166,7 +184,18 @@ server.registerTool(
   },
   async (args) => {
     try {
-      const result = await egovAddEntity(args);
+      const prompt = describeAddEntityAttachmentPrompt(args.projectPath, args.entityName);
+      const decision = await resolveAttachmentDecision({
+        server: server.server,
+        provided: args.withAttachment,
+        supported: prompt.supported,
+        message: prompt.message,
+      });
+      if (decision.kind === "needsUserDecision") throw attachmentDecisionRequiredError();
+      if (decision.kind === "cancelled") {
+        return { content: [{ type: "text", text: attachmentCancelledMessage() }] };
+      }
+      const result = await egovAddEntity({ ...args, withAttachment: decision.value });
       return { content: [{ type: "text", text: result }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
