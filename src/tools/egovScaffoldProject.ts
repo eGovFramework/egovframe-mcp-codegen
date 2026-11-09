@@ -4,6 +4,7 @@
  * DDL 한 줄에서 eGovFrame 5.0/4.3 Boot 또는 WAR 프로젝트를 완전 생성합니다.
  */
 
+import path from "node:path";
 import { z } from "zod";
 import { generateScaffoldProject } from "../utils/scaffold/scaffoldGenerator.js";
 import {
@@ -156,7 +157,13 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
         );
         attachInfraLines = [``, `🧩 첨부파일 인프라 설치:`, ...summarizeAttachFileInstall(plan, applied)];
       } catch (infraError) {
-        const cause = infraError instanceof Error ? infraError.message : String(infraError);
+        const rawCause = infraError instanceof Error ? infraError.message : String(infraError);
+        // 절대 경로 노출 방지 + 이미 붙은 재시도 프리픽스 중첩 방지.
+        const cause = rawCause
+          .split(path.resolve(result.projectDir))
+          .join("<projectDir>")
+          .replace(RETRY_AFTER_ACTION_PREFIX, "")
+          .trim();
         throw retryAfterAction(
           `프로젝트는 생성되었으나 첨부파일 인프라 설치에 실패했습니다. ` +
             `원인을 해결한 뒤 egov_add_attach_file_infrastructure 를 호출하면 복구됩니다.\n${cause}`,

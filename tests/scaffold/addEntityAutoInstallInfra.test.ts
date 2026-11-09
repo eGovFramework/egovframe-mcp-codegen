@@ -150,6 +150,8 @@ describe("egov_add_entity — 첨부파일 인프라 자동 설치", () => {
     const out = await egovAddEntity(memberArgs({ withAttachment: true }));
     expect(detectAttachFileInfra(projectDir).present).toBe(true);
     expect(out).toMatch(/첨부파일 인프라 자동 설치/);
+    expect(out).not.toMatch(/변경 사항 없음/);
+    expect(out).toMatch(/엔티티 .*Member.* 은\(는\) 변경 없이.*인프라를 설치/s);
   });
 
   it("시드 후보가 2개이면 fallback 안내를 응답에 포함한다", async () => {

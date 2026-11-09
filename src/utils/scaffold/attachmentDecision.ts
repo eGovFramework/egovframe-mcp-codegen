@@ -21,8 +21,10 @@ export async function resolveAttachmentDecision(args: {
   provided: boolean | undefined;
   supported: boolean;
   message: string;
+  /** 도구 호출 취소 신호 — 취소/중단되면 질문을 걷어 내고 파일을 생성하지 않는다. */
+  signal?: AbortSignal;
 }): Promise<AttachmentDecision> {
-  const { server, provided, supported, message } = args;
+  const { server, provided, supported, message, signal } = args;
   if (provided !== undefined) return { kind: "value", value: provided };
   if (!supported) return { kind: "value", value: false };
   if (!server.getClientCapabilities()?.elicitation?.form) {
@@ -41,8 +43,10 @@ export async function resolveAttachmentDecision(args: {
           required: ["withAttachment"],
         },
       },
-      { timeout: ATTACHMENT_ELICIT_TIMEOUT_MS },
+      { timeout: ATTACHMENT_ELICIT_TIMEOUT_MS, ...(signal ? { signal } : {}) },
     );
+    // 사용자가 늦게 답했더라도 호출이 이미 취소되었다면 아무 것도 생성하지 않는다.
+    if (signal?.aborted) return { kind: "cancelled" };
     if (res.action === "cancel") return { kind: "cancelled" };
     if (res.action === "decline") return { kind: "value", value: false };
     const value = res.content?.withAttachment;
@@ -50,6 +54,7 @@ export async function resolveAttachmentDecision(args: {
       ? { kind: "value", value }
       : { kind: "needsUserDecision" };
   } catch {
+    if (signal?.aborted) return { kind: "cancelled" };
     return { kind: "needsUserDecision" };
   }
 }

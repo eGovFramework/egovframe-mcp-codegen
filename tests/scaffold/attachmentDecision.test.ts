@@ -67,6 +67,40 @@ describe("resolveAttachmentDecision", () => {
   });
 });
 
+describe("resolveAttachmentDecision — signal", () => {
+  it("signal 을 elicitInput 옵션으로 전달한다", async () => {
+    const { server, elicitInput } = stub({
+      form: true,
+      reply: { action: "accept", content: { withAttachment: true } },
+    });
+    const ac = new AbortController();
+    await resolveAttachmentDecision({
+      server,
+      provided: undefined,
+      supported: true,
+      message: "질문",
+      signal: ac.signal,
+    });
+    expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 120000, signal: ac.signal });
+  });
+
+  it("질문 중 취소되면 늦은 accept 응답이 와도 cancelled 를 반환한다", async () => {
+    const ac = new AbortController();
+    const elicitInput = vi.fn(async () => {
+      ac.abort();
+      return { action: "accept", content: { withAttachment: true } };
+    });
+    const result = await resolveAttachmentDecision({
+      server: { getClientCapabilities: () => ({ elicitation: { form: {} } }), elicitInput } as never,
+      provided: undefined,
+      supported: true,
+      message: "질문",
+      signal: ac.signal,
+    });
+    expect(result).toEqual({ kind: "cancelled" });
+  });
+});
+
 describe("describeScaffoldAttachmentPrompt", () => {
   it("기본값(5.0 Boot)은 지원, 문구는 설계 문서와 같다", () => {
     expect(describeScaffoldAttachmentPrompt({})).toEqual({

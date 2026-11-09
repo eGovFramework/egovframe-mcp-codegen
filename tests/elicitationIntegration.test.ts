@@ -37,8 +37,8 @@ function text(res: unknown): string {
   return content.map((c) => c.text ?? "").join("\n");
 }
 
-async function connect(reply?: Reply) {
-  const handler = vi.fn(async (_req: unknown) => reply as Reply);
+async function connect(reply?: Reply, impl?: (req: unknown) => Promise<Reply>) {
+  const handler = vi.fn(impl ?? (async (_req: unknown) => reply as Reply));
   const client = new Client(
     { name: "elicitation-test", version: "1.0.0" },
     { capabilities: reply ? { elicitation: {} } : {} },
@@ -128,6 +128,43 @@ describe("egov_scaffold_project — withAttachment 확인", () => {
     expect(res.isError).toBeFalsy();
     expect(handler).not.toHaveBeenCalled();
     expect(detectAttachFileInfra(projectDir).present).toBe(false);
+  });
+
+  it("호출이 취소되면 늦게 답해도 파일을 생성하지 않는다", async () => {
+    let release!: () => void;
+    const gate = new Promise<void>((r) => (release = r));
+    let asked!: () => void;
+    const askedP = new Promise<void>((r) => (asked = r));
+    const { client } = await connect({ action: "accept" }, async () => {
+      asked();
+      await gate;
+      return { action: "accept", content: { withAttachment: true } };
+    });
+    const ac = new AbortController();
+    const call = client
+      .callTool({ name: "egov_scaffold_project", arguments: scaffoldArgs() }, undefined, {
+        ...TIMEOUT,
+        signal: ac.signal,
+      })
+      .catch((e) => e as Error);
+    await askedP;
+    ac.abort();
+    expect(await call).toBeInstanceOf(Error);
+    release();
+    await new Promise((r) => setTimeout(r, 1000));
+    expect(await fs.pathExists(projectDir)).toBe(false);
+  });
+
+  it("입력이 유효하지 않으면 질문하지 않고 오류를 돌려준다", async () => {
+    const { client, handler } = await connect({ action: "accept", content: { withAttachment: true } });
+    const res = await client.callTool(
+      { name: "egov_scaffold_project", arguments: scaffoldArgs({ projectName: "../evil name" }) },
+      undefined,
+      TIMEOUT,
+    );
+    expect(res.isError).toBe(true);
+    expect(handler).not.toHaveBeenCalled();
+    expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
   it("지원하지 않는 스택(4.3)은 질문 없이 첨부파일 없이 생성한다", async () => {

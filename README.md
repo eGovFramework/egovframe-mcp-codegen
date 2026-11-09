@@ -42,7 +42,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | stackVersion  | string |      | `5.0` (기본) / `4.3`                                              |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
 | description   | string |      | 프로젝트 한 줄 설명                                                |
-| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (5.0 Boot 전용, 4.3/WAR 은 거부) |
+| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (5.0 Boot 전용. 4.3/WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
 
 ### 2. `egov_add_entity`
 

@@ -761,7 +761,9 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         infraLines = infraInstallLines(plan, result);
       }
       return (
-        `ℹ️ 엔티티 '${params.entityName}' 은(는) 이미 동일한 내용으로 생성되어 있습니다. 변경 사항 없음.\n\n` +
+        (infraLines.length > 0
+          ? `ℹ️ 엔티티 '${params.entityName}' 은(는) 변경 없이 이미 동일한 내용으로 생성되어 있고, 누락된 첨부파일 인프라를 설치했습니다.\n\n`
+          : `ℹ️ 엔티티 '${params.entityName}' 은(는) 이미 동일한 내용으로 생성되어 있습니다. 변경 사항 없음.\n\n`) +
         `📁 프로젝트: ${projectDir}\n` +
         `🏷️ 엔티티: ${ctx.entityName} (테이블: ${ctx.tableName})\n` +
         `📄 대상 파일 수: ${fileStatuses.length} (모두 기존 내용과 동일)\n\n` +

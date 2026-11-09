@@ -99,6 +99,25 @@ describe("egov_scaffold_project — withAttachment", () => {
     expect(out).toMatch(/첨부파일 인프라/);
   });
 
+  it("true 이면 모든 메시지 번들에 첨부 화면 키가 있다", async () => {
+    await egovScaffoldProject(boardArgs({ withAttachment: true }));
+    const dir = path.join(projectDir, "src/main/resources/egovframework/message");
+    for (const f of ["message-common.properties", "message-common_ko.properties", "message-common_en.properties"]) {
+      const text = await fs.readFile(path.join(dir, f), "utf-8");
+      expect(text, f).toMatch(/^title\.board\.attachment=/m);
+      expect(text, f).toMatch(/^info\.board\.attachment\.existing=/m);
+    }
+  });
+
+  it("false 이면 메시지 번들에 첨부 키가 없다", async () => {
+    await egovScaffoldProject(boardArgs());
+    const text = await fs.readFile(
+      path.join(projectDir, "src/main/resources/egovframework/message/message-common.properties"),
+      "utf-8",
+    );
+    expect(text).not.toMatch(/attachment/);
+  });
+
   it("false(기본)이면 인프라를 설치하지 않는다", async () => {
     await egovScaffoldProject(boardArgs());
     expect(detectAttachFileInfra(projectDir).present).toBe(false);
@@ -129,10 +148,20 @@ describe("egov_scaffold_project — withAttachment", () => {
     expect(block).toMatch(/,\s*\n\s*ATCH_FILE_ID/);
   });
 
+  it("설치 실패 메시지는 프로젝트 절대 경로를 노출하지 않고 프리픽스를 중첩하지 않는다", async () => {
+    await fs.outputFile(attachConfigPath, "// different");
+    const err = await egovScaffoldProject(boardArgs({ withAttachment: true })).catch((e) => e as Error);
+    expect(err).toBeInstanceOf(Error);
+    expect((err as Error).message).not.toContain(projectDir);
+    expect((err as Error).message.match(/\[조치 후 재시도 가능\]/g)).toHaveLength(1);
+  });
+
   it("설치 실패 시 복구 방법을 안내한다", async () => {
     await fs.outputFile(attachConfigPath, "// different");
     await expect(egovScaffoldProject(boardArgs({ withAttachment: true }))).rejects.toThrow(
       /^\[조치 후 재시도 가능\].*egov_add_attach_file_infrastructure/s,
     );
+    expect(await fs.pathExists(path.join(projectDir, "pom.xml"))).toBe(true);
+    expect(detectAttachFileInfra(projectDir).present).toBe(false);
   });
 });
