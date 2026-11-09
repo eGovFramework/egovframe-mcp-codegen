@@ -13,7 +13,7 @@ import * as path from "node:path";
 import { egovAddEntity } from "../../src/tools/egovAddEntity.js";
 import { egovScaffoldProject } from "../../src/tools/egovScaffoldProject.js";
 import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
-import { RETRY_AFTER_ACTION_PREFIX } from "../../src/utils/scaffold/toolMessages.js";
+import { NON_RETRYABLE_PREFIX } from "../../src/utils/scaffold/toolMessages.js";
 
 const BOARD_DDL = `CREATE TABLE BOARD (
   ID VARCHAR(16) NOT NULL PRIMARY KEY,
@@ -40,7 +40,7 @@ afterEach(async () => {
 });
 
 describe("egov_add_entity — withAttachment 사전조건 에러 분류", () => {
-  it("첨부파일 인프라 미설치 상태에서 withAttachment=true 로 호출하면 [조치 후 재시도 가능] 프리픽스로 거부된다", async () => {
+  it("첨부파일 인프라가 없는 4.3 Boot 프로젝트에서 withAttachment=true 로 호출하면 [재시도 불가] 프리픽스로 거부된다", async () => {
     await generateScaffoldProject({
       projectName: "board-app",
       packageName: "egovframework.example.board",
@@ -49,30 +49,23 @@ describe("egov_add_entity — withAttachment 사전조건 에러 분류", () => 
       ddl: BOARD_DDL,
       description: "",
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "4.3",
     });
     const projectDir = path.join(tmpRoot, "board-app");
 
-    await expect(
+    const call = () =>
       egovAddEntity({
         projectPath: projectDir,
         packageName: "egovframework.example.member",
         entityName: "Member",
         ddl: MEMBER_DDL,
         withAttachment: true,
-      }),
-    ).rejects.toThrow(new RegExp(RETRY_AFTER_ACTION_PREFIX.replace(/[[\]]/g, "\\$&")));
+      });
 
-    // 사전조건 관련 안내(다음에 어떤 도구를 호출해야 하는지)도 함께 담겨 있어야 한다.
-    await expect(
-      egovAddEntity({
-        projectPath: projectDir,
-        packageName: "egovframework.example.member",
-        entityName: "Member",
-        ddl: MEMBER_DDL,
-        withAttachment: true,
-      }),
-    ).rejects.toThrow(/egov_add_attach_file_infrastructure/);
+    await expect(call()).rejects.toThrow(
+      new RegExp(NON_RETRYABLE_PREFIX.replace(/[[\]]/g, "\\$&")),
+    );
+    await expect(call()).rejects.toThrow(/5\.0 Boot 만 지원/);
   });
 });
 

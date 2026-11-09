@@ -50,6 +50,14 @@ import {
 } from "../utils/ddlNormalizer.js";
 import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
 import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
+import {
+  applyAttachFileInfra,
+  defaultAttachFileInstallOptions,
+  planAttachFileInfra,
+  summarizeAttachFileInstall,
+  type AttachFilePlan,
+} from "../utils/scaffold/attachFileInstaller.js";
+import { applyAttachmentContext } from "../utils/scaffold/attachmentContext.js";
 
 /**
  * 입력 검증 스키마. `egov_scaffold_project` 와 다른 점:
@@ -131,9 +139,10 @@ export const AddEntityInputSchema = z.object({
    * - ServiceImpl 의 delete 가 `EgovFileMngService.deleteAllFileInf` 를 함께 호출 (orphan 방지)
    * - 등록/수정 화면(`...Register.html`)에 `<input type="file" name="file_1" multiple>` 추가
    *
-   * 사전조건: 프로젝트에 첨부파일 인프라가 설치되어 있어야 한다 — `EgovFileMngService.java` 와
-   * `EgovConfigAttachFile.java` (boot) 또는 `context-idgn-File.xml` (war) 존재.
-   * 미설치 시 명확한 가이드로 거부 ("먼저 `egov_add_attach_file_infrastructure` 를 호출하세요").
+   * 첨부파일 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로
+   * 자동 설치한다 (5.0 Boot 만 지원 — 그 외 스택은 거부). 설치는 엔티티 사전 검사가 모두 통과한 뒤
+   * 엔티티 파일 쓰기와 하나의 롤백 저널로 수행된다. 세부 옵션이 필요하면 먼저
+   * `egov_add_attach_file_infrastructure` 를 호출한다.
    */
   withAttachment: z.boolean().optional().default(false),
   /**
@@ -492,24 +501,31 @@ async function renderEntityFilesInMemory(
 /**
  * `renderEntityFilesInMemory` 의 결과를 실제 파일로 쓴다.
  * 사전 충돌 검사(내용 비교) 통과 시점 이후에만 호출된다.
- * 쓰기 시작 후 OS 레벨 중간 실패(권한/디스크 풀) 시 이미 쓰인 파일을 원상 복구한다.
+ * 롤백은 호출자가 넘긴 저널로 수행한다 (`withWriteRollback` 은 호출자 책임) — 인프라 설치와
+ * 하나의 저널을 공유하기 위함.
  */
 async function writeRenderedEntityFiles(
   projectDir: string,
   rendered: RenderedEntityFile[],
+  journal: FileWriteJournal,
 ): Promise<string[]> {
-  const journal = new FileWriteJournal();
-  return withWriteRollback(projectDir, journal, async () => {
-    const written: string[] = [];
-    for (const r of rendered) {
-      const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, r.output));
-      await journal.recordBeforeWrite(fullOutputPath);
-      await fs.ensureDir(path.dirname(fullOutputPath));
-      await writeFile(fullOutputPath, r.content, "utf-8");
-      written.push(r.output);
-    }
-    return written;
-  });
+  const written: string[] = [];
+  for (const r of rendered) {
+    const fullOutputPath = assertInsideProject(projectDir, path.join(projectDir, r.output));
+    await journal.recordBeforeWrite(fullOutputPath);
+    await fs.ensureDir(path.dirname(fullOutputPath));
+    await writeFile(fullOutputPath, r.content, "utf-8");
+    written.push(r.output);
+  }
+  return written;
+}
+
+/** 인프라 자동 설치 결과 안내 라인. */
+function infraInstallLines(
+  plan: AttachFilePlan,
+  result: Awaited<ReturnType<typeof applyAttachFileInfra>>,
+): string[] {
+  return [``, `🧩 첨부파일 인프라 자동 설치:`, ...summarizeAttachFileInstall(plan, result)];
 }
 
 export async function egovAddEntity(rawParams: unknown): Promise<string> {
@@ -527,17 +543,12 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     const detected = detectProjectStack(projectDir);
 
     // 2-a) withAttachment 사전조건 — 인프라(EgovFileMngService + EgovConfigAttachFile|context-idgn-File.xml) 가
-    //   설치되어 있어야 한다. 없으면 명확한 가이드로 거부 — 어떤 파일도 쓰지 않고 종료한다.
-    if (params.withAttachment) {
-      const infra = detectAttachFileInfra(projectDir);
-      if (!infra.present) {
-        throw retryAfterAction(
-          `withAttachment=true 로 호출되었으나 프로젝트에 첨부파일 인프라가 설치되어 있지 않습니다.\n` +
-            `먼저 \`egov_add_attach_file_infrastructure\` 도구를 호출해 인프라를 설치한 뒤 다시 시도하세요.\n\n` +
-            `누락된 항목:\n` +
-            infra.missing.map((m) => `  - ${m}`).join("\n"),
-        );
-      }
+    //   없으면 설치 *계획* 만 세운다 (쓰기 없음). 실제 적용은 엔티티 사전 검사가 모두 통과한 뒤
+    //   엔티티 파일 쓰기와 같은 롤백 저널 안에서 수행한다 — 거부 시 어떤 파일도 쓰지 않는다.
+    //   4.3 등 미지원 스택이면 계획 단계에서 nonRetryable 로 거부된다.
+    let infraPlan: AttachFilePlan | undefined;
+    if (params.withAttachment && !detectAttachFileInfra(projectDir).present) {
+      infraPlan = await planAttachFileInfra(defaultAttachFileInstallOptions(projectDir));
     }
 
     // 3) DDL 정규화 (옵션, 기본 on) — egov_scaffold_project 와 동일 동작
@@ -569,15 +580,15 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     const templateBasePath = getScaffoldTemplatePath();
 
     // ctx 에 withAttachment 관련 변수 주입 — 모든 entity 템플릿이 {{#if withAttachment}} 분기로 활용.
-    // ScaffoldContext 의 정적 타입에 없는 필드는 동적 캐스팅으로 추가 (기존 패턴 따름).
-    // 'unknown' 경유 캐스팅은 TS 의 사용자 정의 인터페이스↔동적 dict 호환 우회 표준 패턴.
     const ctxDyn = ctx as unknown as Record<string, unknown>;
-    ctxDyn.withAttachment = params.withAttachment;
-    ctxDyn.attachmentFieldName = params.attachmentFieldName;
-    ctxDyn.attachmentFieldNamePascal =
-      params.attachmentFieldName.charAt(0).toUpperCase() + params.attachmentFieldName.slice(1);
-    ctxDyn.attachmentColumnName = "ATCH_FILE_ID";
-    ctxDyn.maxAttachmentCount = params.maxAttachmentCount;
+    if (params.withAttachment) {
+      applyAttachmentContext(ctx, {
+        attachmentFieldName: params.attachmentFieldName,
+        maxAttachmentCount: params.maxAttachmentCount,
+      });
+    } else {
+      ctxDyn.withAttachment = false;
+    }
     // idGeneration 관련 — 템플릿이 두 boolean 으로 분기 (Handlebars 가 enum 직접 비교를 어색하게 다룸).
     ctxDyn.idGenerationAuto = params.idGeneration === "auto";
     ctxDyn.idGenerationManual = params.idGeneration === "manual";
@@ -600,34 +611,6 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
             `  (b) idGeneration='manual' 로 호출 — DeliveryStatus / Role / CategoryCode 같은 ` +
             `코드 마스터 테이블이라 PK 가 짧은 자연 코드(RCPT/SHIP/DONE 등) 인 경우.`,
         );
-      }
-    }
-
-    // withAttachment=true 면 attribute 컬렉션들에서 ATCH_FILE_ID 를 제외한다.
-    //
-    // 이유: 사용자가 DDL 에 ATCH_FILE_ID 를 명시 포함했거나, 이전 호출에서 자동 주입된
-    //       컬럼을 DDL 에 다시 넣은 경우, attribute 리스트에 들어가 다음 부작용을 일으킨다.
-    //
-    //   (a) Register view 의 일반 필드 루프가 visible text input 으로 렌더 → 사용자에게
-    //       "AtchFileId 은(는) 필수 입력값입니다" 로 입력 요구. atchFileId 는 Controller 가
-    //       채번하는 *내부* 키이므로 사용자가 보거나 입력해선 안 됨.
-    //   (b) Register view 의 client-side validate 가 String 필드는 모두 required 로 잡아
-    //       파일을 안 올린 경우에도 빈 atchFileId 가 검증 실패로 막힘.
-    //   (c) Mapper SQL 의 INSERT/UPDATE 컬럼 루프에서 중복 발생 — withAttachment 분기가
-    //       별도로 컬럼을 추가하기 때문.
-    //
-    // 안전성: ATCH_FILE_ID 는 표준 컬럼명이고 도메인 컬럼명과 충돌하지 않는다 (CHAR(20)
-    //         이 의미하는 첨부파일 그룹 키는 일반 도메인 의미를 갖지 않음).
-    if (params.withAttachment) {
-      const ATTACH_COL = "ATCH_FILE_ID";
-      ctx.attributes = ctx.attributes.filter((a) => a.columnName !== ATTACH_COL);
-      if (ctx.nonPkAttributes) {
-        ctx.nonPkAttributes = ctx.nonPkAttributes.filter((a) => a.columnName !== ATTACH_COL);
-      }
-      if ((ctx as { searchableAttributes?: { columnName: string }[] }).searchableAttributes) {
-        (ctx as { searchableAttributes: { columnName: string }[] }).searchableAttributes = (
-          ctx as { searchableAttributes: { columnName: string }[] }
-        ).searchableAttributes.filter((a) => a.columnName !== ATTACH_COL);
       }
     }
 
@@ -767,6 +750,16 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       existingStatuses.length === fileStatuses.length &&
       existingStatuses.every((s) => s.status === "identical")
     ) {
+      // 엔티티는 그대로지만 첨부 인프라만 없는 경우 — 인프라만 설치한다 (롤백 저널 공유 불필요, 단독 적용).
+      let infraLines: string[] = [];
+      if (infraPlan) {
+        const plan = infraPlan;
+        const journal = new FileWriteJournal();
+        const result = await withWriteRollback(projectDir, journal, () =>
+          applyAttachFileInfra(plan, journal),
+        );
+        infraLines = infraInstallLines(plan, result);
+      }
       return (
         `ℹ️ 엔티티 '${params.entityName}' 은(는) 이미 동일한 내용으로 생성되어 있습니다. 변경 사항 없음.\n\n` +
         `📁 프로젝트: ${projectDir}\n` +
@@ -775,6 +768,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         `대상 파일:\n${fileStatuses.map((s) => `  - ${s.output}`).join("\n")}\n\n` +
         `⏭️ autoApplyMigration / autoApplyMessages / autoApplyMenu 후속 단계는 건너뛰었습니다 ` +
         `(이미 이전 호출에서 반영되었을 것으로 간주해 중복 적용을 방지합니다).` +
+        (infraLines.length > 0 ? `\n${infraLines.join("\n")}\n` : ``) +
         completionFooter()
       );
     }
@@ -817,7 +811,17 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     }
 
     // 7) 파일 쓰기 (위 단계에서 대상 파일이 모두 없음을 확인했으므로 전량 신규 생성)
-    const written = await writeRenderedEntityFiles(projectDir, renderedFiles);
+    //   인프라 설치(있다면)를 먼저, 이어서 엔티티 파일을 하나의 롤백 저널로 쓴다 —
+    //   어느 쪽이 실패해도 둘 다 원상 복구된다.
+    const writeJournal = new FileWriteJournal();
+    let infraInstallLinesOut: string[] = [];
+    const written = await withWriteRollback(projectDir, writeJournal, async () => {
+      if (infraPlan) {
+        const result = await applyAttachFileInfra(infraPlan, writeJournal);
+        infraInstallLinesOut = infraInstallLines(infraPlan, result);
+      }
+      return writeRenderedEntityFiles(projectDir, renderedFiles, writeJournal);
+    });
 
     // 7-a) appendToSeed 모드: 마이그레이션 템플릿을 별도 렌더링해 감지된 시드 파일 끝에 append.
     let appendedSeedRelPath: string | undefined;
@@ -907,6 +911,10 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       `추가된 파일:`,
       ...written.map((f) => `  - ${f}`),
     ];
+
+    if (infraInstallLinesOut.length > 0) {
+      lines.push(...infraInstallLinesOut);
+    }
 
     // basePackage 자동 보정 안내 — 입력 packageName 으로 추출한 basePackage 가 기존 프로젝트와 달라
     // FkComboVO 등 공유 클래스 위치에 맞춰 보정한 경우.
