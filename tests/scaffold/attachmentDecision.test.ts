@@ -56,6 +56,7 @@ describe("resolveAttachmentDecision", () => {
     expect(result).toEqual(c.expected);
     expect(elicitInput).toHaveBeenCalledTimes(c.calls);
     if (c.calls > 0) {
+      expect(elicitInput.mock.calls[0][0]).toMatchObject({ mode: "form", message: "질문" });
       expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: ATTACHMENT_ELICIT_TIMEOUT_MS });
       expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 120000 });
     }

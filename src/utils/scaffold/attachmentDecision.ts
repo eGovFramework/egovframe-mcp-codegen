@@ -32,6 +32,7 @@ export async function resolveAttachmentDecision(args: {
   try {
     const res = await server.elicitInput(
       {
+        mode: "form",
         message,
         requestedSchema: {
           type: "object",
