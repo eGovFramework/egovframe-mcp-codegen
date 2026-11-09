@@ -71,11 +71,13 @@
 	</select>
 
 	<select id="selectFileInf" parameterType="{{basePackage}}.cmm.service.FileVO" resultMap="fileDetail">
-		SELECT ATCH_FILE_ID, FILE_CN, FILE_SN, FILE_STRE_COURS, STRE_FILE_NM,
-		       FILE_EXTSN, ORIGNL_FILE_NM, FILE_SIZE
-		  FROM COMTNFILEDETAIL
-		 WHERE ATCH_FILE_ID = #{atchFileId}
-		   AND FILE_SN = #{fileSn}
+		SELECT b.ATCH_FILE_ID, b.FILE_CN, b.FILE_SN, b.FILE_STRE_COURS, b.STRE_FILE_NM,
+		       b.FILE_EXTSN, b.ORIGNL_FILE_NM, b.FILE_SIZE
+		  FROM COMTNFILE a, COMTNFILEDETAIL b
+		 WHERE a.ATCH_FILE_ID = #{atchFileId}
+		   AND a.ATCH_FILE_ID = b.ATCH_FILE_ID
+		   AND b.FILE_SN = #{fileSn}
+		   AND a.USE_AT = 'Y'
 	</select>
 
 	<update id="deleteCOMTNFILE" parameterType="{{basePackage}}.cmm.service.FileVO">
