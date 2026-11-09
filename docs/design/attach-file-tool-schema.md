@@ -178,7 +178,7 @@ public class EgovConfigAttachFile {
   "ddlEmitted":      ["src/main/resources/db/migrations/mysql/attach-file.sql", "…/oracle/attach-file.sql", "…"],
   "configEdits":     [{ "path": "src/main/java/.../config/EgovConfigWeb.java", "change": "added @Import(EgovConfigAttachFile.class)" }],
   "nextSteps": [
-    "egov_add_entity 호출 시 withAttachment: true 옵션을 줄 수 있습니다.",
+    "egov_add_entity 호출 시 withAttachment: true 옵션을 줄 수 있습니다 (인프라가 없으면 withAttachment: true 호출이 자동 설치하므로 이 도구는 세부 옵션이 필요할 때만 사용).",
     "Globals.fileStorePath 경로의 디렉터리 쓰기 권한을 확인하세요."
   ]
 }
@@ -296,9 +296,11 @@ export const AddEntityInputSchema = z.object({
 
   /**
    * true 면 생성되는 엔티티가 eGov 표준 첨부파일(atchFileId) 와이어드 형태로 emit 된다.
-   * 사전조건: 프로젝트에 첨부파일 인프라가 설치되어 있어야 한다
-   *           (`EgovFileMngService` Bean 검색 + EgovConfigAttachFile.java 존재).
-   * 미설치 시 거부 + "egov_add_attach_file_infrastructure 를 먼저 실행하세요" 가이드.
+   * 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로 자동 설치한다
+   * (엔티티 사전 검사 통과 후, 엔티티 파일과 하나의 롤백 저널로 기록). 5.0 Boot 만 지원 — 그 외 스택은 거부.
+   * 세부 옵션이 필요하면 먼저 `egov_add_attach_file_infrastructure` 를 호출한다.
+   * 생략 시: Elicitation 지원 클라이언트는 서버가 사용자에게 직접 묻고, 미지원이면 파일을 만들지 않고
+   * "사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 재호출" 오류를 반환한다.
    */
   withAttachment: z.boolean().optional().default(false),
 
@@ -334,7 +336,8 @@ export const AddEntityInputSchema = z.object({
 
 ### 3.3 새 에러 / 거부 케이스
 
-- **인프라 미설치** — `withAttachment: true` 인데 `EgovFileMngService.java` 또는 `EgovConfigAttachFile.java` 가 프로젝트에 없음. 메시지: *"첨부파일 인프라가 설치되어 있지 않습니다. 먼저 `egov_add_attach_file_infrastructure` 도구를 호출하세요."*
+- **인프라 미설치** — 더 이상 거부하지 않는다. `withAttachment: true` 면 기본 옵션으로 자동 설치한다 (5.0 Boot 한정, 그 외 스택은 거부).
+- **withAttachment 미지정** — Elicitation 미지원 클라이언트에서는 오류(`isError`)로 사용자 확인을 요청하고 아무 파일도 만들지 않는다. 사용자가 취소하면 오류 없이 "생성하지 않았다"는 안내만 반환한다.
 - **DDL 첨부 필드 타입 충돌** — 사용자 DDL 에 `ATCH_FILE_ID` 가 있지만 타입이 `CHAR(20)` 이 아니거나 NOT NULL/길이가 다름.
 - **필드명 충돌** — `attachmentFieldName` 이 DDL 의 다른 컬럼명과 겹침.
 - **WAR + 5.0 미지원** — `egov_scaffold_project` 정책상 5.0 은 boot 전용. `egov_add_query_view` 와 동일. (실제로는 5.0+boot 에서만 `withAttachment` 지원 — 4.3 도 지원하려면 별도 결정 필요.)
@@ -345,7 +348,7 @@ export const AddEntityInputSchema = z.object({
 - True 조건: `src/main/java/**/cmm/service/EgovFileMngService.java` **AND**
             `src/main/java/**/config/EgovConfigAttachFile.java` (boot) 또는
             `src/main/resources/**/context-idgn-File.xml` (war)
-- False 면 위 에러로 거부.
+- False 이고 `withAttachment: true` 면 인프라를 자동 설치하고, 질문 문구에 "함께 설치됩니다"를 덧붙인다 (사용 가능 판정에는 쓰지 않음).
 
 ---
 

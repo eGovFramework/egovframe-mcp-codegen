@@ -117,7 +117,7 @@ server.registerTool(
   {
     title: "Add Entity to eGovFrame Project",
     description:
-      "이미 생성된 eGovFrame 프로젝트에 새 엔티티의 CRUD 코드(Controller/Service/ServiceImpl/Mapper.java/Mapper.xml/VO/View)를 DDL 한 줄로 추가합니다. projectType(boot/war) 과 stackVersion(4.3/5.0) 은 기존 pom.xml 에서 자동 감지하므로 지정할 필요가 없습니다. 표준 eGovFrame scaffold 구조가 아니면 명확한 에러로 거부합니다. 생성될 파일 중 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다 (덮어쓰기 옵션 없음). pom.xml/application.properties/sql-mapper-config.xml 같은 프로젝트 공용 설정은 건드리지 않습니다.",
+      "이미 생성된 eGovFrame 프로젝트에 새 엔티티의 CRUD 코드(Controller/Service/ServiceImpl/Mapper.java/Mapper.xml/VO/View)를 DDL 한 줄로 추가합니다. projectType(boot/war) 과 stackVersion(4.3/5.0) 은 기존 pom.xml 에서 자동 감지하므로 지정할 필요가 없습니다. 표준 eGovFrame scaffold 구조가 아니면 명확한 에러로 거부합니다. 생성될 파일 중 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다 (덮어쓰기 옵션 없음). pom.xml/application.properties/sql-mapper-config.xml 같은 프로젝트 공용 설정은 건드리지 않습니다. 단 withAttachment=true 이고 첨부파일 인프라(EgovFileMngService/EgovConfigAttachFile)가 없으면 기본 옵션으로 인프라를 함께 설치하므로 이 경우에 한해 공용 설정(application.properties, 메시지 번들, 시드 SQL 등)도 수정됩니다 (5.0 Boot 만 지원). withAttachment 를 생략했을 때 클라이언트가 Elicitation 을 지원하면 서버가 사용자에게 직접 묻고, 지원하지 않으면 사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 다시 호출하라는 오류를 반환합니다.",
     inputSchema: {
       projectPath: z
         .string()

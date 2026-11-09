@@ -60,7 +60,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | autoApplyMigration  | bool   |      | 시드 SQL 파일에 마이그레이션 DDL append (기본 true)                  |
 | autoApplyMessages   | bool   |      | 메시지 번들 3종에 키 자동 append (기본 true)                          |
 | autoApplyMenu       | bool   |      | nav fragment 자동 재생성 + 기존 List 화면에 include 라인 삽입 (기본 false) |
-| withAttachment      | bool   |      | eGov 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성 (기본 false) |
+| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (5.0 Boot 전용). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
 | idGeneration        | string |      | `auto` (기본, EgovTableIdGnrServiceImpl) / `manual` (코드 마스터 테이블) |
 
 ### 3. `egov_add_query_view`
@@ -101,7 +101,7 @@ eGovFrame 5.0 Boot 프로젝트에 표준 첨부파일 인프라를 1회 설치�
 - `atchFileId` 채번: `EgovTableIdGnrServiceImpl` (prefix=`FILE_`, cipers=15) — 정확히 `CHAR(20)` PK 와 길이 일치
 - 충돌 시 거부 (force/overwrite 옵션 없음). `skipIfPresent=true` (기본) 면 동일 내용 존재 시 no-op
 - 업로드 예외(크기 초과 / 실행파일 차단) 발생 시 `cmm/uploadError` view 가 한국어 안내 + "이전 화면" / "처음으로" 버튼 표시
-- `egov_add_entity` 의 `withAttachment: true` 사용 전에 먼저 호출해야 합니다
+- `egov_add_entity` / `egov_scaffold_project` 의 `withAttachment: true` 는 인프라가 없으면 기본 옵션으로 자동 설치하므로 사전 호출은 필수가 아닙니다. 화이트리스트·한도 등 세부 옵션이 필요할 때만 이 도구를 먼저 호출하세요
 
 | 파라미터              | 타입       | 필수 | 설명                                                              |
 |---------------------|-----------|------|-------------------------------------------------------------------|
@@ -276,16 +276,20 @@ Claude: (egov_add_query_view 호출 — boot50 전용)
 ### 예시 5. 첨부파일 인프라 + 첨부 게시판
 
 ```
-User: "보드 앱에 파일 업로드 기능을 넣고 싶어. 우선 첨부파일 베이스부터 만들고,
-       그 다음에 첨부파일 달린 NoticeBoard 엔티티를 추가해줘."
+User: "보드 앱에 첨부파일 달린 NoticeBoard 엔티티를 추가해줘."
 
 Claude:
-  1) egov_add_attach_file_infrastructure 호출 (1회 설치)
-     → 자동: BLOCKED_EXTENSIONS + webroot 검증 + ControllerAdvice + uploadError view +
-            multipart 한도 10MB/50MB + 메시지 번들 append
-  2) egov_add_entity 호출 (withAttachment: true)
+  1) egov_add_entity 호출 (withAttachment 생략)
+     → Elicitation 지원 클라이언트: "엔티티 'NoticeBoard'에 표준 첨부파일 기능을 연결할까요?
+       프로젝트에 첨부파일 인프라가 없어 함께 설치됩니다." 를 사용자에게 직접 묻는다
+     → Elicitation 미지원 클라이언트: 파일을 만들지 않고 오류를 반환 —
+       Claude 가 사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 나머지 인자는 그대로 재호출
+  2) withAttachment: true 로 실행되면
+     → 인프라가 없을 때 기본 옵션으로 자동 설치 (BLOCKED_EXTENSIONS + webroot 검증 + ControllerAdvice +
+       uploadError view + multipart 한도 10MB/50MB + 메시지 번들 append)
      → VO 에 atchFileId 필드, Controller 에 MultipartHttpServletRequest 분기,
        등록 화면에 <input type="file" name="file_1" multiple> 추가
+  (세부 옵션이 필요하면 먼저 egov_add_attach_file_infrastructure 를 호출. 사용자가 취소하면 아무 파일도 만들지 않는다)
 ```
 
 ### 예시 6. 화이트리스트 + 큰 파일 허용 첨부 인프라
