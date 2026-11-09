@@ -12,6 +12,7 @@ import { assertInsideProject } from "./pathGuard.js";
 import { osJunkCopyFilter } from "../fsCopyFilter.js";
 import { validateRenderedFiles } from "./outputValidator.js";
 import { nonRetryable } from "./toolMessages.js";
+import { applyAttachmentContext } from "./attachmentContext.js";
 
 export interface ScaffoldParams {
   projectName: string;
@@ -22,6 +23,11 @@ export interface ScaffoldParams {
   description: string;
   projectType: "boot" | "war";
   stackVersion: "4.3" | "5.0";
+  /**
+   * true 이면 첫 엔티티를 첨부파일 연결(`withAttachment`) 형태로 렌더링한다.
+   * 인프라 설치는 이 함수가 아니라 도구 계층(`egovScaffoldProject`)이 생성 직후 수행한다.
+   */
+  withAttachment?: boolean;
   /**
    * 이 호출이 프로젝트의 "최초/주(primary) 엔티티"를 만드는지 여부.
    * - `egov_scaffold_project` 가 새 프로젝트의 첫 엔티티를 만들 때: `true` (기본).
@@ -354,6 +360,9 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
   registerScaffoldHelpers();
 
   const ctx = buildContext(params);
+  if (params.withAttachment) {
+    applyAttachmentContext(ctx, { attachmentFieldName: "atchFileId", maxAttachmentCount: 0 });
+  }
   const templateBasePath = getScaffoldTemplatePath();
   const projectDir = path.join(params.outputPath, params.projectName);
 

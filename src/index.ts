@@ -70,6 +70,12 @@ server.registerTool(
         .describe(
           "Scaffold 진입 전 DDL 을 케이스/공백/인용부호 기준으로 정규화하고, 표준 미준수 항목을 진단 보고서로 첨부합니다. 의미를 바꾸지 않는 보수적 변환만 수행. 기본 true.",
         ),
+      withAttachment: z
+        .boolean()
+        .optional()
+        .describe(
+          "true 면 첫 엔티티를 첨부파일(atchFileId) 연결 형태로 생성하고 첨부파일 인프라(EgovFileMngService, EgovConfigAttachFile, COMTNFILE 계열 테이블 등)를 프로젝트 생성 직후 함께 설치합니다. eGovFrame 5.0 Boot(projectType='boot', stackVersion='5.0') 에서만 지원하며 그 외 조합은 거부됩니다. 인프라 설치가 실패하면 프로젝트는 남고 egov_add_attach_file_infrastructure 로 복구할 수 있습니다. 기본 false.",
+        ),
     },
   },
   async (args) => {

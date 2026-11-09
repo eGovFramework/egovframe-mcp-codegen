@@ -11,7 +11,19 @@ import {
   normalizeDdl,
   type NormalizationReport,
 } from "../utils/ddlNormalizer.js";
-import { completionFooter, nonRetryable } from "../utils/scaffold/toolMessages.js";
+import {
+  completionFooter,
+  nonRetryable,
+  retryAfterAction,
+  RETRY_AFTER_ACTION_PREFIX,
+} from "../utils/scaffold/toolMessages.js";
+import {
+  applyAttachFileInfra,
+  defaultAttachFileInstallOptions,
+  planAttachFileInfra,
+  summarizeAttachFileInstall,
+} from "../utils/scaffold/attachFileInstaller.js";
+import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
 
 /**
  * 입력 검증 스키마.
@@ -58,6 +70,17 @@ export const ScaffoldInputSchema = z
      * 의미를 바꾸지 않는 보수적 변환만 수행하므로 끄지 않는 것을 권장한다.
      */
     normalizeDdl: z.boolean().optional().default(true),
+    /**
+     * true 이면 첫 엔티티를 첨부파일 연결 형태로 만들고 첨부파일 인프라를 함께 설치한다.
+     * eGovFrame 5.0 Boot 에서만 지원한다.
+     */
+    withAttachment: z
+      .boolean()
+      .optional()
+      .default(false)
+      .describe(
+        "true 이면 첫 엔티티에 첨부파일 업로드/다운로드를 연결하고 첨부파일 인프라를 함께 설치합니다 (eGovFrame 5.0 Boot 전용).",
+      ),
   })
   .superRefine((v, ctx) => {
     // WAR 는 4.3 만 지원한다. 모순 조합을 차단한다.
@@ -67,6 +90,14 @@ export const ScaffoldInputSchema = z
         path: ["stackVersion"],
         message:
           "projectType='war' 는 stackVersion='4.3' 만 지원합니다. WAR + 5.0 조합은 허용되지 않습니다.",
+      });
+    }
+    if (v.withAttachment && !(v.projectType === "boot" && v.stackVersion === "5.0")) {
+      ctx.addIssue({
+        code: "custom",
+        path: ["withAttachment"],
+        message:
+          "withAttachment=true 는 eGovFrame 5.0 Boot(projectType='boot', stackVersion='5.0') 만 지원합니다.",
       });
     }
   });
@@ -109,9 +140,29 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
       description: params.description,
       projectType: params.projectType,
       stackVersion: params.stackVersion,
+      withAttachment: params.withAttachment,
     });
 
     const result = JSON.parse(resultJson);
+
+    // 3-a) 첨부파일 인프라 설치 — 프로젝트는 이미 생성된 상태이므로 실패 시 복구 방법을 안내한다.
+    let attachInfraLines: string[] = [];
+    if (params.withAttachment) {
+      try {
+        const plan = await planAttachFileInfra(defaultAttachFileInstallOptions(result.projectDir));
+        const journal = new FileWriteJournal();
+        const applied = await withWriteRollback(result.projectDir, journal, () =>
+          applyAttachFileInfra(plan, journal),
+        );
+        attachInfraLines = [``, `🧩 첨부파일 인프라 설치:`, ...summarizeAttachFileInstall(plan, applied)];
+      } catch (infraError) {
+        const cause = infraError instanceof Error ? infraError.message : String(infraError);
+        throw retryAfterAction(
+          `프로젝트는 생성되었으나 첨부파일 인프라 설치에 실패했습니다. ` +
+            `원인을 해결한 뒤 egov_add_attach_file_infrastructure 를 호출하면 복구됩니다.\n${cause}`,
+        );
+      }
+    }
 
     const isWar = result.projectType === "war";
     const isBoot50 = result.stackVersion === "5.0";
@@ -159,6 +210,8 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
       );
     }
 
+    lines.push(...attachInfraLines);
+
     // 4) DDL 파서 폴백 안내 — AST(MySQL) 파싱 실패로 legacy 정규식 파서가 쓰인 경우.
     //    산출물은 정상 생성되지만 입력 DDL 이 비표준일 수 있음을 사용자가 알아야 한다.
     if (result.ddlParserUsed === "legacy") {
@@ -188,6 +241,9 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
     return lines.join("\n") + completionFooter();
   } catch (error) {
     console.error("Error in egovScaffoldProject:", error);
+    if (error instanceof Error && error.message.startsWith(RETRY_AFTER_ACTION_PREFIX)) {
+      throw error;
+    }
     throw new Error(
       `프로젝트 생성 실패: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
