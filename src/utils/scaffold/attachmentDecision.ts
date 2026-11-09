@@ -7,7 +7,7 @@ import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
 import { detectAttachFileInfra, detectProjectStack } from "./projectDetector.js";
 import { completionFooter, retryAfterAction } from "./toolMessages.js";
 
-export const ATTACHMENT_ELICIT_TIMEOUT_MS = 120_000;
+export const ATTACHMENT_ELICIT_TIMEOUT_MS = 60_000;
 
 export type AttachmentDecision =
   | { kind: "value"; value: boolean }

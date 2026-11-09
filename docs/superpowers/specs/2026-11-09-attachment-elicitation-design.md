@@ -45,7 +45,7 @@
 | 인자 구성 | 두 도구 모두 `withAttachment` 하나로 통합합니다. 별도 설치 인자는 두지 않습니다. |
 | 인프라가 없는 프로젝트의 `egov_add_entity` | `withAttachment=true`이면 인프라를 먼저 설치합니다. 기존의 거부 동작은 제거합니다. |
 | 질문 방식 | MCP Elicitation을 두 도구에 적용합니다. |
-| Elicitation 응답 대기 시간 | 120초입니다. |
+| Elicitation 응답 대기 시간 | 60초입니다. |
 | 응답별 처리 | `accept`는 입력값대로 진행, `decline`은 첨부파일 없이 생성, `cancel`은 아무 파일도 만들지 않고 중단합니다. |
 | "동작"의 범위 | 2절 목표의 마지막 항목까지입니다. |
 | 지원 스택 | 5.0 Boot만 대상으로 합니다. 4.3 Boot와 WAR 지원은 이번 작업에서 제외합니다. |
@@ -89,7 +89,7 @@
    - 스캐폴드: `projectType`(기본 `boot`)과 `stackVersion`(기본 `5.0`)이 5.0 Boot일 때만 사용할 수 있습니다.
    - 엔티티: `detectProjectStack`이 5.0 Boot를 반환할 때만 사용할 수 있습니다. 인프라 존재 여부는 사용 가능 판정에 쓰지 않고 질문 문구를 고를 때만 사용합니다.
    - `detectProjectStack`이 예외를 던지면 질문을 건너뛰고 도구 본체가 기존 오류를 보고하게 합니다.
-3. `elicitInput`을 `mode: "form"`과 `{ timeout: 120_000 }`으로 호출합니다. 요청 스키마는 필수 boolean 필드 `withAttachment` 하나입니다.
+3. `elicitInput`을 `mode: "form"`과 `{ timeout: 60_000 }`으로 호출합니다. 요청 스키마는 필수 boolean 필드 `withAttachment` 하나입니다.
    - `accept` + boolean 값: `value`
    - `decline`: `value: false`
    - `cancel`: `cancelled`
@@ -153,7 +153,7 @@
 
 ### 자동 테스트
 
-- `attachmentDecision`: 값 지정, 미지원 스택, 미지원 클라이언트, `accept`(true/false), `decline`, `cancel`, `accept` 값 누락, 시간 초과, 120초 옵션 전달을 인메모리 클라이언트로 검증합니다.
+- `attachmentDecision`: 값 지정, 미지원 스택, 미지원 클라이언트, `accept`(true/false), `decline`, `cancel`, `accept` 값 누락, 시간 초과, 60초 옵션 전달을 인메모리 클라이언트로 검증합니다.
 - `egov_add_entity`: 인프라 없음 + `true`의 자동 설치, 인프라 있음 + `true`의 재설치 없음, 엔티티 충돌 시 인프라 미기록, 쓰기 실패 시 인프라까지 복원, 인프라가 없는 4.3 프로젝트 거부, 인프라가 있는 4.3 프로젝트에서 값이 없을 때 질문하지 않음을 검증합니다.
 - `egov_scaffold_project`: `true`의 인프라 설치와 첫 엔티티 연결, 4.3·WAR 조합 거부, `false` 또는 값 없음의 골든 파일 불변을 검증합니다.
 - `tests/scaffold/errorClassificationIntegration.test.ts`의 인프라 미설치 거부 검증은 새 동작에 맞게 수정합니다.

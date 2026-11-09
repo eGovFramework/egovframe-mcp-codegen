@@ -58,7 +58,7 @@ describe("resolveAttachmentDecision", () => {
     if (c.calls > 0) {
       expect(elicitInput.mock.calls[0][0]).toMatchObject({ mode: "form", message: "질문" });
       expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: ATTACHMENT_ELICIT_TIMEOUT_MS });
-      expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 120000 });
+      expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 60000 });
     }
   });
 });
@@ -76,7 +76,7 @@ describe("resolveAttachmentDecision — signal", () => {
       message: "질문",
       signal: ac.signal,
     });
-    expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 120000, signal: ac.signal });
+    expect(elicitInput.mock.calls[0][1]).toEqual({ timeout: 60000, signal: ac.signal });
   });
 
   it("질문 중 취소되면 늦은 accept 응답이 와도 cancelled 를 반환한다", async () => {
