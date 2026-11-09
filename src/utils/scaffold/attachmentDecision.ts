@@ -14,7 +14,7 @@ export type AttachmentDecision =
   | { kind: "needsUserDecision" }
   | { kind: "cancelled" };
 
-type ElicitingServer = Pick<Server, "getClientCapabilities" | "elicitInput">;
+type ElicitingServer = Pick<Server, "elicitInput">;
 
 export async function resolveAttachmentDecision(args: {
   server: ElicitingServer;
@@ -27,10 +27,8 @@ export async function resolveAttachmentDecision(args: {
   const { server, provided, supported, message, signal } = args;
   if (provided !== undefined) return { kind: "value", value: provided };
   if (!supported) return { kind: "value", value: false };
-  if (!server.getClientCapabilities()?.elicitation?.form) {
-    return { kind: "needsUserDecision" };
-  }
 
+  // form capability 가 없는 클라이언트에는 SDK 가 요청을 보내기 전에 예외를 던지며, 아래 catch 에서 처리한다.
   try {
     const res = await server.elicitInput(
       {

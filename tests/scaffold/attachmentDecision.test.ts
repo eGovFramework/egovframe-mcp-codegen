@@ -14,44 +14,39 @@ import { egovAddAttachFileInfrastructure } from "../../src/tools/egovAddAttachFi
 
 type Reply = { action: "accept" | "decline" | "cancel"; content?: Record<string, unknown> };
 
-function stub(opts: { form: boolean; reply?: Reply | "reject" }) {
+function stub(opts: { reply?: Reply | "reject" | "unsupported" }) {
   const elicitInput = vi.fn(async () => {
     if (opts.reply === "reject") throw new Error("boom");
+    // SDK 1.29 는 form capability 가 없는 클라이언트에 요청을 보내기 전에 이 예외를 던진다.
+    if (opts.reply === "unsupported") throw new Error("Client does not support form elicitation.");
     return opts.reply as Reply;
   });
-  return {
-    server: {
-      getClientCapabilities: () => (opts.form ? { elicitation: { form: {} } } : {}),
-      elicitInput,
-    } as never,
-    elicitInput,
-  };
+  return { server: { elicitInput } as never, elicitInput };
 }
 
 const cases: Array<{
   name: string;
   provided: boolean | undefined;
   supported: boolean;
-  form: boolean;
-  reply?: Reply | "reject";
+  reply?: Reply | "reject" | "unsupported";
   expected: unknown;
   calls: number;
 }> = [
-  { name: "true 명시", provided: true, supported: true, form: true, expected: { kind: "value", value: true }, calls: 0 },
-  { name: "false 명시", provided: false, supported: true, form: true, expected: { kind: "value", value: false }, calls: 0 },
-  { name: "미지원 스택", provided: undefined, supported: false, form: true, expected: { kind: "value", value: false }, calls: 0 },
-  { name: "capability 없음", provided: undefined, supported: true, form: false, expected: { kind: "needsUserDecision" }, calls: 0 },
-  { name: "accept true", provided: undefined, supported: true, form: true, reply: { action: "accept", content: { withAttachment: true } }, expected: { kind: "value", value: true }, calls: 1 },
-  { name: "accept false", provided: undefined, supported: true, form: true, reply: { action: "accept", content: { withAttachment: false } }, expected: { kind: "value", value: false }, calls: 1 },
-  { name: "decline", provided: undefined, supported: true, form: true, reply: { action: "decline" }, expected: { kind: "value", value: false }, calls: 1 },
-  { name: "cancel", provided: undefined, supported: true, form: true, reply: { action: "cancel" }, expected: { kind: "cancelled" }, calls: 1 },
-  { name: "accept 인데 content 없음", provided: undefined, supported: true, form: true, reply: { action: "accept" }, expected: { kind: "needsUserDecision" }, calls: 1 },
-  { name: "elicitInput 예외", provided: undefined, supported: true, form: true, reply: "reject", expected: { kind: "needsUserDecision" }, calls: 1 },
+  { name: "true 명시", provided: true, supported: true, expected: { kind: "value", value: true }, calls: 0 },
+  { name: "false 명시", provided: false, supported: true, expected: { kind: "value", value: false }, calls: 0 },
+  { name: "미지원 스택", provided: undefined, supported: false, expected: { kind: "value", value: false }, calls: 0 },
+  { name: "미지원 클라이언트 (SDK 예외)", provided: undefined, supported: true, reply: "unsupported", expected: { kind: "needsUserDecision" }, calls: 1 },
+  { name: "accept true", provided: undefined, supported: true, reply: { action: "accept", content: { withAttachment: true } }, expected: { kind: "value", value: true }, calls: 1 },
+  { name: "accept false", provided: undefined, supported: true, reply: { action: "accept", content: { withAttachment: false } }, expected: { kind: "value", value: false }, calls: 1 },
+  { name: "decline", provided: undefined, supported: true, reply: { action: "decline" }, expected: { kind: "value", value: false }, calls: 1 },
+  { name: "cancel", provided: undefined, supported: true, reply: { action: "cancel" }, expected: { kind: "cancelled" }, calls: 1 },
+  { name: "accept 인데 content 없음", provided: undefined, supported: true, reply: { action: "accept" }, expected: { kind: "needsUserDecision" }, calls: 1 },
+  { name: "elicitInput 예외", provided: undefined, supported: true, reply: "reject", expected: { kind: "needsUserDecision" }, calls: 1 },
 ];
 
 describe("resolveAttachmentDecision", () => {
   it.each(cases)("$name", async (c) => {
-    const { server, elicitInput } = stub({ form: c.form, reply: c.reply });
+    const { server, elicitInput } = stub({ reply: c.reply });
     const result = await resolveAttachmentDecision({
       server,
       provided: c.provided,
@@ -70,7 +65,6 @@ describe("resolveAttachmentDecision", () => {
 describe("resolveAttachmentDecision — signal", () => {
   it("signal 을 elicitInput 옵션으로 전달한다", async () => {
     const { server, elicitInput } = stub({
-      form: true,
       reply: { action: "accept", content: { withAttachment: true } },
     });
     const ac = new AbortController();
@@ -91,7 +85,7 @@ describe("resolveAttachmentDecision — signal", () => {
       return { action: "accept", content: { withAttachment: true } };
     });
     const result = await resolveAttachmentDecision({
-      server: { getClientCapabilities: () => ({ elicitation: { form: {} } }), elicitInput } as never,
+      server: { elicitInput } as never,
       provided: undefined,
       supported: true,
       message: "질문",

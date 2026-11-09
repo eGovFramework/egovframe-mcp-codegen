@@ -89,12 +89,11 @@
    - 스캐폴드: `projectType`(기본 `boot`)과 `stackVersion`(기본 `5.0`)이 5.0 Boot일 때만 사용할 수 있습니다.
    - 엔티티: `detectProjectStack`이 5.0 Boot를 반환할 때만 사용할 수 있습니다. 인프라 존재 여부는 사용 가능 판정에 쓰지 않고 질문 문구를 고를 때만 사용합니다.
    - `detectProjectStack`이 예외를 던지면 질문을 건너뛰고 도구 본체가 기존 오류를 보고하게 합니다.
-3. `getClientCapabilities()?.elicitation?.form`이 없으면 `needsUserDecision`을 반환합니다.
-4. `elicitInput`을 `{ timeout: 120_000 }`으로 호출합니다. 요청 스키마는 필수 boolean 필드 `withAttachment` 하나입니다.
+3. `elicitInput`을 `{ timeout: 120_000 }`으로 호출합니다. 요청 스키마는 필수 boolean 필드 `withAttachment` 하나입니다.
    - `accept` + boolean 값: `value`
    - `decline`: `value: false`
    - `cancel`: `cancelled`
-   - `accept`인데 값 없음, 시간 초과, 그 외 예외: `needsUserDecision`
+   - `accept`인데 값 없음, 미지원 클라이언트에서 SDK가 던지는 예외, 시간 초과, 그 외 예외: `needsUserDecision`
 
 질문 문구는 다음과 같습니다.
 
