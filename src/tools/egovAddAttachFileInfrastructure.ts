@@ -13,9 +13,9 @@
  * - **부수 효과 제한.** 8개 Java 파일 + 1개 mapper XML + 7개 dialect별 DDL + 2개 properties append.
  *   pom.xml / sql-mapper-config.xml 등은 건드리지 않음.
  *
- * Phase A 한계
+ * 현재 한계
  * ------------
- * - **boot50 한 stack 만 지원.** boot43 / war43 은 다음 페이즈.
+ * - **Boot(5.0, 4.3) 만 지원.** WAR 은 다음 페이즈.
  * - 매니페스트 mode `append-fallback` 은 본 도구에서는 사용 안 함 (운영 DB DDL 은 `create` 로
  *   `db/migrations/<dialect>/` 에 fan-out). HSQL 임베디드 시드 머지는 매니페스트 외부에서
  *   `decideMigrationStrategy` + `planHsqlSeedMerge` 로 별도 처리 — 시드 파일명이 프로젝트마다
@@ -29,6 +29,7 @@ import { completionFooter, nonRetryable } from "../utils/scaffold/toolMessages.j
 import {
   AddAttachFileInfrastructureInputSchema,
   applyAttachFileInfra,
+  downloadUrlProtectionNote,
   hsqlSeedSummaryLines,
   planAttachFileInfra,
 } from "../utils/scaffold/attachFileInstaller.js";
@@ -111,7 +112,7 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     `  2. 운영 DB 벤더에 맞는 DDL 을 적용하세요: src/main/resources/db/migrations/<dialect>/attach-file.sql`,
     `     (HSQL 임베디드용 DDL 은 위 시드 머지 결과를 참고하세요.)`,
     `  3. egov_add_entity 호출 시 첨부 와이어드 컨트롤러를 받으려면 withAttachment 옵션을 켜세요.`,
-    `  4. 다운로드 URL: GET /cmm/fms/FileDown.do?atchFileId=&fileSn=  (Spring Security 정책으로 보호 권장)`,
+    `  4. ${downloadUrlProtectionNote(detected.stackVersion)}  (GET /cmm/fms/FileDown.do?atchFileId=&fileSn=)`,
     ``,
     `🔐 보안 정책 (자동 적용됨):`,
     `  - 실행 가능 확장자 차단 (EXE/BAT/SH/JSP/PHP/SVG/HTML/JAR 등) — EgovFileMngUtil.BLOCKED_EXTENSIONS`,

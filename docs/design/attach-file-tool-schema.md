@@ -72,31 +72,29 @@ export const AddAttachFileInfrastructureInputSchema = z.object({
 - `mode: append-fallback` = `autoApplyMigration: false` 또는 안전조건 불충족 시 별도 파일 fallback
 - `expandDialects: true` = 8개 RDBMS(mysql/mariadb/oracle/tibero/postgres/cubrid/altibase/goldilocks) 각각
 
-**boot50 (eGovFrame 5.0 Boot) 출력**
+**boot (eGovFrame 5.0 / 4.3 Boot 공용) 출력**
 
 | # | template | output (relative to projectPath) | mode |
 |---|---|---|---|
-| 1 | `attach-file/boot50/java/EgovFileMngService.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/EgovFileMngService.java` | create |
-| 2 | `attach-file/boot50/java/EgovFileMngServiceImpl.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/impl/EgovFileMngServiceImpl.java` | create |
-| 3 | `attach-file/boot50/java/FileVO.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/FileVO.java` | create |
-| 4 | `attach-file/boot50/java/EgovFileMngUtil.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/EgovFileMngUtil.java` | create |
-| 5 | `attach-file/boot50/java/FileManageMapper.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/impl/FileManageMapper.java` | create |
-| 6 | `attach-file/boot50/java/EgovFileDownloadController.hbs` | `src/main/java/{{basePackagePath}}/cmm/web/EgovFileDownloadController.java` | create |
-| 7 | `attach-file/boot50/java/EgovConfigAttachFile.hbs` | `src/main/java/{{basePackagePath}}/config/EgovConfigAttachFile.java` | create |
-| 8 | `attach-file/boot50/mapper/EgovFileMng_SQL.xml.hbs` | `src/main/resources/egovframework/sqlmap/cmm/mappers/EgovFileMng_SQL.xml` | create |
-| 9 | `attach-file/boot50/ddl/attach-file.sql.hbs` | `src/main/resources/db/migrations/{{dialect}}/attach-file.sql` (expandDialects) — *또는* 기존 시드 SQL 끝에 append | append-fallback |
-| 10 | `attach-file/boot50/properties/attach-file.properties.hbs` | `src/main/resources/application.properties` (append: `Globals.fileStorePath=…`) | append-idempotent |
-| 11 | `attach-file/boot50/properties/attach-file-globals.properties.hbs` | `src/main/resources/egovframework/egovProps/globals.properties` (append) | append-idempotent |
+| 1 | `attach-file/boot/java/EgovFileMngService.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/EgovFileMngService.java` | create |
+| 2 | `attach-file/boot/java/EgovFileMngServiceImpl.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/impl/EgovFileMngServiceImpl.java` | create |
+| 3 | `attach-file/boot/java/FileVO.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/FileVO.java` | create |
+| 4 | `attach-file/boot/java/EgovFileMngUtil.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/EgovFileMngUtil.java` | create |
+| 5 | `attach-file/boot/java/FileManageMapper.hbs` | `src/main/java/{{basePackagePath}}/cmm/service/impl/FileManageMapper.java` | create |
+| 6 | `attach-file/boot/java/EgovFileDownloadController.hbs` | `src/main/java/{{basePackagePath}}/cmm/web/EgovFileDownloadController.java` | create |
+| 7 | `attach-file/boot/java/EgovConfigAttachFile.hbs` | `src/main/java/{{basePackagePath}}/config/EgovConfigAttachFile.java` | create |
+| 8 | `attach-file/boot/mapper/EgovFileMng_SQL.xml.hbs` | `src/main/resources/egovframework/sqlmap/cmm/mappers/EgovFileMng_SQL.xml` | create |
+| 9 | `attach-file/boot/ddl/attach-file.sql.hbs` | `src/main/resources/db/migrations/{{dialect}}/attach-file.sql` (expandDialects) — *또는* 기존 시드 SQL 끝에 append | append-fallback |
+| 10 | `attach-file/boot/properties/attach-file.properties.hbs` | `src/main/resources/application.properties` (append: `Globals.fileStorePath=…`) | append-idempotent |
+| 11 | `attach-file/boot/properties/attach-file-globals.properties.hbs` | `src/main/resources/egovframework/egovProps/globals.properties` (append) | append-idempotent |
 
-**boot43 (eGovFrame 4.3 Boot) 출력**
-
-- 동일 구조, `import javax.*` / Spring 5 패키지로 차이. 별도 템플릿 디렉터리.
+- 5.0 과 4.3 은 `attach-file/boot/` 템플릿과 `manifests/boot.json` 을 공유한다. `javax.*` / `jakarta.*` import, `@Mapper` / `@EgovMapper` 등의 차이는 렌더 컨텍스트(`eeNamespace`, `useEgovMapper`)로 분기한다.
 
 **war43 (전통 WAR + JSP) 출력**
 
 | # | template | output | mode |
 |---|---|---|---|
-| 1~6 | (boot43 와 동일 java 소스) | 동일 | create |
+| 1~6 | (boot 공용 java 소스) | 동일 | create |
 | 7 | `attach-file/war43/config/context-idgn-File.xml.hbs` | `src/main/resources/egovframework/spring/com/idgn/context-idgn-File.xml` | create |
 | 8 | `attach-file/war43/mapper/EgovFileMng_SQL.xml.hbs` | 동일 위치 | create |
 | 9 | `attach-file/war43/ddl/attach-file.sql.hbs` | 동일 동작 | append-fallback |
@@ -207,10 +205,9 @@ templates/
 ├── boot/  boot50/  static/  static50/  ...    # 기존
 └── attach-file/                        # ★ 신규
     ├── manifests/
-    │   ├── boot50.json                 # 위 1.2 표의 boot50 행을 manifest 로
-    │   ├── boot43.json
-    │   └── war43.json
-    ├── boot50/
+    │   ├── boot.json                   # 5.0 / 4.3 Boot 공용 (위 1.2 표의 boot 행)
+    │   └── war43.json                  # (미구현 — WAR 지원 시 추가)
+    ├── boot/                           # 5.0 / 4.3 Boot 공용 — javax/jakarta, @Mapper/@EgovMapper 차이는 렌더 컨텍스트로 분기
     │   ├── java/
     │   │   ├── EgovFileMngService.hbs
     │   │   ├── EgovFileMngServiceImpl.hbs
@@ -226,10 +223,8 @@ templates/
     │   └── properties/
     │       ├── attach-file.properties.hbs           # application.properties append 조각
     │       └── attach-file-globals.properties.hbs   # globals.properties append 조각
-    ├── boot43/
-    │   └── …                            # boot50 와 동일 구조, javax/spring5 차이
     └── war43/
-        ├── java/                       # boot43 와 java 는 동일 (재사용 가능 — symlink 또는 복제)
+        ├── java/                       # boot 와 java 는 동일 (재사용 가능 — symlink 또는 복제)
         ├── config/
         │   └── context-idgn-File.xml.hbs
         ├── mapper/
@@ -261,16 +256,16 @@ type AttachFileTemplateContext = {
 ### 2.2 매니페스트 항목 형태 (기존 매니페스트 스키마 재사용)
 
 ```jsonc
-// templates/attach-file/manifests/boot50.json
+// templates/attach-file/manifests/boot.json
 {
-  "name": "attach-file-boot50",
+  "name": "attach-file-boot",
   "scope": "framework",   // 모두 framework (per-project once)
   "files": [
-    { "template": "attach-file/boot50/java/EgovFileMngService.hbs",
+    { "template": "attach-file/boot/java/EgovFileMngService.hbs",
       "output":   "src/main/java/{{basePackagePath}}/cmm/service/EgovFileMngService.java",
       "mode": "create" },
-    // ... (1.2 표의 boot50 행 그대로)
-    { "template": "attach-file/boot50/ddl/attach-file.sql.hbs",
+    // ... (1.2 표의 boot 행 그대로)
+    { "template": "attach-file/boot/ddl/attach-file.sql.hbs",
       "output":   "src/main/resources/db/migrations/{{dialect}}/attach-file.sql",
       "expandDialects": true,
       "mode": "append-fallback",
@@ -297,7 +292,7 @@ export const AddEntityInputSchema = z.object({
   /**
    * true 면 생성되는 엔티티가 eGov 표준 첨부파일(atchFileId) 와이어드 형태로 emit 된다.
    * 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로 자동 설치한다
-   * (엔티티 사전 검사 통과 후, 엔티티 파일과 하나의 롤백 저널로 기록). 5.0 Boot 만 지원 — 그 외 스택은 거부.
+   * (엔티티 사전 검사 통과 후, 엔티티 파일과 하나의 롤백 저널로 기록). Boot(5.0, 4.3) 만 지원 — WAR 은 거부.
    * 세부 옵션이 필요하면 먼저 `egov_add_attach_file_infrastructure` 를 호출한다.
    * 생략 시: Elicitation 지원 클라이언트는 서버가 사용자에게 직접 묻고, 미지원이면 파일을 만들지 않고
    * "사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 재호출" 오류를 반환한다.
@@ -336,11 +331,11 @@ export const AddEntityInputSchema = z.object({
 
 ### 3.3 새 에러 / 거부 케이스
 
-- **인프라 미설치** — 더 이상 거부하지 않는다. `withAttachment: true` 면 기본 옵션으로 자동 설치한다 (5.0 Boot 한정, 그 외 스택은 거부).
+- **인프라 미설치** — 더 이상 거부하지 않는다. `withAttachment: true` 면 기본 옵션으로 자동 설치한다 (Boot 5.0, 4.3 한정, WAR 은 거부).
 - **withAttachment 미지정** — Elicitation 미지원 클라이언트에서는 오류(`isError`)로 사용자 확인을 요청하고 아무 파일도 만들지 않는다. 사용자가 취소하면 오류 없이 "생성하지 않았다"는 안내만 반환한다.
 - **DDL 첨부 필드 타입 충돌** — 사용자 DDL 에 `ATCH_FILE_ID` 가 있지만 타입이 `CHAR(20)` 이 아니거나 NOT NULL/길이가 다름.
 - **필드명 충돌** — `attachmentFieldName` 이 DDL 의 다른 컬럼명과 겹침.
-- **WAR + 5.0 미지원** — `egov_scaffold_project` 정책상 5.0 은 boot 전용. `egov_add_query_view` 와 동일. (실제로는 5.0+boot 에서만 `withAttachment` 지원 — 4.3 도 지원하려면 별도 결정 필요.)
+- **WAR + 5.0 미지원** — `egov_scaffold_project` 정책상 5.0 은 boot 전용. `egov_add_query_view` 와 동일. (`withAttachment` 는 5.0 / 4.3 Boot 에서 지원하고 WAR 은 거부한다.)
 
 ### 3.4 인프라 존재 자동 감지 로직
 
@@ -383,12 +378,12 @@ skill (`egovframe-attach-file-pattern.md`) 의 7개 invariants 가 도구 출력
 ## 6. 합의 후 다음 단계 (이 문서 승인되면)
 
 1. `templates/attach-file/` 디렉터리 생성 + 각 `.hbs` 파일 본문 작성 (공통컴포넌트 코드 기반, stack 별 차이 반영)
-2. `templates/attach-file/manifests/{boot50,boot43,war43}.json` 작성
+2. `templates/attach-file/manifests/{boot,war43}.json` 작성 (boot 는 5.0/4.3 공용)
 3. `src/utils/scaffold/manifestLoader.ts` 에 `mode` / `appendTarget` 필드 지원 추가
 4. `src/tools/egovAddAttachFileInfrastructure.ts` 신규 — `egovAddEntity.ts` 의 사전검사·충돌처리 로직 일부 재사용
 5. `src/tools/egovAddEntity.ts` 에 `withAttachment` 분기 추가 + `detectAttachFileInfra` 유틸 추가
 6. `src/index.ts` 에 신규 tool 등록 (4번째 tool)
-7. `tests/` 골든 스냅샷: boot50 인프라 emit / boot43 / war43 각 1건 + withAttachment=true 엔티티 1건
+7. `tests/` 골든 스냅샷: boot(5.0/4.3 공용) 인프라 emit / war43 각 1건 + withAttachment=true 엔티티 1건
 8. README 도구 카탈로그 업데이트
 
 추정 변경량: 신규 TS 약 600~900 LoC + 템플릿 약 15~20 파일 + 매니페스트 3 + 골든 4건.

@@ -5,7 +5,7 @@
   "files": [
     {
       "path": ".claude/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a531ed1f6e93c6f3f48290985598c4d013116c8591ff752757773d3065aec8dd"
+      "sha256": "b4e431f046505d70d409af774a5516b72683fbc5d93e3726af57a181091d7eca"
     },
     {
       "path": ".claude/skills/egovframe-conventions/SKILL.md",
@@ -17,7 +17,7 @@
     },
     {
       "path": ".cline/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a531ed1f6e93c6f3f48290985598c4d013116c8591ff752757773d3065aec8dd"
+      "sha256": "b4e431f046505d70d409af774a5516b72683fbc5d93e3726af57a181091d7eca"
     },
     {
       "path": ".cline/skills/egovframe-conventions/SKILL.md",
@@ -29,7 +29,7 @@
     },
     {
       "path": ".continue/rules/egovframe-attach-file-pattern.md",
-      "sha256": "f6253cb350f7bbcbfcfa4c57cfe2f7eaf91197c63de17126eb1c92f813767939"
+      "sha256": "595918c40740c8de6c5f169811a0ca2d95021d59e8eab4359b4c8f2c5efba0f4"
     },
     {
       "path": ".continue/rules/egovframe-conventions.md",
@@ -41,7 +41,7 @@
     },
     {
       "path": ".cursor/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a531ed1f6e93c6f3f48290985598c4d013116c8591ff752757773d3065aec8dd"
+      "sha256": "b4e431f046505d70d409af774a5516b72683fbc5d93e3726af57a181091d7eca"
     },
     {
       "path": ".cursor/skills/egovframe-conventions/SKILL.md",
@@ -53,7 +53,7 @@
     },
     {
       "path": ".opencode/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a531ed1f6e93c6f3f48290985598c4d013116c8591ff752757773d3065aec8dd"
+      "sha256": "b4e431f046505d70d409af774a5516b72683fbc5d93e3726af57a181091d7eca"
     },
     {
       "path": ".opencode/skills/egovframe-conventions/SKILL.md",

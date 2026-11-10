@@ -55,7 +55,7 @@ COMTNFILEDETAIL (상세, 1:N)
 - [ ] **(6)** 도메인 삭제 시 `EgovFileMngService.deleteAllFileInf(fvo)` 를 **반드시 별도 호출**. 도메인 DELETE 만 하면 COMTNFILE/COMTNFILEDETAIL 에 orphan 누적 + 디스크 파일도 그대로.
 - [ ] **(7)** `egovFileIdGnrService` Bean 은 일반 `egovIdGnrService` 와 **별도로 등록**되어야 한다 (prefix 가 다르므로). Bean name 은 정확히 `egovFileIdGnrService`, 시퀀스 테이블 row 의 `TABLE_NAME` 컬럼 값은 정확히 `FILE_ID`.
   - 위반 시: `NoSuchBeanDefinitionException: egovFileIdGnrService` 또는 다른 도메인의 시퀀스를 갉아먹어 다음 채번이 충돌.
-- [ ] **(8)** 5.0 Boot 산출물은 CSRF 보호가 기본 활성이므로 업로드/첨부삭제 요청도 **CSRF 토큰을 포함**해야 한다. 생성 화면은 폼 hidden 필드(`id="csrfField"`, multipart 본문 파트로 전송)와 meta 태그 기반 fetch 헤더를 이미 갖추고 있다 — 커스텀 화면을 추가할 때 같은 패턴을 복제한다.
+- [ ] **(8)** (5.0 Boot 에만 해당 — 4.3 Boot 는 Spring Security 가 없다) 5.0 Boot 산출물은 CSRF 보호가 기본 활성이므로 업로드/첨부삭제 요청도 **CSRF 토큰을 포함**해야 한다. 생성 화면은 폼 hidden 필드(`id="csrfField"`, multipart 본문 파트로 전송)와 meta 태그 기반 fetch 헤더를 이미 갖추고 있다 — 커스텀 화면을 추가할 때 같은 패턴을 복제한다.
   - 위반 시: 업로드/삭제 POST 가 403 → `/egovCSRFAccessDenied.do` 화면. 파일이 `spring.servlet.multipart.max-file-size` 초과 시에도 파트 파싱 실패로 같은 화면이 나타날 수 있다 (`egovframe-troubleshooting` §2.13 참조).
 
 ---
@@ -227,7 +227,7 @@ DDL 정규화 시 `VARCHAR2` ↔ `VARCHAR`, `NUMBER` ↔ `NUMERIC`, `DATE` ↔ `
 
 ---
 
-## Bean 설정 (Boot 5.0 / Java Config)
+## Bean 설정 (Boot 5.0 / 4.3 Java Config)
 
 ```java
 // EgovConfigIdGeneration.java 또는 그에 준하는 @Configuration 클래스에 추가

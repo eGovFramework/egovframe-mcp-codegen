@@ -112,16 +112,16 @@ export function defaultAttachFileInstallOptions(projectPath: string): AttachFile
 }
 
 /**
- * stack → 매니페스트 경로 라우팅. Phase A 는 5.0 Boot 만.
- * boot43 / war43 추가 시 본 함수만 확장하면 된다.
+ * stack → 매니페스트 경로 라우팅. Boot(5.0, 4.3)는 공용 매니페스트를 쓴다.
+ * WAR 지원을 추가할 때 본 함수만 확장하면 된다.
  */
 function manifestForStack(stackVersion: "5.0" | "4.3", projectType: "boot" | "war"): string {
-  if (stackVersion === "5.0" && projectType === "boot") {
+  if (projectType === "boot") {
     return "attach-file/manifests/boot.json";
   }
   throw nonRetryable(
-    `egov_add_attach_file_infrastructure 는 현재 eGovFrame 5.0 Boot 만 지원합니다 (감지: ${stackVersion} ${projectType}). ` +
-      `4.3 Boot / 4.3 WAR 지원은 다음 페이즈에서 추가됩니다.`,
+    `egov_add_attach_file_infrastructure 는 현재 eGovFrame Boot 만 지원합니다 (감지: ${stackVersion} ${projectType}). ` +
+      `WAR 지원은 다음 페이즈에서 추가됩니다.`,
   );
 }
 
@@ -653,6 +653,13 @@ export function hsqlSeedSummaryLines(r: HsqlSeedApplyResult): string[] {
   ];
 }
 
+/** 다운로드 URL 보호 안내 문구 — 4.3 은 Spring Security 가 기본 구성에 없다. */
+export function downloadUrlProtectionNote(stackVersion: "5.0" | "4.3"): string {
+  return stackVersion === "4.3"
+    ? `다운로드 URL /cmm/fms/FileDown.do 에는 접근 제어가 없습니다. 인증 체계를 도입할 때 보호하세요.`
+    : `다운로드 URL /cmm/fms/FileDown.do 는 Spring Security 정책으로 보호하세요.`;
+}
+
 /** 설치 결과 요약: 생성 파일 수와 목록, 파일 저장 경로, HSQL 시드 처리 결과. */
 export function summarizeAttachFileInstall(plan: AttachFilePlan, result: AttachFileApplyResult): string[] {
   return [
@@ -662,6 +669,6 @@ export function summarizeAttachFileInstall(plan: AttachFilePlan, result: AttachF
     ...hsqlSeedSummaryLines(result.hsqlSeedResult),
     `   - 운영 DB 에는 db/migrations/<dialect>/attach-file.sql 의 DDL 을 적용하세요.`,
     `   - 기본 파일 저장 경로는 OS 임시 디렉터리 하위입니다 — 운영에서는 Globals.fileStorePath 를 외부 마운트 경로로 바꾸세요.`,
-    `   - 다운로드 URL /cmm/fms/FileDown.do 는 Spring Security 정책으로 보호하세요.`,
+    `   - ${downloadUrlProtectionNote(plan.detected.stackVersion)}`,
   ];
 }

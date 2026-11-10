@@ -167,10 +167,10 @@ describe("egov_scaffold_project — withAttachment 확인", () => {
     expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
-  it("지원하지 않는 스택(4.3)은 질문 없이 첨부파일 없이 생성한다", async () => {
+  it("지원하지 않는 스택(WAR 4.3)은 질문 없이 첨부파일 없이 생성한다", async () => {
     const { client, handler } = await connect({ action: "accept", content: { withAttachment: true } });
     const res = await client.callTool(
-      { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: "4.3" }) },
+      { name: "egov_scaffold_project", arguments: scaffoldArgs({ projectType: "war", stackVersion: "4.3" }) },
       undefined,
       TIMEOUT,
     );

@@ -73,14 +73,14 @@ export const ScaffoldInputSchema = z
     normalizeDdl: z.boolean().optional().default(true),
     /**
      * true 이면 첫 엔티티를 첨부파일 연결 형태로 만들고 첨부파일 인프라를 함께 설치한다.
-     * eGovFrame 5.0 Boot 에서만 지원한다.
+     * eGovFrame Boot(5.0, 4.3) 에서만 지원한다.
      */
     withAttachment: z
       .boolean()
       .optional()
       .default(false)
       .describe(
-        "true 이면 첫 엔티티에 첨부파일 업로드/다운로드를 연결하고 첨부파일 인프라를 함께 설치합니다 (eGovFrame 5.0 Boot 전용).",
+        "true 이면 첫 엔티티에 첨부파일 업로드/다운로드를 연결하고 첨부파일 인프라를 함께 설치합니다 (eGovFrame Boot 전용: 5.0, 4.3).",
       ),
   })
   .superRefine((v, ctx) => {
@@ -93,12 +93,12 @@ export const ScaffoldInputSchema = z
           "projectType='war' 는 stackVersion='4.3' 만 지원합니다. WAR + 5.0 조합은 허용되지 않습니다.",
       });
     }
-    if (v.withAttachment && !(v.projectType === "boot" && v.stackVersion === "5.0")) {
+    if (v.withAttachment && v.projectType !== "boot") {
       ctx.addIssue({
         code: "custom",
         path: ["withAttachment"],
         message:
-          "withAttachment=true 는 eGovFrame 5.0 Boot(projectType='boot', stackVersion='5.0') 만 지원합니다.",
+          "withAttachment=true 는 eGovFrame Boot(projectType='boot', 5.0 및 4.3) 만 지원합니다.",
       });
     }
   });

@@ -140,7 +140,7 @@ export const AddEntityInputSchema = z.object({
    * - 등록/수정 화면(`...Register.html`)에 `<input type="file" name="file_1" multiple>` 추가
    *
    * 첨부파일 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로
-   * 자동 설치한다 (5.0 Boot 만 지원 — 그 외 스택은 거부). 설치는 엔티티 사전 검사가 모두 통과한 뒤
+   * 자동 설치한다 (Boot 만 지원: 5.0, 4.3 — WAR 은 거부). 설치는 엔티티 사전 검사가 모두 통과한 뒤
    * 엔티티 파일 쓰기와 하나의 롤백 저널로 수행된다. 세부 옵션이 필요하면 먼저
    * `egov_add_attach_file_infrastructure` 를 호출한다.
    */
@@ -545,7 +545,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     // 2-a) withAttachment 사전조건 — 인프라(EgovFileMngService + EgovConfigAttachFile|context-idgn-File.xml) 가
     //   없으면 설치 *계획* 만 세운다 (쓰기 없음). 실제 적용은 엔티티 사전 검사가 모두 통과한 뒤
     //   엔티티 파일 쓰기와 같은 롤백 저널 안에서 수행한다 — 거부 시 어떤 파일도 쓰지 않는다.
-    //   4.3 등 미지원 스택이면 계획 단계에서 nonRetryable 로 거부된다.
+    //   WAR 등 미지원 스택이면 계획 단계에서 nonRetryable 로 거부된다.
     let infraPlan: AttachFilePlan | undefined;
     if (params.withAttachment && !detectAttachFileInfra(projectDir).present) {
       infraPlan = await planAttachFileInfra(defaultAttachFileInstallOptions(projectDir));

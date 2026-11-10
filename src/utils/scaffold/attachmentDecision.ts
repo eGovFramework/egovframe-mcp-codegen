@@ -65,7 +65,7 @@ export function describeScaffoldAttachmentPrompt(args: {
   const projectType = args.projectType ?? "boot";
   const stackVersion = args.stackVersion ?? "5.0";
   return {
-    supported: projectType === "boot" && stackVersion === "5.0",
+    supported: projectType === "boot",
     message: "이 프로젝트에 표준 첨부파일 기능을 포함할까요?",
   };
 }
@@ -77,7 +77,7 @@ export function describeAddEntityAttachmentPrompt(
   const base = `엔티티 '${entityName}'에 표준 첨부파일 기능을 연결할까요?`;
   try {
     const stack = detectProjectStack(projectPath);
-    const supported = stack.projectType === "boot" && stack.stackVersion === "5.0";
+    const supported = stack.projectType === "boot";
     if (!supported) return { supported: false, message: base };
     const present = detectAttachFileInfra(projectPath).present;
     return {

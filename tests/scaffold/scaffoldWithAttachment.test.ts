@@ -124,13 +124,10 @@ describe("egov_scaffold_project — withAttachment", () => {
     expect(detectAttachFileInfra(projectDir).present).toBe(false);
   });
 
-  it.each([
-    ["boot", "4.3"],
-    ["war", "4.3"],
-  ])("%s %s + true 는 거부한다", async (projectType, stackVersion) => {
+  it.each([["war", "4.3"]])("%s %s + true 는 거부한다", async (projectType, stackVersion) => {
     await expect(
       egovScaffoldProject(boardArgs({ withAttachment: true, projectType, stackVersion })),
-    ).rejects.toThrow(/5\.0 Boot/);
+    ).rejects.toThrow(/Boot/);
   });
 
   it("DDL 의 ATCH_FILE_ID 는 입력 필드와 중복 컬럼을 만들지 않는다", async () => {

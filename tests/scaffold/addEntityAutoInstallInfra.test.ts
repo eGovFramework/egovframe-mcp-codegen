@@ -122,11 +122,21 @@ describe("egov_add_entity — 첨부파일 인프라 자동 설치", () => {
     expect(await fs.readFile(seedPath, "utf-8")).toBe(seedBefore);
   });
 
-  it("인프라가 없는 4.3 프로젝트는 거부한다", async () => {
+  it("인프라가 없는 WAR 프로젝트는 거부한다", async () => {
     await fs.remove(path.join(tmpRoot, "board-app"));
-    projectDir = await scaffold("4.3");
+    await generateScaffoldProject({
+      projectName: "board-app",
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: BOARD_DDL,
+      description: "",
+      projectType: "war",
+      stackVersion: "4.3",
+    });
+    projectDir = path.join(tmpRoot, "board-app");
     await expect(egovAddEntity(memberArgs({ withAttachment: true }))).rejects.toThrow(
-      /5\.0 Boot 만 지원/,
+      /Boot 만 지원/,
     );
   });
 

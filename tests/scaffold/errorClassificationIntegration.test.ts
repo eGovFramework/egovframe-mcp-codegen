@@ -40,7 +40,7 @@ afterEach(async () => {
 });
 
 describe("egov_add_entity — withAttachment 사전조건 에러 분류", () => {
-  it("첨부파일 인프라가 없는 4.3 Boot 프로젝트에서 withAttachment=true 로 호출하면 [재시도 불가] 프리픽스로 거부된다", async () => {
+  it("첨부파일 인프라가 없는 4.3 WAR 프로젝트에서 withAttachment=true 로 호출하면 [재시도 불가] 프리픽스로 거부된다", async () => {
     await generateScaffoldProject({
       projectName: "board-app",
       packageName: "egovframework.example.board",
@@ -48,7 +48,7 @@ describe("egov_add_entity — withAttachment 사전조건 에러 분류", () => 
       entityName: "Board",
       ddl: BOARD_DDL,
       description: "",
-      projectType: "boot",
+      projectType: "war",
       stackVersion: "4.3",
     });
     const projectDir = path.join(tmpRoot, "board-app");
@@ -65,7 +65,7 @@ describe("egov_add_entity — withAttachment 사전조건 에러 분류", () => 
     await expect(call()).rejects.toThrow(
       new RegExp(NON_RETRYABLE_PREFIX.replace(/[[\]]/g, "\\$&")),
     );
-    await expect(call()).rejects.toThrow(/5\.0 Boot 만 지원/);
+    await expect(call()).rejects.toThrow(/Boot 만 지원/);
   });
 });
 

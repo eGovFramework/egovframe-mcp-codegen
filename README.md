@@ -42,7 +42,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | stackVersion  | string |      | `5.0` (기본) / `4.3`                                              |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
 | description   | string |      | 프로젝트 한 줄 설명                                                |
-| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (5.0 Boot 전용. 4.3/WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
+| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.0, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
 
 ### 2. `egov_add_entity`
 
@@ -50,7 +50,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 - `projectType` / `stackVersion` 은 기존 `pom.xml` 에서 자동 감지 (지정 불필요)
 - 생성될 파일 중 하나라도 충돌하면 **전체 거부** (덮어쓰기 옵션 없음)
-- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (5.0 Boot 만 지원)
+- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (Boot 만 지원: 5.0, 4.3)
 
 | 파라미터              | 타입    | 필수 | 설명                                                                 |
 |---------------------|--------|------|----------------------------------------------------------------------|
@@ -61,7 +61,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | autoApplyMigration  | bool   |      | 시드 SQL 파일에 마이그레이션 DDL append (기본 true)                  |
 | autoApplyMessages   | bool   |      | 메시지 번들 3종에 키 자동 append (기본 true)                          |
 | autoApplyMenu       | bool   |      | nav fragment 자동 재생성 + 기존 List 화면에 include 라인 삽입 (기본 false) |
-| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (5.0 Boot 전용). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
+| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (Boot 전용: 5.0, 4.3). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
 | idGeneration        | string |      | `auto` (기본, EgovTableIdGnrServiceImpl) / `manual` (코드 마스터 테이블) |
 
 ### 3. `egov_add_query_view`
@@ -87,7 +87,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 ### 4. `egov_add_attach_file_infrastructure`
 
-eGovFrame 5.0 Boot 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다 — **자체 보안 정책 + multipart 한도 + 업로드 에러 UX 까지 포함된 완성형**.
+eGovFrame Boot(5.0, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다 — **자체 보안 정책 + multipart 한도 + 업로드 에러 UX 까지 포함된 완성형**.
 
 **구성 (자동 생성/등록되는 산출물 19종)**
 
@@ -106,7 +106,7 @@ eGovFrame 5.0 Boot 프로젝트에 표준 첨부파일 인프라를 1회 설치�
 
 | 파라미터              | 타입       | 필수 | 설명                                                              |
 |---------------------|-----------|------|-------------------------------------------------------------------|
-| projectPath         | string    | ✓    | 기존 eGovFrame 5.0 Boot 프로젝트 루트                              |
+| projectPath         | string    | ✓    | 기존 eGovFrame Boot(5.0, 4.3) 프로젝트 루트                              |
 | fileStorePath       | string    |      | `Globals.fileStorePath` 절대경로. 비우면 OS 임시 디렉터리 fallback |
 | idGnrPrefix         | string    |      | atchFileId 채번 prefix (기본 `FILE_`)                              |
 | idGnrCipers         | number    |      | atchFileId 채번 자릿수 (기본 15, prefix+cipers=20 강제)            |
@@ -136,7 +136,7 @@ eGovFrame 5.0 Boot 프로젝트에 표준 첨부파일 인프라를 1회 설치�
 
 ⚠️ **여전히 외부 조치가 필요한 부분** (이번 인프라가 자동으로 해주지 않는 것):
 
-- **다운로드 URL 인증/인가** (`/cmm/fms/FileDown.do`) — Spring Security 정책으로 보호 권장. 기본은 permitAll 이라 `atchFileId`+`fileSn` 만 알면 누구나 다운로드 가능 (IDOR)
+- **다운로드 URL 인증/인가** (`/cmm/fms/FileDown.do`) — 5.0 은 Spring Security 정책으로 보호 권장, 4.3 은 접근 제어가 없으므로 인증 체계 도입 시 보호. 기본은 열려 있어 `atchFileId`+`fileSn` 만 알면 누구나 다운로드 가능 (IDOR)
 - **antivirus 스캔** — 자체 후크 없음. 운영 환경에서는 ClamAV 등 외부 스캔 권장
 - **MIME 매직넘버 검증** — 확장자만 검사하며 실제 내용은 검증 안 함 (`.jpg` 로 리네임된 `.exe` 우회 가능. 다만 다운로드 시 `octet-stream` 강제라 인라인 실행은 막힘)
 
@@ -347,7 +347,8 @@ egovframe-mcp-codegen/
 │   ├── static/                                 # 4.3 정적 리소스
 │   ├── static50/                               # 5.0 정적 리소스
 │   ├── attach-file/                            # 첨부파일 인프라 템플릿
-│   │   └── boot50/
+│   │   ├── manifests/   # boot.json (5.0/4.3 공용)
+│   │   └── boot/        # 5.0/4.3 공용 (stack 차이는 렌더 컨텍스트로 분기)
 │   │       ├── java/        # 8개 Java 클래스 (Service/Util/Mapper/Controller/Config/ExceptionAdvice)
 │   │       ├── thymeleaf/   # cmm/uploadError.html + _fragments/alertMessages.html
 │   │       ├── messages/    # 메시지 번들 append fragment (ko/base/en)

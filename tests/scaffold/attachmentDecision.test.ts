@@ -105,10 +105,12 @@ describe("describeScaffoldAttachmentPrompt", () => {
   });
   it.each([
     [{ projectType: "war" as const }],
-    [{ stackVersion: "4.3" as const }],
     [{ projectType: "war" as const, stackVersion: "4.3" as const }],
-  ])("5.0 Boot 외 조합은 미지원: %j", (a) => {
+  ])("WAR 조합은 미지원: %j", (a) => {
     expect(describeScaffoldAttachmentPrompt(a).supported).toBe(false);
+  });
+  it("4.3 Boot 는 지원", () => {
+    expect(describeScaffoldAttachmentPrompt({ stackVersion: "4.3" }).supported).toBe(true);
   });
 });
 
@@ -155,8 +157,25 @@ describe("describeAddEntityAttachmentPrompt", () => {
     });
   });
 
-  it("4.3 Boot 는 미지원", async () => {
+  it("4.3 Boot 인프라 없음: 지원, 함께 설치 문구", async () => {
     const dir = await scaffold("4.3");
+    const r = describeAddEntityAttachmentPrompt(dir, "Article");
+    expect(r.supported).toBe(true);
+    expect(r.message).toContain("함께 설치됩니다");
+  });
+
+  it("4.3 WAR 는 미지원", async () => {
+    await generateScaffoldProject({
+      projectName: "board-app",
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: DDL,
+      description: "",
+      projectType: "war",
+      stackVersion: "4.3",
+    });
+    const dir = path.join(tmpRoot, "board-app");
     expect(describeAddEntityAttachmentPrompt(dir, "Article").supported).toBe(false);
   });
 

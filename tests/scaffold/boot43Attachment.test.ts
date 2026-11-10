@@ -1,13 +1,17 @@
 /**
  * 4.3 Boot 엔티티 템플릿 첨부파일 연결 테스트.
  *
- * 스택 제한(게이트)과 무관하게 generateScaffoldProject 를 직접 호출한다.
+ * 엔티티 템플릿은 generateScaffoldProject 를 직접 호출하고, 도구 경로는 egov_scaffold_project /
+ * egov_add_entity 로 검증한다.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "fs-extra";
 import * as os from "node:os";
 import * as path from "node:path";
 
+import { egovAddEntity } from "../../src/tools/egovAddEntity.js";
+import { egovScaffoldProject } from "../../src/tools/egovScaffoldProject.js";
+import { detectAttachFileInfra } from "../../src/utils/scaffold/projectDetector.js";
 import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
 
 const SINGLE_DDL = "CREATE TABLE BOARD (ID VARCHAR(20) NOT NULL PRIMARY KEY, TITLE VARCHAR(200))";
@@ -119,5 +123,44 @@ describe("4.3 Boot withAttachment=false", () => {
     expect(await read(CONTROLLER)).not.toContain("deleteAttachFile");
     expect(await read(SERVICE)).toContain("@Override public void deleteBoard(BoardVO vo) throws Exception { boardDAO.deleteBoard(vo); }");
     expect(await read(MAPPER)).not.toContain("ATCH_FILE_ID");
+  });
+});
+
+describe("4.3 Boot 도구 경로", () => {
+  it("egov_scaffold_project 로 4.3 프로젝트를 첨부파일과 함께 생성한다", async () => {
+    const out = await egovScaffoldProject({
+      projectName: "board-app",
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: SINGLE_DDL,
+      projectType: "boot",
+      stackVersion: "4.3",
+      withAttachment: true,
+    });
+    expect(out).toContain("접근 제어가 없습니다");
+    expect(out).not.toContain("Spring Security 정책으로 보호");
+    const u = await read("src/main/java/egovframework/example/cmm/service/EgovFileMngUtil.java");
+    expect(u).toContain("import javax.annotation.Resource;");
+    expect(u).not.toContain("jakarta");
+    const m = await read("src/main/java/egovframework/example/cmm/service/impl/FileManageMapper.java");
+    expect(m).toContain("import org.apache.ibatis.annotations.Mapper;");
+    // 설명 주석에 @EgovMapper 문구가 있으므로 import 와 애너테이션 줄로 검사한다.
+    expect(m).not.toContain("import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;");
+    expect(m).not.toMatch(/^@EgovMapper/m);
+  });
+
+  it("4.3 프로젝트의 egov_add_entity 가 인프라를 자동 설치한다", async () => {
+    await generate(SINGLE_DDL, false);
+    expect(detectAttachFileInfra(projectDir).present).toBe(false);
+    const out = await egovAddEntity({
+      projectPath: projectDir,
+      packageName: "egovframework.example.member",
+      entityName: "Member",
+      ddl: "CREATE TABLE MEMBER (ID VARCHAR(16) NOT NULL PRIMARY KEY, EMAIL VARCHAR(100))",
+      withAttachment: true,
+    });
+    expect(out).toMatch(/첨부파일 인프라 자동 설치/);
+    expect(detectAttachFileInfra(projectDir).present).toBe(true);
   });
 });
