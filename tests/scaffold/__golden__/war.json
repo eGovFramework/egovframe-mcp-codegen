@@ -277,7 +277,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp",
-      "sha256": "4ba56e2dc3c397263b2dd55af742ac25d5d205e7233af356c891bb71ed239430"
+      "sha256": "9b8aabef12655bb3ebab89d88fc0bbb424825001261936656f5c2a4f4b8d3900"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardList.jsp",
