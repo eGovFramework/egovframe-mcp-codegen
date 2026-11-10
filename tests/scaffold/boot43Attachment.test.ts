@@ -163,4 +163,22 @@ describe("4.3 Boot 도구 경로", () => {
     expect(out).toMatch(/첨부파일 인프라 자동 설치/);
     expect(detectAttachFileInfra(projectDir).present).toBe(true);
   });
+
+  it("FK 부모가 있는 엔티티의 Service 는 FkComboVO 를 기본 패키지로 참조한다", async () => {
+    await generate(SINGLE_DDL, false);
+    await egovAddEntity({
+      projectPath: projectDir,
+      packageName: "egovframework.example.comment",
+      entityName: "Comment",
+      ddl: "CREATE TABLE COMMENT_TB (ID VARCHAR(16) NOT NULL PRIMARY KEY, BOARD_ID VARCHAR(20), BODY VARCHAR(200), CONSTRAINT FK_CMT_BOARD FOREIGN KEY (BOARD_ID) REFERENCES BOARD(ID))",
+      withAttachment: true,
+    });
+    const base = "src/main/java/egovframework/example/comment/service";
+    const svc = await read(`${base}/EgovCommentService.java`);
+    const impl = await read(`${base}/impl/EgovCommentServiceImpl.java`);
+    for (const src of [svc, impl]) {
+      expect(src).toContain("java.util.List<egovframework.example.cmm.vo.FkComboVO>");
+      expect(src).not.toContain("List<.cmm");
+    }
+  });
 });
