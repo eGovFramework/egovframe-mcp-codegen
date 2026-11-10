@@ -181,7 +181,7 @@
     },
     {
       "path": "src/main/resources/egovframework/spring/context-mapper.xml",
-      "sha256": "098c01aad48058eecc6c7cb4fb79c486202ae5e3865f1a836d9c42bbd1acba7a"
+      "sha256": "7e12b3a42fb1239b330b46b11f98e9fc0551bddc5f57508cd797832a9c5c59c5"
     },
     {
       "path": "src/main/resources/egovframework/spring/context-properties.xml",
