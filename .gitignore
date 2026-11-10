@@ -53,3 +53,6 @@ Thumbs.db
 
 # 플랫폼별 번들 tgz 산출물
 dist/
+
+# 참고 자료
+references/
