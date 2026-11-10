@@ -97,6 +97,7 @@ describe("egov_scaffold_project — withAttachment", () => {
     expect(seed).toMatch(/COMTNFILE/);
     expect(tableBlock(seed, "BOARD")).toMatch(/ATCH_FILE_ID\s+CHAR\(20\)/);
     expect(out).toMatch(/첨부파일 인프라/);
+    expect(out).toMatch(/^ {2}- src\/main\/java\/.*\/EgovConfigAttachFile\.java$/m);
   });
 
   it("true 이면 모든 메시지 번들에 첨부 화면 키가 있다", async () => {

@@ -650,10 +650,11 @@ export function hsqlSeedSummaryLines(r: HsqlSeedApplyResult): string[] {
   ];
 }
 
-/** 설치 결과 요약: 생성 파일 수, 파일 저장 경로, HSQL 시드 처리 결과. */
+/** 설치 결과 요약: 생성 파일 수와 목록, 파일 저장 경로, HSQL 시드 처리 결과. */
 export function summarizeAttachFileInstall(plan: AttachFilePlan, result: AttachFileApplyResult): string[] {
   return [
     `📄 첨부파일 인프라 생성된 파일: ${result.filesCreated.length}개`,
+    ...result.filesCreated.map((f) => `  - ${f}`),
     `📂 파일 저장 경로: ${plan.fileStorePath}`,
     ...hsqlSeedSummaryLines(result.hsqlSeedResult),
     `   - 운영 DB 에는 db/migrations/<dialect>/attach-file.sql 의 DDL 을 적용하세요.`,

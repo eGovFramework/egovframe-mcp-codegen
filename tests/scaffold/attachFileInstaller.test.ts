@@ -79,6 +79,16 @@ describe("attachFileInstaller", () => {
     expect(summary).toContain("생성된 파일");
   });
 
+  it("요약에 생성한 인프라 파일을 빠짐없이 나열한다", async () => {
+    const plan = await planAttachFileInfra(defaultAttachFileInstallOptions(projectDir));
+    const result = await applyAttachFileInfra(plan, new FileWriteJournal());
+    expect(result.filesCreated.length).toBeGreaterThan(0);
+    const summary = summarizeAttachFileInstall(plan, result);
+    for (const file of result.filesCreated) {
+      expect(summary).toContain(`  - ${file}`);
+    }
+  });
+
   it("저널 롤백으로 설치 전 상태가 복원된다", async () => {
     const seedBefore = await fs.readFile(seedPath, "utf-8");
     const journal = new FileWriteJournal();

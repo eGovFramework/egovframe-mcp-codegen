@@ -85,6 +85,7 @@ describe("egov_add_entity — 첨부파일 인프라 자동 설치", () => {
     const out = await egovAddEntity(memberArgs({ withAttachment: true }));
     expect(detectAttachFileInfra(projectDir).present).toBe(true);
     expect(out).toMatch(/첨부파일 인프라 자동 설치/);
+    expect(out).toMatch(/^ {2}- src\/main\/java\/.*\/EgovConfigAttachFile\.java$/m);
     const seed = await fs.readFile(seedPath, "utf-8");
     expect(seed).toMatch(/COMTNFILE/);
     expect(seed).toMatch(/CREATE MEMORY TABLE MEMBER/);
