@@ -117,6 +117,8 @@ describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
     expect(body).toContain("safeChild(");
     expect(body).toContain("Files.deleteIfExists(");
     expect(body).toMatch(/LOGGER\.warn/);
+    // InvalidPathException 등 RuntimeException 도 흡수해야 "예외를 던지지 않는다" 계약이 지켜진다.
+    expect(body).toMatch(/catch \(IOException \| RuntimeException/);
   });
 });
 
@@ -125,6 +127,9 @@ describe("첨부파일 개별 삭제 (5.0 Boot)", () => {
     const i = await read(IMPL);
     const body = /public void deleteFileInf\(FileVO fvo\)[\s\S]*?\n\t}/.exec(i)![0];
     expect(body.indexOf("selectFileInf")).toBeGreaterThan(-1);
+    // 논리 삭제(USE_AT='N')된 행은 조회되지 않으므로, 메타데이터 보존을 위해 상세 행을 지우지 않고 반환한다.
+    expect(body).toMatch(/if \(stored == null\) \{[^}]*\breturn;\s*\}/);
+    expect(body.indexOf("stored == null")).toBeLessThan(body.indexOf("deleteFileDetail"));
     expect(body.indexOf("deleteFileDetail")).toBeGreaterThan(body.indexOf("selectFileInf"));
     expect(body.indexOf("deleteStoredFile")).toBeGreaterThan(body.indexOf("deleteFileDetail"));
     expect(i).toMatch(/@Resource\(name = "EgovFileMngUtil"\)/);

@@ -299,7 +299,7 @@ public class EgovFileMngUtil {
 		try {
 			Path storeDir = Paths.get(fileStreCours).normalize().toAbsolutePath();
 			Files.deleteIfExists(safeChild(storeDir, streFileNm));
-		} catch (IOException | SecurityException e) {
+		} catch (IOException | RuntimeException e) {
 			LOGGER.warn("첨부파일 디스크 삭제에 실패했습니다 (파일: {}): {}", streFileNm, e.getMessage());
 		}
 	}
