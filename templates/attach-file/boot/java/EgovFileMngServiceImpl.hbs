@@ -10,12 +10,12 @@ import org.springframework.stereotype.Service;
 import {{basePackage}}.cmm.service.EgovFileMngService;
 import {{basePackage}}.cmm.service.EgovFileMngUtil;
 import {{basePackage}}.cmm.service.FileVO;
-import jakarta.annotation.Resource;
+import {{eeNamespace}}.annotation.Resource;
 
 /**
  * 첨부파일 그룹 메타 CRUD 서비스 구현.
  *
- * 저수준 SQL 은 `FileManageMapper` (@EgovMapper 인터페이스) 가 담당하고, 본 서비스는
+ * 저수준 SQL 은 `FileManageMapper` (매퍼 인터페이스) 가 담당하고, 본 서비스는
  * 마스터 1행 + 상세 N행을 묶는 그룹 단위 오퍼레이션을 조립한다.
  *
  * Bean name 은 "EgovFileMngService" (대문자 E) — 공통컴포넌트와 동일한 표준값이라

@@ -130,3 +130,12 @@ describe("첨부파일 개별 삭제 (5.0 Boot)", () => {
     expect(i).toMatch(/@Resource\(name = "EgovFileMngUtil"\)/);
   });
 });
+
+describe("첨부파일 인프라 공용 템플릿 (5.0 Boot)", () => {
+  it("5.0 인프라는 jakarta 와 @EgovMapper 를 사용한다", async () => {
+    expect(await read(UTIL)).toContain("import jakarta.annotation.Resource;");
+    const mapper = await read("src/main/java/egovframework/example/cmm/service/impl/FileManageMapper.java");
+    expect(mapper).toContain('@EgovMapper("fileManageMapper")');
+    expect(mapper).not.toContain("org.apache.ibatis");
+  });
+});

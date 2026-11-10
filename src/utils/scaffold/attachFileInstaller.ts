@@ -28,8 +28,8 @@ import { validateRenderedFiles } from "./outputValidator.js";
 
 /** 첨부파일 인프라가 만들 HSQL 시드 fallback 출력 경로(프로젝트 상대). */
 const HSQL_SEED_FALLBACK_OUTPUT = "src/main/resources/db/attach-file.sql";
-/** HSQL 시드 DDL 템플릿 (boot50). */
-const HSQL_SEED_TEMPLATE = "attach-file/boot50/ddl/attach-file-hsql-seed.sql.hbs";
+/** HSQL 시드 DDL 템플릿 (boot). */
+const HSQL_SEED_TEMPLATE = "attach-file/boot/ddl/attach-file-hsql-seed.sql.hbs";
 
 /**
  * 입력 스키마. spec(docs/design/attach-file-tool-schema.md §1.1) 과 1:1 매핑.
@@ -112,12 +112,12 @@ export function defaultAttachFileInstallOptions(projectPath: string): AttachFile
 }
 
 /**
- * stack → 매니페스트 경로 라우팅. Phase A 는 boot50 만.
+ * stack → 매니페스트 경로 라우팅. Phase A 는 5.0 Boot 만.
  * boot43 / war43 추가 시 본 함수만 확장하면 된다.
  */
 function manifestForStack(stackVersion: "5.0" | "4.3", projectType: "boot" | "war"): string {
   if (stackVersion === "5.0" && projectType === "boot") {
-    return "attach-file/manifests/boot50.json";
+    return "attach-file/manifests/boot.json";
   }
   throw nonRetryable(
     `egov_add_attach_file_infrastructure 는 현재 eGovFrame 5.0 Boot 만 지원합니다 (감지: ${stackVersion} ${projectType}). ` +
@@ -361,6 +361,9 @@ export async function planAttachFileInfra(options: AttachFileInstallOptions): Pr
     blockedExtensionsCsv: toUpperCsv(params.blockedExtensions),
     stackVersion: detected.stackVersion,
     projectType: detected.projectType,
+    // 스택별 차이: 5.0 은 jakarta + @EgovMapper, 4.3 은 javax + MyBatis @Mapper.
+    eeNamespace: detected.stackVersion === "5.0" ? "jakarta" : "javax",
+    useEgovMapper: detected.stackVersion === "5.0",
   };
 
   const mappings = resolveManifest(manifestPath, ctx);
