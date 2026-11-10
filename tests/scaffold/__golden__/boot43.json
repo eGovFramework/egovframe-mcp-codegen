@@ -85,7 +85,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/board/service/impl/BoardMapper.java",
-      "sha256": "10b957121512bb14c5393b190b09159f6aec23f711688bb521b5eb06b73c5439"
+      "sha256": "5788c3bfa197faf8fa029b3e1f457271be518624d6b6ba2411a325f428343e96"
     },
     {
       "path": "src/main/java/egovframework/example/board/service/impl/EgovBoardServiceImpl.java",
@@ -117,7 +117,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigMapper.java",
-      "sha256": "3ebcdc94ee9ccbf708a5db48a8f9d7c9e1f668cfd57434ceb62a0cb21b42eb70"
+      "sha256": "195c6a2deda572227fc7cb129fc3c5839cce08b6c5c1c63dcd83abf2730cd737"
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigProperties.java",

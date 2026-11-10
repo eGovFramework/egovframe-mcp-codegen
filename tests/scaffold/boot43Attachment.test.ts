@@ -145,7 +145,8 @@ describe("4.3 Boot 도구 경로", () => {
     expect(u).toContain("import javax.annotation.Resource;");
     expect(u).not.toContain("jakarta");
     const m = await read("src/main/java/egovframework/example/cmm/service/impl/FileManageMapper.java");
-    expect(m).toContain("import org.apache.ibatis.annotations.Mapper;");
+    expect(m).toContain("import org.egovframe.rte.psl.dataaccess.mapper.Mapper;");
+    expect(m).not.toContain("import org.apache.ibatis.annotations.Mapper;");
     // 설명 주석에 @EgovMapper 문구가 있으므로 import 와 애너테이션 줄로 검사한다.
     expect(m).not.toContain("import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;");
     expect(m).not.toMatch(/^@EgovMapper/m);
@@ -193,8 +194,14 @@ describe("4.3 Boot 도구 경로", () => {
   });
 });
 
-describe("4.3 Boot JDK 8 기준", () => {
+describe("4.3 Boot JDK 8 와 실행환경 @Mapper 기준", () => {
   const DATE_DDL = "CREATE TABLE BOARD (ID VARCHAR(20) NOT NULL PRIMARY KEY, TITLE VARCHAR(200), REG_DT DATE)";
+  const RTE_IMPORT = "import org.egovframe.rte.psl.dataaccess.mapper.Mapper;";
+  const APACHE_IMPORT = "import org.apache.ibatis.annotations.Mapper;";
+  const CONFIG_MAPPER = "src/main/java/egovframework/example/config/EgovConfigMapper.java";
+  const BOARD_MAPPER = "src/main/java/egovframework/example/board/service/impl/BoardMapper.java";
+  const MEMBER_MAPPER = "src/main/java/egovframework/example/member/service/impl/MemberMapper.java";
+  const FILE_MAPPER = "src/main/java/egovframework/example/cmm/service/impl/FileManageMapper.java";
 
   const addMember = () =>
     egovAddEntity({
@@ -229,6 +236,28 @@ describe("4.3 Boot JDK 8 기준", () => {
     expect(files.length).toBeGreaterThan(0);
     for (const file of files) {
       expect(await fs.readFile(file, "utf-8")).not.toContain(".isBlank()");
+    }
+  });
+
+  it("새 프로젝트는 실행환경 @Mapper 로 스캔하고 등록한다", async () => {
+    await generate(SINGLE_DDL);
+    expect(await read(CONFIG_MAPPER)).toContain(RTE_IMPORT);
+    expect(await read(BOARD_MAPPER)).toContain(RTE_IMPORT);
+    await addMember();
+    expect(await read(MEMBER_MAPPER)).toContain(RTE_IMPORT);
+    expect(await read(FILE_MAPPER)).toContain(RTE_IMPORT);
+  });
+
+  it("MyBatis @Mapper 로 스캔하는 기존 프로젝트에는 같은 어노테이션으로 매퍼를 추가한다", async () => {
+    await generate(SINGLE_DDL);
+    const configPath = path.join(projectDir, CONFIG_MAPPER);
+    const config = await fs.readFile(configPath, "utf-8");
+    await fs.writeFile(configPath, config.replace(RTE_IMPORT, APACHE_IMPORT));
+    await addMember();
+    for (const rel of [MEMBER_MAPPER, FILE_MAPPER]) {
+      const src = await read(rel);
+      expect(src).toContain(APACHE_IMPORT);
+      expect(src).not.toContain(RTE_IMPORT);
     }
   });
 });

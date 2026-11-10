@@ -37,6 +37,7 @@ import {
   detectAttachFileInfra,
   detectBasePackage,
   detectProjectStack,
+  usesApacheMapperScan,
 } from "../utils/scaffold/projectDetector.js";
 import {
   discoverEntities,
@@ -589,6 +590,8 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     } else {
       ctxDyn.withAttachment = false;
     }
+    // 이전 버전이 생성한 4.3 Boot 프로젝트는 MyBatis @Mapper 로 스캔하므로 새 매퍼도 그 설정을 따른다.
+    ctxDyn.useApacheMapper = usesApacheMapperScan(projectDir);
     // idGeneration 관련 — 템플릿이 두 boolean 으로 분기 (Handlebars 가 enum 직접 비교를 어색하게 다룸).
     ctxDyn.idGenerationAuto = params.idGeneration === "auto";
     ctxDyn.idGenerationManual = params.idGeneration === "manual";

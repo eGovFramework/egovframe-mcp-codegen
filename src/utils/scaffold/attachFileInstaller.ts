@@ -20,7 +20,7 @@ import { z } from "zod";
 import { resolveManifest, type ResolvedFileMapping } from "./manifestLoader.js";
 import { assertInsideProject } from "./pathGuard.js";
 import type { FileWriteJournal } from "./writeRollback.js";
-import { detectProjectStack, detectBasePackage } from "./projectDetector.js";
+import { detectProjectStack, detectBasePackage, usesApacheMapperScan } from "./projectDetector.js";
 import { getScaffoldTemplatePath, registerScaffoldHelpers } from "./scaffoldGenerator.js";
 import { decideMigrationStrategy } from "./migrationStrategy.js";
 import { nonRetryable, retryAfterAction } from "./toolMessages.js";
@@ -361,9 +361,11 @@ export async function planAttachFileInfra(options: AttachFileInstallOptions): Pr
     blockedExtensionsCsv: toUpperCsv(params.blockedExtensions),
     stackVersion: detected.stackVersion,
     projectType: detected.projectType,
-    // 스택별 차이: 5.0 은 jakarta + @EgovMapper, 4.3 은 javax + MyBatis @Mapper.
+    // 스택별 차이: 5.0 은 jakarta + @EgovMapper, 4.3 은 javax + 실행환경 @Mapper.
+    // 이전 버전이 생성한 4.3 프로젝트는 MyBatis @Mapper 로 스캔하므로 그 설정을 따른다.
     eeNamespace: detected.stackVersion === "5.0" ? "jakarta" : "javax",
     useEgovMapper: detected.stackVersion === "5.0",
+    useApacheMapper: usesApacheMapperScan(projectDir),
   };
 
   const mappings = resolveManifest(manifestPath, ctx);

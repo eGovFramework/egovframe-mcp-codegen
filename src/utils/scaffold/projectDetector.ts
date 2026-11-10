@@ -72,6 +72,27 @@ export function detectBasePackage(projectPath: string): string | null {
 }
 
 /**
+ * 프로젝트의 `EgovConfigMapper` 가 MyBatis `@Mapper` 로 매퍼를 스캔하는지 감지한다.
+ *
+ * 이전 버전이 생성한 4.3 Boot 프로젝트는 MyBatis `@Mapper` 로 스캔한다. 이런 프로젝트에
+ * 실행환경 `@Mapper` 를 붙인 매퍼를 추가하면 빈으로 등록되지 않아 기동에 실패하므로,
+ * 새로 생성하는 매퍼의 어노테이션을 프로젝트의 스캔 설정에 맞추는 데 사용한다.
+ */
+export function usesApacheMapperScan(projectPath: string): boolean {
+  const javaRoot = path.join(projectPath, "src/main/java");
+  if (!fs.existsSync(javaRoot)) return false;
+
+  const found = findFileByName(javaRoot, "EgovConfigMapper.java", "config");
+  if (!found) return false;
+
+  try {
+    return fs.readFileSync(found, "utf-8").includes("org.apache.ibatis.annotations.Mapper");
+  } catch {
+    return false;
+  }
+}
+
+/**
  * 첨부파일 인프라(`egov_add_attach_file_infrastructure` 가 설치한 일습) 가
  * 프로젝트에 존재하는지 감지한다.
  *

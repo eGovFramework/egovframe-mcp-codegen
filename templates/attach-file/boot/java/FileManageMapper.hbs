@@ -4,14 +4,16 @@ import java.util.List;
 
 {{#if useEgovMapper}}
 import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
-{{else}}
+{{else if useApacheMapper}}
 import org.apache.ibatis.annotations.Mapper;
+{{else}}
+import org.egovframe.rte.psl.dataaccess.mapper.Mapper;
 {{/if}}
 
 import {{basePackage}}.cmm.service.FileVO;
 
 /**
- * 첨부파일 메타 SQL 매퍼 (매퍼 인터페이스 스타일 — 5.0 은 `@EgovMapper`, 4.3 은 MyBatis `@Mapper`).
+ * 첨부파일 메타 SQL 매퍼 (매퍼 인터페이스 스타일 — 5.0 은 `@EgovMapper`, 4.3 은 실행환경 `@Mapper`).
  *
  * 본 인터페이스의 메서드 이름이 `EgovFileMng_SQL.xml` 의 `<insert id="..."/>` /
  * `<select id="..."/>` id 와 1:1 로 매핑된다 (namespace = 본 인터페이스의 FQN).

@@ -2,7 +2,11 @@ package {{packageName}}.service.impl;
 
 import {{packageName}}.service.{{entityName}}DefaultVO;
 import {{packageName}}.service.{{entityName}}VO;
+{{#if useApacheMapper}}
 import org.apache.ibatis.annotations.Mapper;
+{{else}}
+import org.egovframe.rte.psl.dataaccess.mapper.Mapper;
+{{/if}}
 {{#if hasFk}}
 import {{basePackage}}.cmm.vo.FkComboVO;
 {{/if}}
