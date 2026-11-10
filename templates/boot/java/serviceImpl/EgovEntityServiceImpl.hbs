@@ -55,7 +55,7 @@ public class Egov{{entityName}}ServiceImpl extends EgovAbstractServiceImpl imple
 		String {{attachmentFieldName}} = stored != null ? stored.get{{attachmentFieldNamePascal}}() : null;
 		{{entityNameLower}}DAO.delete{{entityName}}(vo);
 		// 첨부 그룹 삭제 — CHAR(20) 공백 값은 첨부 없음으로 본다.
-		if ({{attachmentFieldName}} != null && !{{attachmentFieldName}}.isBlank()) {
+		if ({{attachmentFieldName}} != null && !{{attachmentFieldName}}.trim().isEmpty()) {
 			FileVO fvo = new FileVO();
 			fvo.setAtchFileId({{attachmentFieldName}});
 			fileMngService.deleteAllFileInf(fvo);

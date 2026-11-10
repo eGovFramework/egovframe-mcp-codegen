@@ -69,8 +69,8 @@ describe("4.3 Boot 첨부파일 연결", () => {
     expect(c).not.toMatch(/String atchFileId = boardVO\.getAtchFileId/);
     expect(c).toContain('@PostMapping("/board/deleteAttachFile")');
     expect(c).toContain("import javax.annotation.Resource;");
-    // CHAR(20) 컬럼은 빈 값이 공백으로 채워져 읽히므로 isEmpty() 가 아니라 isBlank() 로 검사한다.
-    expect(c).toMatch(/atchFileId == null \|\| atchFileId\.isBlank\(\)/);
+    // CHAR(20) 컬럼은 빈 값이 공백으로 채워져 읽히므로 trim 후 비어 있는지 검사한다 (JDK 8 호환).
+    expect(c).toMatch(/atchFileId == null \|\| atchFileId\.trim\(\)\.isEmpty\(\)/);
     expect(c).not.toMatch(/atchFileId\.isEmpty\(\)\) \{\s*\/\/ \(A\)/);
     expect(c).toMatch(/boardVO\.setAtchFileId\(atchFileId\);\s+this\.boardService\.updateBoard\(boardVO\);/);
   });
@@ -189,6 +189,46 @@ describe("4.3 Boot 도구 경로", () => {
     for (const src of [svc, impl]) {
       expect(src).toContain("java.util.List<egovframework.example.cmm.vo.FkComboVO>");
       expect(src).not.toContain("List<.cmm");
+    }
+  });
+});
+
+describe("4.3 Boot JDK 8 기준", () => {
+  const DATE_DDL = "CREATE TABLE BOARD (ID VARCHAR(20) NOT NULL PRIMARY KEY, TITLE VARCHAR(200), REG_DT DATE)";
+
+  const addMember = () =>
+    egovAddEntity({
+      projectPath: projectDir,
+      packageName: "egovframework.example.member",
+      entityName: "Member",
+      ddl: "CREATE TABLE MEMBER (ID VARCHAR(16) NOT NULL PRIMARY KEY, EMAIL VARCHAR(100))",
+      withAttachment: true,
+    });
+
+  async function javaFiles(dir: string): Promise<string[]> {
+    const entries = await fs.readdir(dir, { withFileTypes: true });
+    const nested = await Promise.all(
+      entries.map((e) => {
+        const p = path.join(dir, e.name);
+        if (e.isDirectory()) return javaFiles(p);
+        return Promise.resolve(e.name.endsWith(".java") ? [p] : []);
+      }),
+    );
+    return nested.flat();
+  }
+
+  it("pom.xml 은 Java 1.8 로 컴파일한다", async () => {
+    await generate(SINGLE_DDL);
+    expect(await read("pom.xml")).toContain("<java.version>1.8</java.version>");
+  });
+
+  it("생성된 Java 코드에 Java 11 API 인 isBlank 를 쓰지 않는다", async () => {
+    await generate(DATE_DDL);
+    await addMember();
+    const files = await javaFiles(path.join(projectDir, "src/main/java"));
+    expect(files.length).toBeGreaterThan(0);
+    for (const file of files) {
+      expect(await fs.readFile(file, "utf-8")).not.toContain(".isBlank()");
     }
   });
 });

@@ -124,7 +124,8 @@ public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
     final List<MultipartFile> files = multiRequest.getFiles("file_1");
 
     if (files != null && !files.isEmpty()) {
-        // CHAR(20) 컬럼은 빈 값이 공백 20자로 읽혀 "".equals() 가 거짓이 되므로 null 또는 isBlank() 로 검사한다
+        // CHAR(20) 컬럼은 빈 값이 공백 20자로 읽혀 "".equals() 가 거짓이 되므로 null 또는 공백 여부로 검사한다
+        // (JDK 8 기반 4.3 Boot 는 String.isBlank() 가 없으므로 atchFileId.trim().isEmpty() 를 사용한다)
         if (atchFileId == null || atchFileId.isBlank()) {
             // (A) 첨부 그룹이 아직 없음 → 신규 채번
             List<FileVO> result = fileUtil.parseFileInf(files, "FAQ_", 0, atchFileId, "");

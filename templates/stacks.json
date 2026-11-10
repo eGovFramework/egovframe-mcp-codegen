@@ -33,7 +33,7 @@
       "egovframe": "4.3.0",
       "springBoot": "2.7.18",
       "spring": null,
-      "java": "17",
+      "java": "1.8",
       "jakarta": false,
       "rteVersion": "4.3.0",
       "starterParentGroupId": "org.springframework.boot",

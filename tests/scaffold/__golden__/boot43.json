@@ -5,7 +5,7 @@
   "files": [
     {
       "path": ".claude/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a4974648ff806ccf81bfc136b9dfe4a80be676725f7c217099480d98bac2805c"
+      "sha256": "27fabc6d256f9eddc264d7bd4c7d50c72e4e415b173a7af8dd63f4f2d24fee1b"
     },
     {
       "path": ".claude/skills/egovframe-conventions/SKILL.md",
@@ -17,7 +17,7 @@
     },
     {
       "path": ".cline/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a4974648ff806ccf81bfc136b9dfe4a80be676725f7c217099480d98bac2805c"
+      "sha256": "27fabc6d256f9eddc264d7bd4c7d50c72e4e415b173a7af8dd63f4f2d24fee1b"
     },
     {
       "path": ".cline/skills/egovframe-conventions/SKILL.md",
@@ -29,7 +29,7 @@
     },
     {
       "path": ".continue/rules/egovframe-attach-file-pattern.md",
-      "sha256": "3f7e29ca4e1ecc0854b039c4a6be5713481e6100e983f5c282b455e247a04ed7"
+      "sha256": "2f4d9ba743c3eb8d506cf7e44b900726097fcf6f1b7e97d0d1c1995d88853cf4"
     },
     {
       "path": ".continue/rules/egovframe-conventions.md",
@@ -41,7 +41,7 @@
     },
     {
       "path": ".cursor/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a4974648ff806ccf81bfc136b9dfe4a80be676725f7c217099480d98bac2805c"
+      "sha256": "27fabc6d256f9eddc264d7bd4c7d50c72e4e415b173a7af8dd63f4f2d24fee1b"
     },
     {
       "path": ".cursor/skills/egovframe-conventions/SKILL.md",
@@ -53,7 +53,7 @@
     },
     {
       "path": ".opencode/skills/egovframe-attach-file-pattern/SKILL.md",
-      "sha256": "a4974648ff806ccf81bfc136b9dfe4a80be676725f7c217099480d98bac2805c"
+      "sha256": "27fabc6d256f9eddc264d7bd4c7d50c72e4e415b173a7af8dd63f4f2d24fee1b"
     },
     {
       "path": ".opencode/skills/egovframe-conventions/SKILL.md",
@@ -69,7 +69,7 @@
     },
     {
       "path": "pom.xml",
-      "sha256": "c107b96a1d7f523e2be06b55d1d9dc9661401393fda57fc49b69ef9a64e7c554"
+      "sha256": "bce070d7a9cf4b4d3dd38f9e70a64c6704c2f8cd97bbe6927874b9e2f1eba15a"
     },
     {
       "path": "src/main/java/egovframework/example/board/service/BoardDefaultVO.java",
@@ -93,7 +93,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/board/web/EgovBoardController.java",
-      "sha256": "519e2f5c9e201bdc5f13bd145661c78a10e5cbe0c312863f0650cd27a1af478b"
+      "sha256": "91863a8972df9a739136c610c7fc33730ee533209548ba1417109cb70cab07e0"
     },
     {
       "path": "src/main/java/egovframework/example/cmm/vo/FkComboVO.java",

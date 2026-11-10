@@ -22,7 +22,7 @@
 DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니다.
 
 - **기본 스택**: eGovFrame 5.0 Boot (Jakarta + Thymeleaf Spring6 + KRDS)
-- `stackVersion: "4.3"` → eGovFrame 4.3 Boot (javax + Thymeleaf Spring5)
+- `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5)
 - `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.0 조합은 거부)
 - CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
 - 5.0 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정

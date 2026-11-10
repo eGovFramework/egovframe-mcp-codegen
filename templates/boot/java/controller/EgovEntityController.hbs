@@ -63,14 +63,14 @@ public class Egov{{entityName}}Controller {
 		binder.registerCustomEditor(Date.class, new PropertyEditorSupport() {
 			@Override
 			public void setAsText(String text) throws IllegalArgumentException {
-				if (text == null || text.isBlank()) { setValue(null); return; }
+				if (text == null || text.trim().isEmpty()) { setValue(null); return; }
 				setValue(Date.valueOf(text.trim()));
 			}
 		});
 		binder.registerCustomEditor(Timestamp.class, new PropertyEditorSupport() {
 			@Override
 			public void setAsText(String text) throws IllegalArgumentException {
-				if (text == null || text.isBlank()) { setValue(null); return; }
+				if (text == null || text.trim().isEmpty()) { setValue(null); return; }
 				String s = text.trim();
 				if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') s = s + " 00:00:00";
 				setValue(Timestamp.valueOf(s));
@@ -113,9 +113,9 @@ public class Egov{{entityName}}Controller {
 {{/if}}
 {{#if withAttachment}}
 		// 기존 첨부파일 목록을 model 에 주입 — Register 화면에서 다운로드 링크로 렌더된다.
-		// 첨부 그룹 키는 CHAR(20) 이라 빈 값이 공백으로 읽힐 수 있어 isBlank() 로 검사한다.
+		// 첨부 그룹 키는 CHAR(20) 이라 빈 값이 공백으로 읽힐 수 있어 trim 후 비어 있는지 검사한다.
 		String existing{{attachmentFieldNamePascal}} = detail.get{{attachmentFieldNamePascal}}();
-		if (existing{{attachmentFieldNamePascal}} != null && !existing{{attachmentFieldNamePascal}}.isBlank()) {
+		if (existing{{attachmentFieldNamePascal}} != null && !existing{{attachmentFieldNamePascal}}.trim().isEmpty()) {
 			FileVO attachKey = new FileVO();
 			attachKey.setAtchFileId(existing{{attachmentFieldNamePascal}});
 			model.addAttribute("attachList", this.fileMngService.selectFileInfs(attachKey));
@@ -170,8 +170,8 @@ public class Egov{{entityName}}Controller {
 		String {{attachmentFieldName}} = stored.get{{attachmentFieldNamePascal}}();
 		final java.util.List<MultipartFile> files = multiRequest.getFiles("file_1");
 		if (files != null && !files.isEmpty()) {
-			// CHAR(20) 컬럼은 빈 값이 공백으로 채워져 읽히므로 isEmpty() 가 아니라 isBlank() 로 검사한다.
-			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.isBlank()) {
+			// CHAR(20) 컬럼은 빈 값이 공백으로 채워져 읽히므로 trim 후 비어 있는지 검사한다.
+			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.trim().isEmpty()) {
 				// (A) 첨부 그룹이 아직 없음 → 신규 채번
 				java.util.List<FileVO> fvoList = this.fileUtil.parseFileInf(files, "{{entityNameUpper}}_", 0, "", "");
 				{{attachmentFieldName}} = this.fileMngService.insertFileInfs(fvoList);
