@@ -167,6 +167,18 @@ describe("egov_scaffold_project — withAttachment 확인", () => {
     expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
+  it("4.3 Boot 에서 withAttachment 를 생략하면 질문한다", async () => {
+    const { client, handler } = await connect({ action: "accept", content: { withAttachment: true } });
+    const res = await client.callTool(
+      { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: "4.3" }) },
+      undefined,
+      TIMEOUT,
+    );
+    expect(res.isError).toBeFalsy();
+    expect(handler).toHaveBeenCalledTimes(1);
+    expect(detectAttachFileInfra(projectDir).present).toBe(true);
+  });
+
   it("지원하지 않는 스택(WAR 4.3)은 질문 없이 첨부파일 없이 생성한다", async () => {
     const { client, handler } = await connect({ action: "accept", content: { withAttachment: true } });
     const res = await client.callTool(

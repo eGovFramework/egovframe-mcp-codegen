@@ -9,6 +9,7 @@ import * as fs from "fs-extra";
 import * as os from "node:os";
 import * as path from "node:path";
 
+import { egovAddAttachFileInfrastructure } from "../../src/tools/egovAddAttachFileInfrastructure.js";
 import { egovAddEntity } from "../../src/tools/egovAddEntity.js";
 import { egovScaffoldProject } from "../../src/tools/egovScaffoldProject.js";
 import { detectAttachFileInfra } from "../../src/utils/scaffold/projectDetector.js";
@@ -148,6 +149,15 @@ describe("4.3 Boot 도구 경로", () => {
     // 설명 주석에 @EgovMapper 문구가 있으므로 import 와 애너테이션 줄로 검사한다.
     expect(m).not.toContain("import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;");
     expect(m).not.toMatch(/^@EgovMapper/m);
+  });
+
+  it("egov_add_attach_file_infrastructure 가 4.3 Boot 프로젝트에 인프라를 설치한다", async () => {
+    await generate(SINGLE_DDL, false);
+    const out = await egovAddAttachFileInfrastructure({ projectPath: projectDir });
+    expect(out).toContain("접근 제어가 없습니다");
+    const u = await read("src/main/java/egovframework/example/cmm/service/EgovFileMngUtil.java");
+    expect(u).toContain("import javax.annotation.Resource;");
+    expect(detectAttachFileInfra(projectDir).present).toBe(true);
   });
 
   it("4.3 프로젝트의 egov_add_entity 가 인프라를 자동 설치한다", async () => {
