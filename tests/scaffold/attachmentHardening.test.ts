@@ -17,6 +17,7 @@ const BOARD_DDL = `CREATE TABLE BOARD (
 )`;
 
 const UTIL = "src/main/java/egovframework/example/cmm/service/EgovFileMngUtil.java";
+const IMPL = "src/main/java/egovframework/example/cmm/service/impl/EgovFileMngServiceImpl.java";
 const CONTROLLER = "src/main/java/egovframework/example/board/web/EgovBoardController.java";
 const SERVICE = "src/main/java/egovframework/example/board/service/impl/EgovBoardServiceImpl.java";
 const REGISTER = "src/main/resources/templates/thymeleaf/board/egovBoardRegister.html";
@@ -109,5 +110,23 @@ describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
     const body = /private static String getExtensionUpper[\s\S]*?\n\t}/.exec(u)![0];
     expect(body).toContain('replaceAll("[\\\\s.]+$", "")');
     expect(body.indexOf("replaceAll")).toBeLessThan(body.indexOf("lastIndexOf('.')"));
+  });
+  it("파일 삭제는 경로를 검사하고 없는 파일을 오류로 처리하지 않는다", async () => {
+    const u = await read(UTIL);
+    const body = /public void deleteStoredFile\(String fileStreCours, String streFileNm\)[\s\S]*?\n\t}/.exec(u)![0];
+    expect(body).toContain("safeChild(");
+    expect(body).toContain("Files.deleteIfExists(");
+    expect(body).toMatch(/LOGGER\.warn/);
+  });
+});
+
+describe("첨부파일 개별 삭제 (5.0 Boot)", () => {
+  it("개별 삭제는 DB 행을 지운 뒤 디스크 파일을 삭제한다", async () => {
+    const i = await read(IMPL);
+    const body = /public void deleteFileInf\(FileVO fvo\)[\s\S]*?\n\t}/.exec(i)![0];
+    expect(body.indexOf("selectFileInf")).toBeGreaterThan(-1);
+    expect(body.indexOf("deleteFileDetail")).toBeGreaterThan(body.indexOf("selectFileInf"));
+    expect(body.indexOf("deleteStoredFile")).toBeGreaterThan(body.indexOf("deleteFileDetail"));
+    expect(i).toMatch(/@Resource\(name = "EgovFileMngUtil"\)/);
   });
 });

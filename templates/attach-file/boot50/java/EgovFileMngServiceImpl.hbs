@@ -8,6 +8,7 @@ import org.egovframe.rte.fdl.cmmn.EgovAbstractServiceImpl;
 import org.springframework.stereotype.Service;
 
 import {{basePackage}}.cmm.service.EgovFileMngService;
+import {{basePackage}}.cmm.service.EgovFileMngUtil;
 import {{basePackage}}.cmm.service.FileVO;
 import jakarta.annotation.Resource;
 
@@ -26,10 +27,13 @@ public class EgovFileMngServiceImpl extends EgovAbstractServiceImpl implements E
 	@Resource(name = "fileManageMapper")
 	private FileManageMapper fileMngMapper;
 
+	@Resource(name = "EgovFileMngUtil")
+	private EgovFileMngUtil fileUtil;
+
 	@Override
 	public void deleteFileInfs(List<FileVO> fvoList) throws Exception {
 		for (FileVO vo : fvoList) {
-			fileMngMapper.deleteFileDetail(vo);
+			deleteFileInf(vo);
 		}
 	}
 
@@ -72,7 +76,12 @@ public class EgovFileMngServiceImpl extends EgovAbstractServiceImpl implements E
 
 	@Override
 	public void deleteFileInf(FileVO fvo) throws Exception {
+		// 행을 지우면 저장 경로를 알 수 없으므로 먼저 조회한다. 디스크 삭제는 DB 삭제 뒤에 수행한다.
+		FileVO stored = fileMngMapper.selectFileInf(fvo);
 		fileMngMapper.deleteFileDetail(fvo);
+		if (stored != null) {
+			fileUtil.deleteStoredFile(stored.getFileStreCours(), stored.getStreFileNm());
+		}
 	}
 
 	@Override

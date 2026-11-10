@@ -289,6 +289,22 @@ public class EgovFileMngUtil {
 	}
 
 	/**
+	 * 저장된 파일 1건을 디스크에서 삭제한다. 예외를 던지지 않으며, 실패하면 경고 로그만 남긴다.
+	 * 이미 없는 파일은 오류로 보지 않는다.
+	 */
+	public void deleteStoredFile(String fileStreCours, String streFileNm) {
+		if (fileStreCours == null || fileStreCours.isEmpty() || streFileNm == null || streFileNm.isEmpty()) {
+			return;
+		}
+		try {
+			Path storeDir = Paths.get(fileStreCours).normalize().toAbsolutePath();
+			Files.deleteIfExists(safeChild(storeDir, streFileNm));
+		} catch (IOException | SecurityException e) {
+			LOGGER.warn("첨부파일 디스크 삭제에 실패했습니다 (파일: {}): {}", streFileNm, e.getMessage());
+		}
+	}
+
+	/**
 	 * `storeDir` 의 직계 자식인지 보장하는 path traversal 가드.
 	 * 사용자 입력이 닿는 모든 경로 조립 지점에서 호출한다.
 	 */
