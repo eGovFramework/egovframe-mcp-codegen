@@ -214,7 +214,9 @@ public class Egov{{entityName}}Controller {
 		}
 {{#if withAttachment}}
 		// 첨부파일 update — 신규 그룹이면 채번, 기존 그룹이면 다음 FILE_SN 부터 append.
-		String {{attachmentFieldName}} = {{entityNameLower}}VO.get{{attachmentFieldNamePascal}}();
+		// 그룹 키는 요청 값을 신뢰하지 않고 DB 에 저장된 값에서 읽는다 (다른 레코드의 첨부 그룹 탈취 방지).
+		{{entityName}}VO stored = {{entityNameLower}}Service.select{{entityName}}({{entityNameLower}}VO);
+		String {{attachmentFieldName}} = stored.get{{attachmentFieldNamePascal}}();
 		final java.util.List<MultipartFile> files = multiRequest.getFiles("file_1");
 		if (files != null && !files.isEmpty()) {
 			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.isEmpty()) {
@@ -231,6 +233,8 @@ public class Egov{{entityName}}Controller {
 				fileMngService.updateFileInfs(fvoList);
 			}
 		}
+		// 요청에 실려 온 값을 덮어써 DB 값(또는 새로 채번한 값)만 저장한다.
+		{{entityNameLower}}VO.set{{attachmentFieldNamePascal}}({{attachmentFieldName}});
 {{/if}}
 		{{entityNameLower}}Service.update{{entityName}}({{entityNameLower}}VO);
 		status.setComplete();

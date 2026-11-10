@@ -119,7 +119,8 @@ public class FaqController {
 public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
                           @ModelAttribute("faqVO") FaqVO faqVO) throws Exception {
 
-    String atchFileId = faqVO.getAtchFileId();   // 기존 도메인이 들고 있던 그룹 키
+    // 요청 값은 신뢰하지 않는다 — DB 에 저장된 그룹 키를 사용
+    String atchFileId = egovFaqService.selectFaq(faqVO).getAtchFileId();
     final List<MultipartFile> files = multiRequest.getFiles("file_1");
 
     if (files != null && !files.isEmpty()) {
@@ -138,6 +139,7 @@ public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
         }
     }
 
+    faqVO.setAtchFileId(atchFileId);
     egovFaqService.updateFaq(faqVO);
     return "redirect:/uss/olh/faq/selectFaqList.do";
 }
@@ -149,7 +151,8 @@ public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
 @PostMapping("/uss/olh/faq/deleteFaqCn.do")
 public String deleteFaqCn(@ModelAttribute("faqVO") FaqVO faqVO) throws Exception {
 
-    String atchFileId = faqVO.getAtchFileId();
+    // 요청 값은 신뢰하지 않는다 — 삭제 전에 DB 에서 그룹 키를 읽는다
+    String atchFileId = egovFaqService.selectFaq(faqVO).getAtchFileId();
 
     // 1) 도메인 먼저 삭제
     egovFaqService.deleteFaq(faqVO);

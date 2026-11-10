@@ -158,10 +158,6 @@
 	<!-- 등록/수정/삭제가 POST submit 이므로 CSRF 토큰을 함께 전송한다.
 	     GET 제출(목록 복귀) 전에는 스크립트가 disabled 처리해 URL 유출을 막는다. -->
 	<input type="hidden" id="csrfField" th:if="${_csrf != null}" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
-{{#if withAttachment}}
-	<!-- 첨부파일 그룹 키 (update 시 기존 값 보존). 신규 등록이면 빈 값 — Controller 에서 채번. -->
-	<input type="hidden" id="{{attachmentFieldName}}" name="{{attachmentFieldName}}" th:value="{{{thExpr voName "." attachmentFieldName}}}" />
-{{/if}}
 
 		<div class="conts-wrap">
 	        <div class="fieldset input-form">
