@@ -3,6 +3,7 @@ package {{basePackage}}.cmm.service;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -20,6 +21,8 @@ import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.util.unit.DataSize;
 import org.springframework.web.multipart.MultipartFile;
@@ -273,8 +276,8 @@ public class EgovFileMngUtil {
 
 		String safeOrigin = orignlFileNm == null ? streFileNm : orignlFileNm.replaceAll("[\r\n]", "");
 		response.setContentType("application/octet-stream");
-		response.setHeader("Content-Disposition",
-				"attachment; filename=\"" + new String(safeOrigin.getBytes("UTF-8"), "ISO-8859-1") + "\"");
+		response.setHeader(HttpHeaders.CONTENT_DISPOSITION,
+				ContentDisposition.builder("attachment").filename(safeOrigin, StandardCharsets.UTF_8).build().toString());
 		response.setContentLengthLong(size);
 
 		try (java.io.OutputStream out = response.getOutputStream()) {

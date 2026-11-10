@@ -16,6 +16,7 @@ const BOARD_DDL = `CREATE TABLE BOARD (
   TITLE VARCHAR(200)
 )`;
 
+const UTIL = "src/main/java/egovframework/example/cmm/service/EgovFileMngUtil.java";
 const CONTROLLER = "src/main/java/egovframework/example/board/web/EgovBoardController.java";
 const SERVICE = "src/main/java/egovframework/example/board/service/impl/EgovBoardServiceImpl.java";
 const REGISTER = "src/main/resources/templates/thymeleaf/board/egovBoardRegister.html";
@@ -87,5 +88,13 @@ describe("트랜잭션 포인트컷", () => {
       "utf-8",
     );
     expect(tx).toContain("execution(* egovframework.example..impl.*Impl.*(..))");
+  });
+});
+
+describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
+  it("다운로드 헤더를 ContentDisposition 으로 생성한다", async () => {
+    const u = await read(UTIL);
+    expect(u).toMatch(/ContentDisposition\.builder\("attachment"\)\s*\.filename\([^,]+,\s*StandardCharsets\.UTF_8\)/);
+    expect(u).not.toContain("ISO-8859-1");
   });
 });
