@@ -97,4 +97,10 @@ describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
     expect(u).toMatch(/ContentDisposition\.builder\("attachment"\)\s*\.filename\([^,]+,\s*StandardCharsets\.UTF_8\)/);
     expect(u).not.toContain("ISO-8859-1");
   });
+
+  it("저장명은 UUID 로 생성하고 시각 기반 이름을 쓰지 않는다", async () => {
+    const u = await read(UTIL);
+    expect(u).toMatch(/keyStr \+ UUID\.randomUUID\(\)\.toString\(\)\.replace\("-", ""\)/);
+    expect(u).not.toMatch(/getTimeStamp|SimpleDateFormat/);
+  });
 });

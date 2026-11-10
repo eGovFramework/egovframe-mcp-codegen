@@ -25,7 +25,7 @@ COMTNFILEDETAIL (상세, 1:N)
 ├── ATCH_FILE_ID    CHAR(20)          ┐ 복합 PK
 ├── FILE_SN         NUMERIC(10)       ┘ (Oracle/Tibero: NUMBER(10))
 ├── FILE_STRE_COURS VARCHAR(2000)     ← 저장 경로 (Oracle/Tibero: VARCHAR2)
-├── STRE_FILE_NM    VARCHAR(255)      ← 저장 파일명 (난수+timestamp)
+├── STRE_FILE_NM    VARCHAR(255)      ← 저장 파일명 (prefix+UUID)
 ├── ORIGNL_FILE_NM  VARCHAR(255)      ← 원본 파일명 (다운로드 시 사용)
 ├── FILE_EXTSN      VARCHAR(20)
 ├── FILE_CN         MEDIUMTEXT        (Oracle: CLOB / Postgres: TEXT)
@@ -200,7 +200,7 @@ public class FileVO extends ComDefaultVO {
     public String creatDt       = "";   // COMTNFILE.CREAT_DT
     public String fileSn        = "";   // COMTNFILEDETAIL.FILE_SN (String — 절대 int 로 바꾸지 말 것)
     public String fileStreCours = "";   // COMTNFILEDETAIL.FILE_STRE_COURS (저장 경로)
-    public String streFileNm    = "";   // COMTNFILEDETAIL.STRE_FILE_NM   (저장 파일명 = prefix+timestamp+seq)
+    public String streFileNm    = "";   // COMTNFILEDETAIL.STRE_FILE_NM   (저장 파일명 = prefix+UUID)
     public String orignlFileNm  = "";   // COMTNFILEDETAIL.ORIGNL_FILE_NM (사용자가 본 파일명)
     public String fileExtsn     = "";   // COMTNFILEDETAIL.FILE_EXTSN
     public String fileMg        = "";   // COMTNFILEDETAIL.FILE_SIZE      (이름 주의: fileMg = file Megabyte 아님 — 그냥 사이즈 바이트)

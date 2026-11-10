@@ -124,7 +124,7 @@ eGovFrame 5.0 Boot 프로젝트에 표준 첨부파일 인프라를 1회 설치�
 | 방어선 | 적용 위치 | 동작 |
 |---|---|---|
 | **Path traversal 차단** | `EgovFileMngUtil.safeChild` | `../etc/passwd` 같은 디렉터리 탈출 시 `SecurityException` |
-| **저장 파일명 재생성** | `parseFileInf` | timestamp + 순번 — 사용자 입력 파일명이 디스크에 닿지 않음 |
+| **저장 파일명 재생성** | `parseFileInf` | UUID — 사용자 입력 파일명이 디스크에 닿지 않음 |
 | **인라인 실행 차단** | `EgovFileDownloadController.downFile` | `Content-Type: application/octet-stream` + `Content-Disposition: attachment` 강제. HTML/SVG/JS 가 첨부되어도 브라우저가 인라인 실행 안 함 |
 | **CRLF 헤더 인젝션 차단** | `downFile` | 파일명에서 `\r\n` 제거 (response splitting 방어) |
 | **실행 가능 확장자 차단 (P0)** | `EgovFileMngUtil.DEFAULT_BLOCKED_EXTENSIONS` | `EXE/BAT/SH/JSP/PHP/SVG/HTML/JAR` 등 30+ 확장자. 더블 확장자(`a.jpg.exe`) 도 마지막 기준으로 잡음 |

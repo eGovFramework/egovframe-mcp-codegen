@@ -7,8 +7,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.UUID;
 
 import org.egovframe.rte.fdl.idgnr.EgovIdGnrService;
 import org.slf4j.Logger;
@@ -38,7 +37,7 @@ import jakarta.annotation.Resource;
  *
  * 보안 방어선:
  * - {@link #safeChild(Path, String)} 으로 path traversal(../) 차단
- * - 저장 파일명은 timestamp + 순번으로 재생성하므로 사용자 입력 파일명이 디스크에 직접 닿지 않음
+ * - 저장 파일명은 UUID 로 재생성하므로 사용자 입력 파일명이 디스크에 직접 닿지 않음
  * - {@link #DEFAULT_BLOCKED_EXTENSIONS} 로 실행 가능 확장자 차단 (P0 — exe/bat/sh/jsp/php/svg/html 등)
  * - {@code egov.attach.blockedExtensions} CSV 로 운영 정책 차단 확장자 추가 (P1)
  * - {@code egov.attach.allowedExtensions} CSV 로 화이트리스트 모드 활성화 (P1, 비어 있으면 블랙리스트만)
@@ -241,7 +240,7 @@ public class EgovFileMngUtil {
 						"파일 크기가 한도를 초과했습니다 (" + file.getSize() + " bytes > " + maxFileSizeStr +
 								", 파일명: " + origin + ").");
 			}
-			String storedName = keyStr + getTimeStamp() + fileKey;
+			String storedName = keyStr + UUID.randomUUID().toString().replace("-", "");
 			Path target = safeChild(storeDir, storedName);
 			file.transferTo(target.toFile());
 
@@ -299,15 +298,6 @@ public class EgovFileMngUtil {
 			throw new SecurityException("Invalid file path (traversal denied): " + childName);
 		}
 		return candidate;
-	}
-
-	/**
-	 * 저장 파일명의 고유성을 보장하는 17자리 timestamp.
-	 * (yyyyMMddhhmmssSSS). 같은 ms 안에서도 호출자가 fileKey 를 증가시키므로 충돌 없음.
-	 */
-	private static String getTimeStamp() {
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyyMMddhhmmssSSS", Locale.KOREA);
-		return sdf.format(new Timestamp(System.currentTimeMillis()));
 	}
 
 	/**
