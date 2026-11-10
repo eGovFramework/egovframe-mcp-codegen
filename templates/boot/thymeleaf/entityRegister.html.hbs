@@ -15,6 +15,22 @@
 		function {{entityNameLower}}Update() { if (confirm([[#{modify.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/update').submit(); } }
 		function {{entityNameLower}}Delete() { if (confirm([[#{delete.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/delete').submit(); } }
 		function {{entityNameLower}}Reset() { $('form').each(function() { this.reset(); }); }
+{{#if withAttachment}}
+		/** 첨부 그룹의 단일 파일을 삭제한다. 도메인 행은 유지하고, 성공하면 해당 li 만 화면에서 제거한다. */
+		function {{entityNameLower}}DeleteAttach(btn) {
+			if (!confirm([[#{delete.confirm}]])) { return; }
+			var $btn = $(btn);
+			$.ajax({
+				url: contextPath + '/{{entityNameLower}}/deleteAttachFile',
+				type: 'POST',
+				data: { atchFileId: $btn.attr('data-atch-file-id'), fileSn: $btn.attr('data-file-sn') }
+			}).done(function() {
+				$btn.closest('li').remove();
+			}).fail(function(xhr) {
+				alert('Attachment delete failed (status=' + xhr.status + ').');
+			});
+		}
+{{/if}}
 	</script>
 </head>
 <body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
@@ -23,7 +39,7 @@
 		<span th:if="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="#{button.modify}"></span>
 		<span th:unless="${not #strings.isEmpty({{voName}}.{{pkAttributes.0.ccName}})}" th:text="#{button.create}"></span>
 	</li></ul></div>
-	<form id="detailForm" th:object="{{{thExpr voName}}}">
+	<form id="detailForm" th:object="{{{thExpr voName}}}"{{#if withAttachment}} enctype="multipart/form-data"{{/if}}>
 		<div id="table">
 			<table th:width="680px" th:border="1" th:cellpadding="0" th:cellspacing="0" style="bordercolor:#D3E2EC; bordercolordark:#FFFFFF; BORDER-TOP:#C2D0DB 2px solid; BORDER-LEFT:#ffffff 1px solid; BORDER-RIGHT:#ffffff 1px solid; BORDER-BOTTOM:#C2D0DB 1px solid; border-collapse: collapse;">
 				<colgroup><col width="150px"/><col width="530px"/></colgroup>
@@ -85,6 +101,22 @@
 {{/if}}
 {{/if}}
 {{/each}}
+{{#if withAttachment}}
+				<tr>
+					<td class="tbtd_caption"><label for="file_1"><span th:text="#{title.{{entityNameLower}}.attachment}"></span></label></td>
+					<td class="tbtd_content">
+						<ul th:if="${attachList != null and not #lists.isEmpty(attachList)}" style="margin-bottom:8px; padding-left:1.2em; list-style:none;">
+							<li th:each="f : ${attachList}">
+								<a th:href="@{/cmm/fms/FileDown.do(atchFileId=${f.atchFileId}, fileSn=${f.fileSn})}" th:text="${f.orignlFileNm}"></a>
+								<span th:text="|(${f.fileMg} bytes)|"></span>
+								<button type="button" th:attr="data-atch-file-id=${f.atchFileId},data-file-sn=${f.fileSn}" th:text="#{button.delete}" onclick="{{entityNameLower}}DeleteAttach(this)"></button>
+							</li>
+						</ul>
+						<input type="file" id="file_1" name="file_1" multiple{{#if maxAttachmentCount}} data-max-count="{{maxAttachmentCount}}"{{/if}}/>
+						<span th:if="${attachList != null and not #lists.isEmpty(attachList)}" th:text="#{info.{{entityNameLower}}.attachment.existing}"></span>
+					</td>
+				</tr>
+{{/if}}
 			</table>
 		</div>
 		<div id="sysbtn">

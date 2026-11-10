@@ -37,4 +37,9 @@ public class {{entityName}}VO extends {{entityName}}DefaultVO {
 {{/if}}
 {{/if}}
 {{/each}}
+{{#if withAttachment}}
+
+	/** 첨부파일 그룹 키 (COMTNFILE.ATCH_FILE_ID — CHAR(20)). EgovFileMngService 가 채번/관리. */
+	private String {{attachmentFieldName}};
+{{/if}}
 }

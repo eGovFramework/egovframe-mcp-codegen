@@ -1,5 +1,8 @@
 package {{packageName}}.web;
 
+{{#if withAttachment}}
+import javax.annotation.Resource;
+{{/if}}
 import javax.validation.Valid;
 {{#if hasDateAttr}}
 import java.beans.PropertyEditorSupport;
@@ -19,6 +22,14 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+{{#if withAttachment}}
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.multipart.MultipartHttpServletRequest;
+import {{basePackage}}.cmm.service.EgovFileMngService;
+import {{basePackage}}.cmm.service.EgovFileMngUtil;
+import {{basePackage}}.cmm.service.FileVO;
+{{/if}}
 import {{packageName}}.service.Egov{{entityName}}Service;
 import {{packageName}}.service.{{entityName}}VO;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +39,18 @@ import lombok.RequiredArgsConstructor;
 public class Egov{{entityName}}Controller {
 	private final Egov{{entityName}}Service {{entityNameLower}}Service;
 	private final EgovPropertyService propertiesService;
+{{#if withAttachment}}
+
+	/**
+	 * 첨부파일 협력 객체. @RequiredArgsConstructor 는 final 필드만 생성자에 포함하므로
+	 * 빈 이름이 정해진 이 둘은 non-final 필드 주입(@Resource)으로 받는다.
+	 */
+	@Resource(name = "EgovFileMngService")
+	private EgovFileMngService fileMngService;
+
+	@Resource(name = "EgovFileMngUtil")
+	private EgovFileMngUtil fileUtil;
+{{/if}}
 
 {{#if hasDateAttr}}
 	/**
@@ -88,6 +111,16 @@ public class Egov{{entityName}}Controller {
 {{#if hasFk}}
 		populate{{entityName}}ReferenceLists(model);
 {{/if}}
+{{#if withAttachment}}
+		// 기존 첨부파일 목록을 model 에 주입 — Register 화면에서 다운로드 링크로 렌더된다.
+		// 첨부 그룹 키는 CHAR(20) 이라 빈 값이 공백으로 읽힐 수 있어 isBlank() 로 검사한다.
+		String existing{{attachmentFieldNamePascal}} = detail.get{{attachmentFieldNamePascal}}();
+		if (existing{{attachmentFieldNamePascal}} != null && !existing{{attachmentFieldNamePascal}}.isBlank()) {
+			FileVO attachKey = new FileVO();
+			attachKey.setAtchFileId(existing{{attachmentFieldNamePascal}});
+			model.addAttribute("attachList", this.fileMngService.selectFileInfs(attachKey));
+		}
+{{/if}}
 		return "egov{{entityName}}Register";
 	}
 
@@ -100,25 +133,60 @@ public class Egov{{entityName}}Controller {
 	}
 
 	@PostMapping("/{{entityNameLower}}/add")
-	public String add(@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
+	public String add({{#if withAttachment}}final MultipartHttpServletRequest multiRequest, {{/if}}@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
 		if (bindingResult.hasErrors()) {
 {{#if hasFk}}
 			populate{{entityName}}ReferenceLists(model);
 {{/if}}
 			return "egov{{entityName}}Register";
 		}
+{{#if withAttachment}}
+		// 첨부파일 처리 — 디스크에 저장한 뒤 insertFileInfs 로 그룹 키를 채번/INSERT 하고,
+		// 반환된 키만 도메인 VO 에 세팅한다 (요청에 실려 온 값은 덮어쓴다).
+		String {{attachmentFieldName}} = "";
+		final java.util.List<MultipartFile> files = multiRequest.getFiles("file_1");
+		if (files != null && !files.isEmpty()) {
+			java.util.List<FileVO> fvoList = this.fileUtil.parseFileInf(files, "{{entityNameUpper}}_", 0, "", "");
+			{{attachmentFieldName}} = this.fileMngService.insertFileInfs(fvoList);
+		}
+		{{entityNameLower}}VO.set{{attachmentFieldNamePascal}}({{attachmentFieldName}});
+{{/if}}
 		this.{{entityNameLower}}Service.insert{{entityName}}({{entityNameLower}}VO);
 		return "redirect:/";
 	}
 
 	@PostMapping("/{{entityNameLower}}/update")
-	public String update(@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
+	public String update({{#if withAttachment}}final MultipartHttpServletRequest multiRequest, {{/if}}@Valid @ModelAttribute {{entityName}}VO {{entityNameLower}}VO, BindingResult bindingResult{{#if hasFk}}, Model model{{/if}}) throws Exception {
 		if (bindingResult.hasErrors()) {
 {{#if hasFk}}
 			populate{{entityName}}ReferenceLists(model);
 {{/if}}
 			return "egov{{entityName}}Register";
 		}
+{{#if withAttachment}}
+		// 첨부파일 update — 신규 그룹이면 채번, 기존 그룹이면 다음 FILE_SN 부터 append.
+		// 그룹 키는 요청 값을 신뢰하지 않고 DB 에 저장된 값에서 읽는다 (다른 레코드의 첨부 그룹 탈취 방지).
+		{{entityName}}VO stored = this.{{entityNameLower}}Service.select{{entityName}}({{entityNameLower}}VO);
+		String {{attachmentFieldName}} = stored.get{{attachmentFieldNamePascal}}();
+		final java.util.List<MultipartFile> files = multiRequest.getFiles("file_1");
+		if (files != null && !files.isEmpty()) {
+			// CHAR(20) 컬럼은 빈 값이 공백으로 채워져 읽히므로 isEmpty() 가 아니라 isBlank() 로 검사한다.
+			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.isBlank()) {
+				// (A) 첨부 그룹이 아직 없음 → 신규 채번
+				java.util.List<FileVO> fvoList = this.fileUtil.parseFileInf(files, "{{entityNameUpper}}_", 0, "", "");
+				{{attachmentFieldName}} = this.fileMngService.insertFileInfs(fvoList);
+			} else {
+				// (B) 기존 그룹에 추가 — getMaxFileSN 으로 다음 FILE_SN 부터 (중복 PK 방지)
+				FileVO key = new FileVO();
+				key.setAtchFileId({{attachmentFieldName}});
+				int cnt = this.fileMngService.getMaxFileSN(key);
+				java.util.List<FileVO> fvoList = this.fileUtil.parseFileInf(files, "{{entityNameUpper}}_", cnt, {{attachmentFieldName}}, "");
+				this.fileMngService.updateFileInfs(fvoList);
+			}
+		}
+		// 요청에 실려 온 값을 덮어써 DB 값(또는 새로 채번한 값)만 저장한다.
+		{{entityNameLower}}VO.set{{attachmentFieldNamePascal}}({{attachmentFieldName}});
+{{/if}}
 		this.{{entityNameLower}}Service.update{{entityName}}({{entityNameLower}}VO);
 		return "redirect:/";
 	}
@@ -137,4 +205,23 @@ public class Egov{{entityName}}Controller {
 		this.{{entityNameLower}}Service.delete{{entityName}}({{entityNameLower}}VO);
 		return "redirect:/";
 	}
+{{#if withAttachment}}
+
+	/**
+	 * 첨부 그룹의 단일 파일(atchFileId + fileSn) 1건 삭제.
+	 * 도메인 행은 유지하고 첨부 한 건만 떼어내는 용도 — 수정 화면에서 호출.
+	 * 반환: 단순 텍스트 "ok" (성공).
+	 */
+	@PostMapping("/{{entityNameLower}}/deleteAttachFile")
+	@ResponseBody
+	public String deleteAttachFile(
+			@RequestParam("atchFileId") String atchFileId,
+			@RequestParam("fileSn") String fileSn) throws Exception {
+		FileVO fvo = new FileVO();
+		fvo.setAtchFileId(atchFileId);
+		fvo.setFileSn(fileSn);
+		this.fileMngService.deleteFileInf(fvo);
+		return "ok";
+	}
+{{/if}}
 }

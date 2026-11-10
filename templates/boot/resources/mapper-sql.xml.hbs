@@ -6,17 +6,20 @@
 {{#each attributes}}
 		<result property="{{ccName}}" column="{{columnName}}"/>
 {{/each}}
+{{#if withAttachment}}
+		<result property="{{attachmentFieldName}}" column="{{attachmentColumnName}}"/>
+{{/if}}
 	</resultMap>
 
 	<insert id="insert{{entityName}}" parameterType="{{entityNameLower}}VO">
 			INSERT INTO {{tableName}}
-				( {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}} )
-			VALUES ( {{#each attributes}}{{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}} )
+				( {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}{{#if withAttachment}}, {{attachmentColumnName}}{{/if}} )
+			VALUES ( {{#each attributes}}{{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}}{{#if withAttachment}}, #{{{concat "{" attachmentFieldName "}"}}}{{/if}} )
 	</insert>
 
 	<update id="update{{entityName}}">
 			UPDATE {{tableName}}
-			SET {{#each nonPkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}}
+			SET {{#each nonPkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}}, {{/unless}}{{/each}}{{#if withAttachment}}, {{attachmentColumnName}}=#{{{concat "{" attachmentFieldName "}"}}}{{/if}}
 			WHERE {{#each pkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}} AND {{/unless}}{{/each}}
 	</update>
 
@@ -26,13 +29,13 @@
 	</delete>
 
 	<select id="select{{entityName}}" resultMap="{{entityNameLower}}">
-			SELECT {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}
+			SELECT {{#each attributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}{{#if withAttachment}}, {{attachmentColumnName}}{{/if}}
 			FROM {{tableName}}
 			WHERE {{#each pkAttributes}}{{columnName}}={{concat "#{" ccName "}"}}{{#unless @last}} AND {{/unless}}{{/each}}
 	</select>
 
 	<select id="select{{entityName}}List" parameterType="{{entityNameLower}}DefaultVO" resultType="egovMap">
-			SELECT {{#each attributes}}t.{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}{{#each resolvedFks}}
+			SELECT {{#each attributes}}t.{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}{{#if withAttachment}}, t.{{attachmentColumnName}}{{/if}}{{#each resolvedFks}}
 				, ({{joinSqlDisplay fkParent.displayColumns (concat "fk_" ccName)}}) AS {{lowercase columnName}}_display_name{{/each}}
 			FROM {{tableName}} t{{#each resolvedFks}}
 			LEFT JOIN {{fk.targetTable}} fk_{{ccName}} ON t.{{columnName}} = fk_{{ccName}}.{{fkParent.pkColumn}}{{/each}}

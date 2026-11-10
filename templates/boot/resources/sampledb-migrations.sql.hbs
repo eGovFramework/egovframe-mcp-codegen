@@ -18,14 +18,17 @@
 {{#if (eq dialect "oracle")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "oracle"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "oracle"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 
@@ -38,14 +41,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "tibero")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "tibero"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "tibero"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 
@@ -58,14 +64,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "altibase")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "altibase"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "altibase"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 
@@ -78,14 +87,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "cubrid")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "cubrid"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "cubrid"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 
@@ -98,14 +110,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "goldilocks")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "goldilocks"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "goldilocks"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 
@@ -118,14 +133,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "mysql")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "mysql"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "mysql"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 {{#if isPrimaryEntity}}
 
@@ -138,14 +156,17 @@ INSERT INTO IDS VALUES('{{entityNameUpper}}', 1);
 {{else if (eq dialect "postgres")}}
 CREATE TABLE {{tableName}} (
 {{#each attributes}}
-	{{columnName}}	{{{dialectType dataType maxLength "postgres"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}}	{{{dialectType dataType maxLength "postgres"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}}	CHAR(20)
+{{/if}}
 );
 {{#if isPrimaryEntity}}
 

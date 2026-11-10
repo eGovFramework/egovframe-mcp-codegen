@@ -1,13 +1,16 @@
 CREATE MEMORY TABLE {{tableName}}(
 {{#each attributes}}
-	{{columnName}} {{{dialectType dataType maxLength "hsql"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{/if}}{{else}},{{/if}}
+	{{columnName}} {{{dialectType dataType maxLength "hsql"}}}{{#if defaultValue}} DEFAULT {{{defaultValue}}}{{/if}}{{#if isPrimaryKey}} NOT NULL{{#unless ../hasCompositePk}} PRIMARY KEY{{/unless}}{{else}}{{#if isNotNull}} NOT NULL{{/if}}{{/if}}{{#if @last}}{{#if ../hasTrailingTableClauses}},{{else}}{{#if ../withAttachment}},{{/if}}{{/if}}{{else}},{{/if}}
 {{/each}}
 {{#if hasCompositePk}}
-	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{/if}}
+	PRIMARY KEY ({{#each pkAttributes}}{{columnName}}{{#unless @last}}, {{/unless}}{{/each}}){{#if fkAttributes.length}},{{else}}{{#if withAttachment}},{{/if}}{{/if}}
 {{/if}}
 {{#each fkAttributes}}
-	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{/unless}}
+	CONSTRAINT FK_{{../tableName}}_{{columnName}} FOREIGN KEY ({{columnName}}) REFERENCES {{fk.targetTable}}({{fk.targetColumn}}){{#unless @last}},{{else}}{{#if ../withAttachment}},{{/if}}{{/unless}}
 {{/each}}
+{{#if withAttachment}}
+	{{attachmentColumnName}} CHAR(20)
+{{/if}}
 );
 
 CREATE MEMORY TABLE IDS(
