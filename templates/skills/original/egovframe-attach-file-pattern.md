@@ -72,7 +72,7 @@ import egovframework.com.cmm.service.EgovFileMngService;
 import egovframework.com.cmm.service.EgovFileMngUtil;
 import egovframework.com.cmm.service.FileVO;
 
-import jakarta.annotation.Resource;
+import jakarta.annotation.Resource; // 4.3 Boot(javax 기반)는 javax.annotation.Resource 를 사용한다
 
 @Controller
 public class FaqController {
@@ -124,7 +124,8 @@ public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
     final List<MultipartFile> files = multiRequest.getFiles("file_1");
 
     if (files != null && !files.isEmpty()) {
-        if (atchFileId == null || "".equals(atchFileId)) {
+        // CHAR(20) 컬럼은 빈 값이 공백 20자로 읽혀 "".equals() 가 거짓이 되므로 null 또는 isBlank() 로 검사한다
+        if (atchFileId == null || atchFileId.isBlank()) {
             // (A) 첨부 그룹이 아직 없음 → 신규 채번
             List<FileVO> result = fileUtil.parseFileInf(files, "FAQ_", 0, atchFileId, "");
             atchFileId = fileMngService.insertFileInfs(result);
@@ -152,6 +153,7 @@ public String updateFaqCn(final MultipartHttpServletRequest multiRequest,
 public String deleteFaqCn(@ModelAttribute("faqVO") FaqVO faqVO) throws Exception {
 
     // 요청 값은 신뢰하지 않는다 — 삭제 전에 DB 에서 그룹 키를 읽는다
+    // (이 예제의 selectFaq 는 레코드가 없으면 예외를 던진다. 생성되는 서비스는 Mapper 로 조회해 없으면 정리를 건너뛴다)
     String atchFileId = egovFaqService.selectFaq(faqVO).getAtchFileId();
 
     // 1) 도메인 먼저 삭제

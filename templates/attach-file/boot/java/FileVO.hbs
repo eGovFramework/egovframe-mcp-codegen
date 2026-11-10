@@ -36,7 +36,7 @@ public class FileVO implements Serializable {
 	/** 원본 파일명 (사용자가 본 이름). */
 	private String orignlFileNm = "";
 
-	/** 저장 파일명 (난수+timestamp, 다운로드 시 실제 디스크 파일명). */
+	/** 저장 파일명 (UUID, 다운로드 시 실제 디스크 파일명). */
 	private String streFileNm = "";
 
 	public String getAtchFileId() { return atchFileId; }

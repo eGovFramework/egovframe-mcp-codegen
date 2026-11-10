@@ -40,7 +40,7 @@ server.registerTool(
   {
     title: "Scaffold eGovFrame Project",
     description:
-      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. 기본은 eGovFrame 5.0 Boot(Jakarta+Thymeleaf Spring6+KRDS). stackVersion='4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용. CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. 5.0 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. withAttachment 를 생략하면 Boot(5.0, 4.3)에서 서버가 사용자에게 첨부파일 포함 여부를 직접 묻고(Elicitation), 지원하지 않는 클라이언트면 사용자에게 물은 뒤 true/false 로 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다..",
+      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. 기본은 eGovFrame 5.0 Boot(Jakarta+Thymeleaf Spring6+KRDS). stackVersion='4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용. CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. 5.0 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. withAttachment 를 생략하면 Boot(5.0, 4.3)에서 서버가 사용자에게 첨부파일 포함 여부를 직접 묻고(Elicitation), 지원하지 않는 클라이언트면 사용자에게 물은 뒤 true/false 로 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다.",
     inputSchema: {
       projectName: z
         .string()
