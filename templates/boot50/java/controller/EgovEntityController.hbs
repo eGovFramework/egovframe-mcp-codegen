@@ -219,7 +219,7 @@ public class Egov{{entityName}}Controller {
 		String {{attachmentFieldName}} = stored.get{{attachmentFieldNamePascal}}();
 		final java.util.List<MultipartFile> files = multiRequest.getFiles("file_1");
 		if (files != null && !files.isEmpty()) {
-			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.isEmpty()) {
+			if ({{attachmentFieldName}} == null || {{attachmentFieldName}}.isBlank()) {
 				// (A) 첨부 그룹이 아직 없음 → 신규 채번
 				java.util.List<FileVO> fvoList = fileUtil.parseFileInf(files, "{{entityNameUpper}}_", 0, "", "");
 				{{attachmentFieldName}} = fileMngService.insertFileInfs(fvoList);

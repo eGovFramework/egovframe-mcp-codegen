@@ -57,7 +57,7 @@ describe("요청 atchFileId 불신 (5.0 Boot)", () => {
     expect(c).not.toMatch(/String atchFileId = boardVO\.getAtchFileId\(\);/);
     expect(c).toMatch(/boardVO\.setAtchFileId\(atchFileId\);\s+boardService\.updateBoard\(boardVO\);/);
     // 첨부가 없는 레코드
-    expect(c).toMatch(/atchFileId == null \|\| atchFileId\.isEmpty\(\)/);
+    expect(c).toMatch(/atchFileId == null \|\| atchFileId\.isBlank\(\)/);
   });
 
   it("레코드 삭제는 DB 에서 읽은 atchFileId 로 첨부를 정리한다", async () => {
