@@ -42,7 +42,7 @@ public class EgovConfigTransaction {
 	@Bean
 	public Advisor txAdvisor(@Qualifier("txManager") DataSourceTransactionManager txManager) {
 		AspectJExpressionPointcut pointcut = new AspectJExpressionPointcut();
-		pointcut.setExpression("execution(* {{packageName}}..impl.*Impl.*(..))");
+		pointcut.setExpression("execution(* {{basePackage}}..impl.*Impl.*(..))");
 		return new DefaultPointcutAdvisor(pointcut, txAdvice(txManager));
 	}
 

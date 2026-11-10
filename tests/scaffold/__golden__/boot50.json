@@ -137,7 +137,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigTransaction.java",
-      "sha256": "c3979495293ef7415891d633d291f4d73f1b6cba195be13b8d3407288769fbb6"
+      "sha256": "07c3fec0fd77224d129edd3d5668b5c5d9f628d1bd3202be1ebd8a182f67d5a8"
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigValidation.java",

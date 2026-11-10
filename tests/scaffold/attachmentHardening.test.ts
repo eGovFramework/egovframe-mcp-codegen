@@ -9,6 +9,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 
 import { egovScaffoldProject } from "../../src/tools/egovScaffoldProject.js";
+import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
 
 const BOARD_DDL = `CREATE TABLE BOARD (
   ID VARCHAR(20) NOT NULL PRIMARY KEY,
@@ -66,5 +67,25 @@ describe("요청 atchFileId 불신 (5.0 Boot)", () => {
 
   it("등록·수정 화면에 atchFileId hidden 필드가 없다", async () => {
     expect(await read(REGISTER)).not.toMatch(/name="atchFileId"/);
+  });
+});
+
+describe("트랜잭션 포인트컷", () => {
+  it.each(["5.0", "4.3"] as const)("%s 트랜잭션 포인트컷은 기본 패키지 전체를 포함한다", async (stackVersion) => {
+    await generateScaffoldProject({
+      projectName: "tx-app",
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: BOARD_DDL,
+      description: "",
+      projectType: "boot",
+      stackVersion,
+    });
+    const tx = await fs.readFile(
+      path.join(tmpRoot, "tx-app/src/main/java/egovframework/example/config/EgovConfigTransaction.java"),
+      "utf-8",
+    );
+    expect(tx).toContain("execution(* egovframework.example..impl.*Impl.*(..))");
   });
 });
