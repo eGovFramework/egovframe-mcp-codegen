@@ -313,6 +313,8 @@ public class EgovFileMngUtil {
 		}
 		int sep = Math.max(filename.lastIndexOf('/'), filename.lastIndexOf('\\'));
 		String name = (sep >= 0) ? filename.substring(sep + 1) : filename;
+		// Windows 는 파일명 끝의 점·공백을 무시하므로 "a.jsp." 같은 이름이 차단 목록을 우회하지 못하게 제거한다.
+		name = name.replaceAll("[\\s.]+$", "");
 		int dot = name.lastIndexOf('.');
 		if (dot < 0 || dot >= name.length() - 1) {
 			return "";

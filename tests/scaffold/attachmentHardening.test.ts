@@ -103,4 +103,11 @@ describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
     expect(u).toMatch(/keyStr \+ UUID\.randomUUID\(\)\.toString\(\)\.replace\("-", ""\)/);
     expect(u).not.toMatch(/getTimeStamp|SimpleDateFormat/);
   });
+
+  it("확장자를 구하기 전에 끝의 점과 공백을 제거한다", async () => {
+    const u = await read(UTIL);
+    const body = /private static String getExtensionUpper[\s\S]*?\n\t}/.exec(u)![0];
+    expect(body).toContain('replaceAll("[\\\\s.]+$", "")');
+    expect(body.indexOf("replaceAll")).toBeLessThan(body.indexOf("lastIndexOf('.')"));
+  });
 });
