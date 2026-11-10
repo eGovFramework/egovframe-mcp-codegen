@@ -17,7 +17,7 @@
 {{#each entities}}
 		<li>
 			<a href="<c:url value='/egov{{entityName}}List.do'/>"
-			   class="${pageContext.request.requestURI.startsWith(pageContext.request.contextPath += '/egov{{entityName}}List') ? 'is-active' : ''}">
+			   class="${requestScope['javax.servlet.forward.request_uri'].startsWith(pageContext.request.contextPath += '/egov{{entityName}}List') ? 'is-active' : ''}">
 				<spring:message code="nav.{{entityNameLower}}" />
 			</a>
 		</li>

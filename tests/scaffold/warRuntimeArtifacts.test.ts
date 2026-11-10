@@ -67,6 +67,15 @@ describe("4.3 WAR nav.jsp EL", () => {
     expect(withArithmeticPlus(elExpressions(nav))).toEqual([]);
   });
 
+  // 컨트롤러가 JSP 로 forward 하면 requestURI 는 JSP 경로가 되어 메뉴 경로와 일치할 수 없다.
+  it("현재 탭 판별에 forward 전의 원본 요청 URI 를 사용한다", async () => {
+    const nav = await read(NAV_JSP);
+    expect(nav).toContain(
+      "requestScope['javax.servlet.forward.request_uri'].startsWith(pageContext.request.contextPath += '/egovBoardList')",
+    );
+    expect(nav).not.toContain("pageContext.request.requestURI");
+  });
+
   it("egov_add_entity 로 재생성한 nav 도 산술 + 를 쓰지 않는다", async () => {
     await egovAddEntity({
       projectPath: projectDir,
