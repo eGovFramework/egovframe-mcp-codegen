@@ -261,7 +261,7 @@
     },
     {
       "path": "src/main/webapp/META-INF/MANIFEST.MF",
-      "sha256": "0ba03413c52dce2615892f96ded781fc337a7693b373069611b0bf380590ea74"
+      "sha256": "51b6d211a461039ad64b8b09eabb809673e8affd06b605f5efefa6b5ebe2f742"
     },
     {
       "path": "src/main/webapp/WEB-INF/config/egovframework/springmvc/dispatcher-servlet.xml",
