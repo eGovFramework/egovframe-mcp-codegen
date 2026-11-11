@@ -445,9 +445,7 @@ describe("egov_add_query_view — 학적 도메인 StudentEnrollmentReport", () 
     ).rejects.toThrow(/충돌로 거부/);
   });
 
-  it("eGovFrame 5.0 Boot 가 아닌 프로젝트는 명확한 에러로 거부한다", async () => {
-    // 별도 WAR 프로젝트 생성
-    const warDir = path.join(tmpRoot, "war-app");
+  it("WAR 4.3 프로젝트도 거부하지 않고 JSP 화면을 포함한 산출물을 생성한다", async () => {
     await generateScaffoldProject({
       projectName: "war-app",
       packageName: "egovframework.example.war.board",
@@ -458,15 +456,21 @@ describe("egov_add_query_view — 학적 도메인 StudentEnrollmentReport", () 
       projectType: "war",
       stackVersion: "4.3",
     });
+    const warDir = path.join(tmpRoot, "war-app");
 
-    await expect(
-      egovAddQueryView({
-        projectPath: warDir,
-        packageName: "egovframework.example.war.report",
-        viewName: "Report",
-        sql: "SELECT 1 AS id FROM BOARD",
-        columns: [{ alias: "id", label: "ID" }],
-      }),
-    ).rejects.toThrow(/eGovFrame 5\.0 Boot 프로젝트만 지원/);
+    const out = await egovAddQueryView({
+      projectPath: warDir,
+      packageName: "egovframework.example.war.report",
+      viewName: "Report",
+      sql: "SELECT 1 AS id FROM BOARD",
+      columns: [{ alias: "id", label: "ID" }],
+    });
+
+    expect(out).toMatch(/Query view 'Report' 추가 완료/);
+    expect(
+      await fs.pathExists(
+        path.join(warDir, "src/main/webapp/WEB-INF/jsp/egovframework/example/war/report/egovReportList.jsp"),
+      ),
+    ).toBe(true);
   });
 });

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+    <title th:text="{{concat "#{title." viewNameLower ".sample}"}}"></title>
+    <link rel="stylesheet" type="text/css" th:href="@{/css/egovframework/sample.css}">
+    <script type="text/javascript" th:src="@{/js/egovframework/jquery-3.6.1.min.js}"></script>
+    <script th:inline="javascript">
+        function {{viewNameLower}}Search() {
+            document.listForm.pageIndex.value = 1;
+            document.listForm.submit();
+        }
+        function {{viewNameLower}}Pagination(pageIndex) {
+            document.listForm.pageIndex.value = pageIndex;
+            document.listForm.submit();
+        }
+    </script>
+</head>
+<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
+    <div id="content_pop">
+        <div id="title"><ul><li><img th:src="@{/images/egovframework/example/title_dot.gif}" alt=""/><span th:text="{{concat "#{list." viewNameLower "}"}}"></span></li></ul></div>
+
+        <!-- @egov:nav-include — egov_add_entity / egov_add_query_view 가 fragment 갱신 시 자동 인식하는 마커. 사용자가 옮기지 마세요. -->
+        <div th:replace="~{_fragments/nav :: links}"></div>
+        <form id="listForm" name="listForm" th:object="${ {{viewVoName}} }" method="get" th:action="@{/egov{{viewName}}List.do}">
+            <input type="hidden" name="pageIndex" th:value="${ {{viewVoName}}.pageIndex }"/>
+{{#if hasSearchable}}
+            <div id="search">
+                <ul>
+                    <li>
+                        <label for="searchCondition" style="visibility:hidden;" th:text="#{search.choose}"></label>
+                        <select id="searchCondition" name="searchCondition" class="use">
+{{#each searchable}}
+                            <option th:text="{{concat "#{title." ../viewNameLower "." alias "}"}}" th:value="{{@index}}" th:selected="${ {{../viewVoName}}.searchCondition } == {{@index}}"></option>
+{{/each}}
+                        </select>
+                    </li>
+                    <li>
+                        <label for="searchKeyword" style="visibility:hidden;display:none;" th:text="#{search.keyword}"></label>
+                        <input type="text" id="searchKeyword" name="searchKeyword" th:value="${ {{viewVoName}}.searchKeyword }" class="txt"/>
+                    </li>
+                    <li><span class="btn_blue_l"><span th:text="#{button.search}" th:onclick="{{viewNameLower}}Search()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.search}"/></span></li>
+                </ul>
+            </div>
+{{/if}}
+            <div id="table">
+                <table th:width="680px">
+                <caption style="visibility:hidden">{{viewName}} List</caption>
+                    <tr>
+                        <th th:width="40px">No</th>
+{{#each columns}}
+                        <th><span th:text="{{concat "#{title." ../viewNameLower "." alias "}"}}"></span></th>
+{{/each}}
+                    </tr>
+                    <tr data-th-each="result, iterStat : ${resultList}">
+                        <td th:class="listtd" th:align="center" th:text="${paginationInfo.totalRecordCount + 1 - (({{viewVoName}}.pageIndex - 1) * {{viewVoName}}.pageSize + iterStat.count)}"></td>
+{{#each columns}}
+{{#if isDate}}
+                        <td th:class="listtd" th:align="center" th:text="${result.{{alias}} != null} ? ${#dates.format(result.{{alias}}, '{{format}}')} : ''"></td>
+{{else if isTimestamp}}
+                        <td th:class="listtd" th:align="center" th:text="${result.{{alias}} != null} ? ${#dates.format(result.{{alias}}, '{{format}}')} : ''"></td>
+{{else if isNumber}}
+{{#if format}}
+                        <td th:class="listtd" th:align="right" th:text="${result.{{alias}} != null} ? ${#numbers.formatDecimal(result.{{alias}}, 1, '{{numberGrouping}}', {{numberDecimals}}, 'POINT')} : ''"></td>
+{{else}}
+                        <td th:class="listtd" th:align="right" th:text="{{concat "${result." alias "}"}}"></td>
+{{/if}}
+{{else if isBoolean}}
+                        <td th:class="listtd" th:align="center" th:text="{{concat "${result." alias " != null and result." alias "}"}} ? #{input.yes} : #{input.no}"></td>
+{{else}}
+                        <td th:class="listtd" th:align="center" th:text="{{concat "${result." alias "}"}}"></td>
+{{/if}}
+{{/each}}
+                    </tr>
+                    <tr th:if="${resultList == null or resultList.isEmpty()}">
+                        <td class="listtd" th:align="center" colspan="{{add columns.length 1}}" th:text="#{info.nodata.msg}"></td>
+                    </tr>
+                </table>
+            </div>
+            <!--
+                th:utext 사용 근거: egovPaginationFormat 은 PaginationInfo 의 int 값과 우리가 지정한 JS 함수명 리터럴만
+                사용해 HTML 을 만들며, 사용자 입력 문자열이 흘러들어갈 경로가 없다. 셀(<td>) 값은 모두 th:text 로 escape 된다.
+            -->
+            <div id="paging"><span th:utext="${#egovPaginationFormat.paginationFormat(paginationInfo, '{{viewNameLower}}Pagination')}"></span></div>
+        </form>
+    </div>
+</body>
+</html>

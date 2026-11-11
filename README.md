@@ -67,16 +67,16 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 ### 3. `egov_add_query_view`
 
-이미 생성된 eGovFrame 5.0 Boot 프로젝트에 다중 JOIN 기반 read-only 조회 화면(리포트성 View) 을 추가합니다.
+이미 생성된 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR)에 다중 JOIN 기반 read-only 조회 화면(리포트성 View) 을 추가합니다.
 
 - 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 **List + 페이징 + 검색**만 생성
 - 사용자가 작성한 raw `SELECT` SQL 본문을 그대로 사용. 도구는 derived table 로 wrapping 해 페이징/검색을 외부에서 안전하게 적용
 - 컬럼 메타(alias / label / type / format) 가 VO 필드와 화면 렌더링을 모두 결정
-- 현재는 `boot50` (eGovFrame 5.0 Boot) 만 지원
+- 5.0 Boot / 4.3 Boot (Thymeleaf 화면), 4.3 WAR (JSP 화면) 지원. 스택은 `pom.xml` 에서 자동 감지
 
 | 파라미터          | 타입     | 필수 | 설명                                                                |
 |-----------------|---------|------|---------------------------------------------------------------------|
-| projectPath     | string  | ✓    | 기존 eGovFrame 5.0 Boot 프로젝트 루트                                |
+| projectPath     | string  | ✓    | 기존 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR) 루트          |
 | packageName     | string  | ✓    | Query view 를 둘 Java 패키지                                         |
 | viewName        | string  | ✓    | PascalCase view 이름 (예: `StudentEnrollmentReport`)                |
 | sql             | string  | ✓    | 조회 본문 `SELECT` 문 (LIMIT/OFFSET 제외, alias 명시 필수)            |

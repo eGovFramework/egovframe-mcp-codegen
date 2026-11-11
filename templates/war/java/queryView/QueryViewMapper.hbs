@@ -1,0 +1,20 @@
+package {{packageName}}.impl;
+
+import java.util.List;
+
+import org.egovframe.rte.psl.dataaccess.mapper.Mapper;
+
+import {{packageName}}.{{viewName}}DefaultVO;
+import {{packageName}}.{{viewName}}VO;
+
+/**
+ * Query view '{{viewName}}' 의 read-only Mapper.
+ * CRUD entity 의 Mapper 와 달리 insert/update/delete/select(단건) 가 없다.
+ */
+@Mapper
+public interface {{viewName}}Mapper {
+
+	List<{{viewName}}VO> select{{viewName}}List({{viewName}}DefaultVO searchVO);
+
+	int select{{viewName}}ListTotCnt({{viewName}}DefaultVO searchVO);
+}

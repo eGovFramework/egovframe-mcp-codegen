@@ -1,0 +1,52 @@
+package {{basePackage}}.{{entityModule}}.web;
+
+import java.util.List;
+
+import org.egovframe.rte.fdl.property.EgovPropertyService;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.ModelMap;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+
+import {{packageName}}.Egov{{viewName}}Service;
+import {{packageName}}.{{viewName}}VO;
+import lombok.RequiredArgsConstructor;
+
+/**
+ * Query view '{{viewName}}' 의 read-only Controller.
+ * CRUD 와 달리 add/update/delete 핸들러가 없고 GET 으로 목록만 노출한다.
+ */
+@Controller
+@RequiredArgsConstructor
+public class Egov{{viewName}}Controller {
+	private final Egov{{viewName}}Service {{viewNameLower}}Service;
+	private final EgovPropertyService propertiesService;
+
+	@GetMapping("/egov{{viewName}}List.do")
+	public String select{{viewName}}List(
+			@ModelAttribute("{{viewVoName}}") {{viewName}}VO {{viewVoName}},
+			ModelMap model) throws Exception {
+
+		{{viewVoName}}.setPageUnit(propertiesService.getInt("pageUnit"));
+		{{viewVoName}}.setPageSize(propertiesService.getInt("pageSize"));
+
+		PaginationInfo paginationInfo = new PaginationInfo();
+		paginationInfo.setCurrentPageNo({{viewVoName}}.getPageIndex());
+		paginationInfo.setRecordCountPerPage({{viewVoName}}.getPageUnit());
+		paginationInfo.setPageSize({{viewVoName}}.getPageSize());
+
+		{{viewVoName}}.setFirstIndex(paginationInfo.getFirstRecordIndex());
+		{{viewVoName}}.setLastIndex(paginationInfo.getLastRecordIndex());
+		{{viewVoName}}.setRecordCountPerPage(paginationInfo.getRecordCountPerPage());
+
+		List<{{viewName}}VO> resultList = {{viewNameLower}}Service.select{{viewName}}List({{viewVoName}});
+		int totCnt = {{viewNameLower}}Service.select{{viewName}}ListTotCnt({{viewVoName}});
+		paginationInfo.setTotalRecordCount(totCnt);
+
+		model.addAttribute("resultList", resultList);
+		model.addAttribute("paginationInfo", paginationInfo);
+
+		return "egov{{viewName}}List";
+	}
+}

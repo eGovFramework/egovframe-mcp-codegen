@@ -1,0 +1,13 @@
+package {{packageName}};
+
+import java.util.List;
+
+/**
+ * Query view '{{viewName}}' 의 read-only Service.
+ */
+public interface Egov{{viewName}}Service {
+
+	List<{{viewName}}VO> select{{viewName}}List({{viewName}}DefaultVO searchVO) throws Exception;
+
+	int select{{viewName}}ListTotCnt({{viewName}}DefaultVO searchVO);
+}

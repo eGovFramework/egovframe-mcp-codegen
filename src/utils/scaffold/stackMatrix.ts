@@ -96,6 +96,25 @@ export interface StackEntry {
     template: string;
     output: string;
   };
+  /**
+   * `egov_add_query_view` 가 생성하는 산출물 목록. 정의가 없는 스택은 query view 미지원.
+   *
+   * - `template`: templates/ 기준 상대경로
+   * - `output`: 프로젝트 루트 기준 상대경로. Handlebars 로 렌더링되며 사용 가능한 변수는
+   *   `packagePath`, `basePackagePath`, `entityModule`, `viewName`.
+   */
+  queryView?: QueryViewFileSpec[];
+  /**
+   * true 면 `egov_add_query_view` 가 메시지 번들에 append 하는 값의 비 ASCII 문자를 \uXXXX 로
+   * 이스케이프한다. messageSource 가 번들을 ISO-8859-1 로 읽는 스택(WAR 4.3)에서 한글 깨짐을 막는다.
+   */
+  messageUnicodeEscape?: boolean;
+}
+
+/** `StackEntry.queryView` 의 항목 1건 (템플릿 → 출력 경로). */
+export interface QueryViewFileSpec {
+  template: string;
+  output: string;
 }
 
 interface StackSelection {

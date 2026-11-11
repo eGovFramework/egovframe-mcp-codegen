@@ -25,7 +25,17 @@
       "navFragment": {
         "template": "boot50/thymeleaf/_fragments/nav.html.hbs",
         "output": "src/main/resources/templates/thymeleaf/_fragments/nav.html"
-      }
+      },
+      "queryView": [
+        { "template": "boot50/java/queryView/QueryViewDefaultVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}DefaultVO.java" },
+        { "template": "boot50/java/queryView/QueryViewVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}VO.java" },
+        { "template": "boot50/java/queryView/QueryViewMapper.hbs", "output": "src/main/java/{{packagePath}}/impl/{{viewName}}Mapper.java" },
+        { "template": "boot50/java/queryView/EgovQueryViewService.hbs", "output": "src/main/java/{{packagePath}}/Egov{{viewName}}Service.java" },
+        { "template": "boot50/java/queryView/EgovQueryViewServiceImpl.hbs", "output": "src/main/java/{{packagePath}}/impl/Egov{{viewName}}ServiceImpl.java" },
+        { "template": "boot50/java/queryView/EgovQueryViewController.hbs", "output": "src/main/java/{{basePackagePath}}/{{entityModule}}/web/Egov{{viewName}}Controller.java" },
+        { "template": "boot50/resources/queryView-sql.xml.hbs", "output": "src/main/resources/egovframework/sqlmap/{{entityModule}}/mappers/Egov{{viewName}}_{{viewName}}_SQL.xml" },
+        { "template": "boot50/thymeleaf/queryViewList.html.hbs", "output": "src/main/resources/templates/thymeleaf/{{entityModule}}/egov{{viewName}}List.html" }
+      ]
     },
     "boot43": {
       "projectType": "boot",
@@ -50,7 +60,17 @@
       "navFragment": {
         "template": "boot/thymeleaf/_fragments/nav.html.hbs",
         "output": "src/main/resources/templates/thymeleaf/_fragments/nav.html"
-      }
+      },
+      "queryView": [
+        { "template": "boot/java/queryView/QueryViewDefaultVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}DefaultVO.java" },
+        { "template": "boot/java/queryView/QueryViewVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}VO.java" },
+        { "template": "boot/java/queryView/QueryViewMapper.hbs", "output": "src/main/java/{{packagePath}}/impl/{{viewName}}Mapper.java" },
+        { "template": "boot/java/queryView/EgovQueryViewService.hbs", "output": "src/main/java/{{packagePath}}/Egov{{viewName}}Service.java" },
+        { "template": "boot/java/queryView/EgovQueryViewServiceImpl.hbs", "output": "src/main/java/{{packagePath}}/impl/Egov{{viewName}}ServiceImpl.java" },
+        { "template": "boot/java/queryView/EgovQueryViewController.hbs", "output": "src/main/java/{{basePackagePath}}/{{entityModule}}/web/Egov{{viewName}}Controller.java" },
+        { "template": "boot/resources/queryView-sql.xml.hbs", "output": "src/main/resources/egovframework/sqlmap/{{entityModule}}/mappers/Egov{{viewName}}_{{viewName}}_SQL.xml" },
+        { "template": "boot/thymeleaf/queryViewList.html.hbs", "output": "src/main/resources/templates/thymeleaf/egov{{viewName}}List.html" }
+      ]
     },
     "war43": {
       "projectType": "war",
@@ -75,7 +95,18 @@
       "navFragment": {
         "template": "war/webapp/jsp/_fragments/nav.jsp.hbs",
         "output": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp"
-      }
+      },
+      "messageUnicodeEscape": true,
+      "queryView": [
+        { "template": "war/java/queryView/QueryViewDefaultVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}DefaultVO.java" },
+        { "template": "war/java/queryView/QueryViewVO.hbs", "output": "src/main/java/{{packagePath}}/{{viewName}}VO.java" },
+        { "template": "war/java/queryView/QueryViewMapper.hbs", "output": "src/main/java/{{packagePath}}/impl/{{viewName}}Mapper.java" },
+        { "template": "war/java/queryView/EgovQueryViewService.hbs", "output": "src/main/java/{{packagePath}}/Egov{{viewName}}Service.java" },
+        { "template": "war/java/queryView/EgovQueryViewServiceImpl.hbs", "output": "src/main/java/{{packagePath}}/impl/Egov{{viewName}}ServiceImpl.java" },
+        { "template": "war/java/queryView/EgovQueryViewController.hbs", "output": "src/main/java/{{basePackagePath}}/{{entityModule}}/web/Egov{{viewName}}Controller.java" },
+        { "template": "war/resources/queryView-sql.xml.hbs", "output": "src/main/resources/egovframework/sqlmap/{{entityModule}}/mappers/Egov{{viewName}}_{{viewName}}_SQL.xml" },
+        { "template": "war/webapp/jsp/queryView/egovQueryViewList.jsp.hbs", "output": "src/main/webapp/WEB-INF/jsp/{{basePackagePath}}/{{entityModule}}/egov{{viewName}}List.jsp" }
+      ]
     }
   },
   "selection": [

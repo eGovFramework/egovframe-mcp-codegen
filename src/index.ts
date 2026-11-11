@@ -225,11 +225,11 @@ server.registerTool(
   {
     title: "Add Read-only Query View",
     description:
-      "이미 생성된 eGovFrame 5.0 Boot 프로젝트에 다중 테이블 JOIN/컬럼 프로젝션 기반 read-only 조회 화면 (리포트성 View) 을 추가합니다. 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 List 화면 + 페이징 + 검색만 갖춥니다. 사용자가 작성한 SELECT SQL 본문을 그대로 사용하면서, 컬럼 메타(alias/label/type/format) 를 별도로 받아 화면 렌더링에 적용합니다. SQL 은 derived table 로 wrapping 되어 페이징/검색이 외부에서 안전하게 적용됩니다. 단계 1 에서는 boot50 (eGovFrame 5.0 Boot) 만 지원합니다. boot43/war 는 향후 작업으로 분리되어 있습니다.",
+      "이미 생성된 eGovFrame 프로젝트(5.0 Boot, 4.3 Boot, 4.3 WAR)에 다중 테이블 JOIN/컬럼 프로젝션 기반 read-only 조회 화면 (리포트성 View) 을 추가합니다. 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 List 화면 + 페이징 + 검색만 갖춥니다. 사용자가 작성한 SELECT SQL 본문을 그대로 사용하면서, 컬럼 메타(alias/label/type/format) 를 별도로 받아 화면 렌더링에 적용합니다. SQL 은 derived table 로 wrapping 되어 페이징/검색이 외부에서 안전하게 적용됩니다. projectType/stackVersion 은 pom.xml 에서 자동 감지하며, 5.0 Boot 와 4.3 Boot 는 Thymeleaf 화면, 4.3 WAR 는 JSP 화면을 생성합니다.",
     inputSchema: {
       projectPath: z
         .string()
-        .describe("기존 eGovFrame 5.0 Boot 프로젝트 루트 경로"),
+        .describe("기존 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR) 루트 경로"),
       packageName: z
         .string()
         .describe(

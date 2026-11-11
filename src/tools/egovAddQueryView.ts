@@ -1,9 +1,10 @@
 /**
  * Tool: egov_add_query_view
  *
- * 이미 생성된 eGovFrame 프로젝트에 다중 테이블 JOIN/컬럼 프로젝션 기반 read-only
- * 조회 화면(리포트성 View) 을 추가한다. CRUD 와 달리 등록/수정/삭제 산출물은
- * 만들지 않으며, List 화면 + 페이징 + 검색만 갖춘다.
+ * 이미 생성된 eGovFrame 프로젝트(Boot 5.0 / Boot 4.3 / WAR 4.3)에 다중 테이블
+ * JOIN/컬럼 프로젝션 기반 read-only 조회 화면(리포트성 View) 을 추가한다. CRUD 와
+ * 달리 등록/수정/삭제 산출물은 만들지 않으며, List 화면 + 페이징 + 검색만 갖춘다.
+ * 산출물 목록(템플릿 → 출력 경로)은 스택별로 templates/stacks.json 의 `queryView` 에 정의된다.
  *
  * 설계 결정
  * ----------
@@ -30,16 +31,19 @@ import {
   getScaffoldTemplatePath,
   registerScaffoldHelpers,
 } from "../utils/scaffold/scaffoldGenerator.js";
-import { detectProjectStack } from "../utils/scaffold/projectDetector.js";
+import { detectProjectStack, usesApacheMapperScan } from "../utils/scaffold/projectDetector.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
-import { resolveStack } from "../utils/scaffold/stackMatrix.js";
+import { resolveStack, type StackEntry } from "../utils/scaffold/stackMatrix.js";
 import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
 import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
 
 /** 컬럼 타입 — Java 필드 타입과 화면 렌더링 분기에 모두 사용된다. */
 const COLUMN_TYPES = ["String", "Date", "Timestamp", "Number", "Boolean"] as const;
 type QueryColumnType = (typeof COLUMN_TYPES)[number];
+
+/** Date/Timestamp format 허용 문자 — 문자·숫자·공백과 일부 구분자만 (표현식/EL 주입 차단). */
+const DATE_FORMAT_PATTERN = /^[\p{L}\p{N} \-/.:,]+$/u;
 
 const ColumnSpecSchema = z.object({
   /** SELECT alias — VO 필드명이자 검색·정렬·결과 접근 key */
@@ -111,6 +115,34 @@ export const AddQueryViewInputSchema = z
           code: "custom",
           path: ["columns", i, "format"],
           message: `columns[${i}].format '${c.format}' 은 지원하지 않는 Number 형식입니다. '#,##0.00', '#,##0', '0.00' 처럼 0, #, 콤마, 소수점만 사용하세요.`,
+        });
+      }
+    });
+
+    // label 은 메시지 번들(properties)의 값으로 기록되므로, 줄을 나누거나 이스케이프로 해석되어
+    // 번들을 깨뜨릴 수 있는 제어문자와 백슬래시를 차단한다.
+    val.columns.forEach((c, i) => {
+      if (/[\u0000-\u001f\u007f\u2028\u2029\\]/.test(c.label)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["columns", i, "label"],
+          message: `columns[${i}].label 에는 줄바꿈 등 제어문자와 백슬래시(\\)를 사용할 수 없습니다.`,
+        });
+      }
+    });
+
+    // Date/Timestamp format 은 화면 템플릿의 표현식(Thymeleaf #dates.format 인자, JSP fmt:formatDate 의
+    // pattern 속성) 안에 그대로 들어가므로, 표현식을 깨뜨리거나 EL 로 평가될 수 있는 문자($, {, }, 따옴표 등)를 차단한다.
+    val.columns.forEach((c, i) => {
+      if (
+        (c.type === "Date" || c.type === "Timestamp") &&
+        c.format !== undefined &&
+        !DATE_FORMAT_PATTERN.test(c.format)
+      ) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["columns", i, "format"],
+          message: `columns[${i}].format '${c.format}' 은 지원하지 않는 날짜 형식입니다. 'yyyy-MM-dd', 'yyyy/MM/dd HH:mm' 처럼 문자, 숫자, 공백과 - / . : , 만 사용하세요.`,
         });
       }
     });
@@ -203,16 +235,17 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   const projectDir = path.resolve(params.projectPath);
   const detected = detectProjectStack(projectDir);
 
-  // 단계 1: boot50 만 지원 — 그 외 스택은 명확한 에러로 거부
-  if (!(detected.projectType === "boot" && detected.stackVersion === "5.0")) {
+  // 스택 매트릭스에 query view 정의(queryView)가 없는 스택은 명확한 에러로 거부
+  const stack = resolveStack(detected.projectType, detected.stackVersion);
+  if (!stack.queryView || stack.queryView.length === 0) {
     throw nonRetryable(
-      `egov_add_query_view 는 현재 eGovFrame 5.0 Boot 프로젝트만 지원합니다 ` +
-        `(감지된 스택: ${detected.reason}). 다른 스택 지원은 향후 작업으로 계획되어 있습니다.`,
+      `egov_add_query_view 는 이 스택(${stack.frameworkLabel}) 을 지원하지 않습니다 ` +
+        `(감지된 스택: ${detected.reason}).`,
     );
   }
+  const queryViewSpecs = stack.queryView;
 
   // 2) Context 빌드 — 일반 ScaffoldContext 와 별개로, query view 전용 데이터 구성
-  const stack = resolveStack(detected.projectType, detected.stackVersion);
   const parts = params.packageName.split(".");
   const entityModule = parts[parts.length - 1];
   const basePackage = parts.slice(0, -1).join(".");
@@ -237,7 +270,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
       isTimestamp: t === "Timestamp",
       isNumber: t === "Number",
       isBoolean: t === "Boolean",
-      format: c.format ?? DEFAULT_FORMAT_BY_COLUMN_TYPE[t] ?? null,
+      format: c.format?.trim() ?? DEFAULT_FORMAT_BY_COLUMN_TYPE[t] ?? null,
       // Number format → #numbers.formatDecimal(값, 1, 천단위구분, 소수자릿수, 'POINT')
       ...(() => {
         const spec = t === "Number" && c.format ? parseNumberFormat(c.format) : null;
@@ -284,44 +317,16 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     imports,
     hasDateAttr: columns.some((c) => c.isDate || c.isTimestamp),
     stack,
+    // Boot 4.3 Mapper 어노테이션 선택용 — 프로젝트의 EgovConfigMapper 스캔 방식을 따른다.
+    useApacheMapper: usesApacheMapperScan(projectDir),
   };
 
-  // 3) 매니페스트 — 단계 1 boot50 만 지원. 향후 stack matrix 로 분리.
+  // 3) 산출물 목록 — 스택 매트릭스(stacks.json 의 queryView)에서 읽고, 출력 경로는 Handlebars 로 렌더링.
   const templateBase = getScaffoldTemplatePath();
-  const targets: { template: string; output: string }[] = [
-    {
-      template: "boot50/java/queryView/QueryViewDefaultVO.hbs",
-      output: `src/main/java/${packagePath}/${viewName}DefaultVO.java`,
-    },
-    {
-      template: "boot50/java/queryView/QueryViewVO.hbs",
-      output: `src/main/java/${packagePath}/${viewName}VO.java`,
-    },
-    {
-      template: "boot50/java/queryView/QueryViewMapper.hbs",
-      output: `src/main/java/${packagePath}/impl/${viewName}Mapper.java`,
-    },
-    {
-      template: "boot50/java/queryView/EgovQueryViewService.hbs",
-      output: `src/main/java/${packagePath}/Egov${viewName}Service.java`,
-    },
-    {
-      template: "boot50/java/queryView/EgovQueryViewServiceImpl.hbs",
-      output: `src/main/java/${packagePath}/impl/Egov${viewName}ServiceImpl.java`,
-    },
-    {
-      template: "boot50/java/queryView/EgovQueryViewController.hbs",
-      output: `src/main/java/${basePackagePath}/${entityModule}/web/Egov${viewName}Controller.java`,
-    },
-    {
-      template: "boot50/resources/queryView-sql.xml.hbs",
-      output: `src/main/resources/egovframework/sqlmap/${entityModule}/mappers/Egov${viewName}_${viewName}_SQL.xml`,
-    },
-    {
-      template: "boot50/thymeleaf/queryViewList.html.hbs",
-      output: `src/main/resources/templates/thymeleaf/${entityModule}/egov${viewName}List.html`,
-    },
-  ];
+  const targets = queryViewSpecs.map((spec) => ({
+    template: spec.template,
+    output: Handlebars.compile(spec.output, { noEscape: true })(ctx),
+  }));
 
   // 4) 렌더링(메모리) — 파일을 쓰기 전에 기존 산출물과 내용을 비교해 멱등 여부를 판단한다.
   //    (add_entity 와 동일 패턴: 렌더와 쓰기를 분리해 "존재 여부" 가 아니라 "내용까지 동일한지"
@@ -331,7 +336,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   for (const t of targets) {
     const templateAbs = path.join(templateBase, t.template);
     if (!(await fs.pathExists(templateAbs))) {
-      throw new Error(`템플릿을 찾을 수 없습니다: ${templateAbs}`);
+      throw new Error(`템플릿을 찾을 수 없습니다: ${t.template}`);
     }
     const tmpl = await fs.readFile(templateAbs, "utf-8");
     const content = Handlebars.compile(tmpl)(ctx);
@@ -363,16 +368,16 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     existingStatuses.length === fileStatuses.length &&
     existingStatuses.every((s) => s.status === "identical")
   ) {
-    // 4-a-메타) columns[].label 등은 위 8개 렌더 대상 파일 어디에도 나타나지 않고 오직
-    //   메시지 번들 append 블록(buildMessageKeys)에만 반영된다. 8개 파일이 전부 동일하다는
+    // 4-a-메타) columns[].label 등은 렌더 대상 산출물 어디에도 나타나지 않고 오직
+    //   메시지 번들 append 블록(buildMessageKeys)에만 반영된다. 산출물이 전부 동일하다는
     //   이유만으로 "변경 없음" 을 반환하면, label 만 바뀐 재호출이 조용히 무시되는 silent
     //   no-op 이 된다. 메시지 번들에 이미 반영된 이전 블록과 새로 계산한 블록을 비교해
-    //   다르면(=메타 변경이 있으면) 8개 파일 동일 여부와 무관하게 충돌로 거부한다.
+    //   다르면(=메타 변경이 있으면) 산출물 동일 여부와 무관하게 충돌로 거부한다.
     const messageConflicts = await findMessageBlockConflicts(projectDir, viewName, ctx);
     if (messageConflicts.length > 0) {
       throw retryAfterAction(
         `Query view '${viewName}' 추가가 충돌로 거부되었습니다. ` +
-          `산출물 파일(VO/Mapper/Service/Controller/XML/HTML) ${fileStatuses.length}개는 기존 내용과 동일하지만, ` +
+          `산출물 파일(VO/Mapper/Service/Controller/XML/화면) ${fileStatuses.length}개는 기존 내용과 동일하지만, ` +
           `columns 메타(label 등 — 렌더 대상 파일에는 나타나지 않고 메시지 번들 append 블록에만 반영되는 값)가 ` +
           `이전 호출과 다릅니다.\n` +
           `충돌이 감지된 메시지 번들 파일 (${messageConflicts.length}개):\n${messageConflicts.map((f) => `  - ${f}`).join("\n")}\n\n` +
@@ -449,7 +454,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
       result.menuAttachedTo = await regenerateNavWithQueryView(projectDir, {
         viewName,
         viewNameLower,
-      });
+      }, ctx);
     } catch (e) {
       // 메뉴 갱신 실패는 치명적이지 않음 — 본문은 이미 생성됨
       console.error("[egov_add_query_view] menu update skipped:", e);
@@ -514,6 +519,7 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
 async function regenerateNavWithQueryView(
   projectDir: string,
   newView: { viewName: string; viewNameLower: string },
+  ctx: Record<string, unknown> & { stack: StackEntry },
 ): Promise<string | undefined> {
   // 기존 entity discovery 와 동일한 방식으로 Egov*Controller.java 들을 스캔.
   // 발견된 모든 controller (CRUD 와 query view 모두) 를 nav 에 포함시킨다.
@@ -535,22 +541,17 @@ async function regenerateNavWithQueryView(
     a.entityName.localeCompare(b.entityName),
   );
 
-  // nav.html fragment 가 있어야만 갱신
-  const fragmentRel =
-    "src/main/resources/templates/thymeleaf/_fragments/nav.html";
-  const fragmentAbs = path.join(projectDir, fragmentRel);
+  // nav fragment 가 있어야만 갱신 — 템플릿/출력 경로는 스택 매트릭스의 navFragment 를 따른다.
+  const fragSpec = ctx.stack.navFragment;
+  const fragmentAbs = assertInsideProject(projectDir, path.join(projectDir, fragSpec.output));
   if (!(await fs.pathExists(fragmentAbs))) return undefined;
 
-  // 기존과 동일한 template (boot50 nav.html.hbs) 으로 다시 렌더
-  const templateBase = getScaffoldTemplatePath();
-  const navTemplateAbs = path.join(
-    templateBase,
-    "boot50/thymeleaf/_fragments/nav.html.hbs",
-  );
+  // egov_add_entity 가 같은 nav 템플릿을 렌더링할 때와 동일한 컨텍스트(스택 컨텍스트 + entities)로 다시 렌더
+  const navTemplateAbs = path.join(getScaffoldTemplatePath(), fragSpec.template);
   const navTmpl = await fs.readFile(navTemplateAbs, "utf-8");
-  const rendered = Handlebars.compile(navTmpl)({ entities });
+  const rendered = Handlebars.compile(navTmpl)({ ...ctx, entities });
   await writeFile(fragmentAbs, rendered, "utf-8");
-  return fragmentRel;
+  return fragSpec.output;
 }
 
 /** 메시지 번들(properties) 3종 — locale 별로 동일한 append 블록을 갖는다. */
@@ -573,22 +574,33 @@ function messageBlockMarker(viewName: string): string {
   return `# === query view '${viewName}' keys (egov_add_query_view 가 append) ===`;
 }
 
+interface MessageKeyContext {
+  viewNameLower: string;
+  viewName: string;
+  columns: { alias: string; label: string }[];
+  stack: Pick<StackEntry, "messageUnicodeEscape">;
+}
+
+/** ASCII 가 아닌 문자를 properties 의 \uXXXX 이스케이프로 바꾼다 (UTF-16 코드 유닛 단위). */
+function escapeNonAscii(s: string): string {
+  return s.replace(/[^\x20-\x7e]/g, (ch) => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0"));
+}
+
 /**
  * Query view 의 메시지 키들을 properties 라인 문자열로 만든다.
  * autoApplyMessages 가 활성일 때 모든 lang properties 파일 끝에 append 된다.
  */
-function buildMessageKeys(ctx: {
-  viewNameLower: string;
-  viewName: string;
-  columns: { alias: string; label: string }[];
-}): string {
+function buildMessageKeys(ctx: MessageKeyContext): string {
+  // 메시지 번들을 ISO-8859-1 로 읽는 스택(WAR 4.3 — messageSource 에 defaultEncoding 없음)은
+  // 한글 label 이 깨지므로 properties 표준 \uXXXX 이스케이프로 기록한다.
+  const value = (v: string) => (ctx.stack.messageUnicodeEscape ? escapeNonAscii(v) : v);
   const lines = [
     messageBlockMarker(ctx.viewName),
     `list.${ctx.viewNameLower}=${ctx.viewName}`,
     `title.${ctx.viewNameLower}.sample=${ctx.viewName}`,
     `nav.${ctx.viewNameLower}=${ctx.viewName}`,
     ...ctx.columns.map(
-      (c) => `title.${ctx.viewNameLower}.${c.alias}=${c.label}`,
+      (c) => `title.${ctx.viewNameLower}.${c.alias}=${value(c.label)}`,
     ),
   ];
   return lines.join("\n") + "\n";
@@ -610,7 +622,7 @@ function extractMessageBlockForView(content: string, viewName: string): string |
 }
 
 /**
- * columns[].label 등 렌더 대상 8개 파일에는 나타나지 않고 메시지 번들 append 블록에만
+ * columns[].label 등 렌더 대상 산출물 파일에는 나타나지 않고 메시지 번들 append 블록에만
  * 반영되는 메타가 이전 호출과 달라졌는지 확인한다. 메시지 번들 파일이 없거나, 있어도
  * 해당 viewName 의 블록이 아직 append 된 적 없으면(첫 호출 등) 비교할 대상이 없으므로
  * 충돌로 보지 않는다 — 오직 "이전에 append 된 블록과 지금 다시 계산한 블록이 다른"
@@ -619,7 +631,7 @@ function extractMessageBlockForView(content: string, viewName: string): string |
 async function findMessageBlockConflicts(
   projectDir: string,
   viewName: string,
-  ctx: { viewNameLower: string; viewName: string; columns: { alias: string; label: string }[] },
+  ctx: MessageKeyContext,
 ): Promise<string[]> {
   const newBlock = buildMessageKeys(ctx).trimEnd();
   const msgDir = messageBundleDir(projectDir);
