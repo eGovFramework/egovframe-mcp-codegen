@@ -68,9 +68,17 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
   // 9) 결과 메시지
   const egovLabel = detected.stackVersion === "5.0" ? "eGovFrame 5.0" : "eGovFrame 4.3";
   const kindLabel = detected.projectType === "war" ? "WAR" : "Spring Boot";
+  // 모든 항목이 기존 내용과 같아 건너뛴 경우 — 이미 설치된 프로젝트에 다시 호출한 경우다.
+  const changed =
+    filesCreated.length > 0 ||
+    filesAppended.length > 0 ||
+    hsqlSeedResult.kind === "append" ||
+    hsqlSeedResult.kind === "fallbackCreate";
 
   const lines = [
-    `✅ ${egovLabel} ${kindLabel} 프로젝트에 첨부파일 인프라 설치 완료!`,
+    changed
+      ? `✅ ${egovLabel} ${kindLabel} 프로젝트에 첨부파일 인프라 설치 완료!`
+      : `✅ ${egovLabel} ${kindLabel} 프로젝트에는 첨부파일 인프라가 이미 설치되어 있어 변경한 파일이 없습니다.`,
     ``,
     `📁 프로젝트: ${projectDir}`,
     `🔎 감지된 스택: ${detected.reason}`,
@@ -117,16 +125,18 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     `🔐 보안 정책 (자동 적용됨):`,
     `  - 실행 가능 확장자 차단 (EXE/BAT/SH/JSP/PHP/SVG/HTML/JAR 등) — EgovFileMngUtil.BLOCKED_EXTENSIONS`,
     `  - 저장 경로 webroot/classpath 겹침 검증 — 부팅 시 @PostConstruct 로 거부`,
-    `  - 차단/사이즈초과 시 EgovFileUploadExceptionAdvice 가 referer 로 redirect + flash errorMessage`,
+    `  - 차단/사이즈초과 시 EgovFileUploadExceptionAdvice 가 cmm/uploadError 화면으로 오류 메시지를 표시`,
     ``,
     `🪧 화면에 에러 메시지를 보여주려면 (기존 첨부 화면들에 1회만):`,
     `   List/Register/Update 화면의 콘텐츠 영역 상단에 다음 한 줄을 추가하세요 —`,
     `     <th:block th:replace="~{_fragments/alertMessages :: messages}"></th:block>`,
     `   메시지 키는 message-common.properties 의 fail.common.fileSize.exceeded / fail.common.fileType.blocked`,
-    `   가 자동 append 되었습니다. 추가 키가 필요하면 같은 파일에 직접 추가하세요.`,
-    ``,
-    `✅ 자체 검증 통과 (검사한 파일 ${plan.validatedFileCount}개)`,
+    `   에 있습니다. 추가 키가 필요하면 같은 파일에 직접 추가하세요.`,
   );
+  // 새로 쓰거나 덧붙인 내용이 없으면 검사 대상도 없으므로 결과 줄을 생략한다.
+  if (plan.validatedFileCount > 0) {
+    lines.push(``, `✅ 자체 검증 통과 (검사한 파일 ${plan.validatedFileCount}개)`);
+  }
 
   return lines.join("\n") + completionFooter();
 }
