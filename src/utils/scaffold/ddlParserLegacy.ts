@@ -99,6 +99,9 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		const dataType = RegExp(/^\w+/).exec(rawDataType)?.[0] ?? rawDataType
 		const lengthMatch = RegExp(/\((\d+)/).exec(rawDataType)
 		const maxLength = lengthMatch ? parseInt(lengthMatch[1], 10) : 0
+		// DECIMAL(p,s) / NUMBER(p,s) 의 두 번째 인자 — 소수 자릿수
+		const scaleMatch = RegExp(/\(\s*\d+\s*,\s*(\d+)\s*\)/).exec(rawDataType)
+		const scale = scaleMatch ? parseInt(scaleMatch[1], 10) : 0
 		const isPrimaryKey = primaryKeyColumns.includes(columnName) || columnDef.toUpperCase().includes("PRIMARY KEY")
 		const ccName = convertToCamelCase(columnName)
 
@@ -139,6 +142,7 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 			dataType,
 			javaType,
 			maxLength,
+			scale,
 			isDate: DATE_JAVA_TYPES.has(javaType),
 			isLongText: computeIsLongText(dataType, maxLength),
 			isYnFlag: computeIsYnFlag(dataType, maxLength, columnName),

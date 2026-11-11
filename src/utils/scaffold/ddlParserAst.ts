@@ -192,6 +192,7 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
     const columnName = def.column.column;
     const rawType = (def.definition.dataType || "").toUpperCase();
     const length = typeof def.definition.length === "number" ? def.definition.length : 0;
+    const scale = typeof def.definition.scale === "number" ? def.definition.scale : 0;
     const isInlinePk =
       typeof def.primary_key === "string" && def.primary_key.toLowerCase() === "primary key";
 
@@ -213,6 +214,7 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
       dataType: rawType,
       javaType,
       maxLength: length,
+      scale,
       isDate: DATE_JAVA_TYPES.has(javaType),
       isLongText: computeIsLongText(rawType, length),
       isYnFlag: computeIsYnFlag(rawType, length, columnName),

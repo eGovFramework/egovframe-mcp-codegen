@@ -236,9 +236,11 @@ export function registerScaffoldHelpers() {
   });
   // 방언별 컬럼 타입 문자열 (예: dataType=VARCHAR, maxLength=36, dialect=oracle → "VARCHAR2(36)")
   // 길이 의미 있는 타입(VARCHAR/CHAR/NUMBER 등) 에만 (LEN) 을 붙이고, CLOB/TEXT/DATE 등은 길이 없이 반환.
-  Handlebars.registerHelper("dialectType", function (rawType: any, maxLength: any, dialect: any) {
+  // 네 번째 인자 scale 은 DECIMAL(P,S) 의 소수 자릿수 — 생략하면 Handlebars options 객체가 들어오므로 0 으로 본다.
+  Handlebars.registerHelper("dialectType", function (rawType: any, maxLength: any, dialect: any, scale: any) {
+    const scaleValue = typeof scale === "object" ? 0 : Number(scale) || 0;
     return new Handlebars.SafeString(
-      dialectFullType(String(rawType ?? ""), Number(maxLength) || 0, String(dialect) as Dialect),
+      dialectFullType(String(rawType ?? ""), Number(maxLength) || 0, String(dialect) as Dialect, scaleValue),
     );
   });
 }

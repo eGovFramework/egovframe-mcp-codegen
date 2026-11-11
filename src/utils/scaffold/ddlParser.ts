@@ -31,6 +31,8 @@ export interface Column {
   dataType: string;
   javaType: string;
   maxLength: number;
+  /** DECIMAL/NUMERIC/NUMBER 의 소수 자릿수(scale). DDL 에 지정되지 않았으면 0. */
+  scale?: number;
   isDate: boolean;
   /**
    * "본문성 긴 텍스트" 여부 — Register view 등에서 `<textarea>` 로 렌더링할지 결정.

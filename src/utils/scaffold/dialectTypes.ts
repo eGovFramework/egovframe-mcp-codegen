@@ -74,8 +74,11 @@ const LENGTH_AWARE = new Set([
   "NUMBER",
 ]);
 
+/** 소수 자릿수(scale)가 의미있는 타입군. scale 이 있으면 (P,S) 로 출력한다. */
+const SCALE_AWARE = new Set(["DECIMAL", "NUMERIC", "NUMBER"]);
+
 /**
- * 한 컬럼의 (rawType, maxLength) → "TYPE(LEN)" 문자열.
+ * 한 컬럼의 (rawType, maxLength, scale) → "TYPE(LEN)" 또는 "TYPE(P,S)" 문자열.
  *
  * 길이가 의미 없는 타입(CLOB/TEXT/DATE/TIMESTAMP/BLOB/INTEGER/BIGINT 등) 에는
  * 길이를 붙이지 않는다.
@@ -84,6 +87,7 @@ export function dialectFullType(
   rawType: string,
   maxLength: number,
   dialect: Dialect,
+  scale = 0,
 ): string {
   const t = String(rawType || "").toUpperCase();
   const mapped = mapType(t, dialect);
@@ -91,6 +95,9 @@ export function dialectFullType(
   // 타입이다 — INT(11) 처럼 입력에 표시 폭이 딸려 와도 재부착하지 않는다.
   if (mapped.includes("(")) {
     return mapped;
+  }
+  if (SCALE_AWARE.has(mapped) && maxLength > 0 && scale > 0) {
+    return `${mapped}(${maxLength},${scale})`;
   }
   if (LENGTH_AWARE.has(mapped) && maxLength > 0) {
     return `${mapped}(${maxLength})`;
