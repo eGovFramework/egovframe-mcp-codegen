@@ -93,7 +93,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/board/web/EgovBoardController.java",
-      "sha256": "91863a8972df9a739136c610c7fc33730ee533209548ba1417109cb70cab07e0"
+      "sha256": "cff2fe686a1317970664659ce7a498dc4931d418e73f855e22631de29ea890c0"
     },
     {
       "path": "src/main/java/egovframework/example/cmm/vo/FkComboVO.java",
