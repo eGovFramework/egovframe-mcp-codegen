@@ -74,7 +74,7 @@
 							<td class="text-center" th:text="${result.{{alias}} != null} ? ${#dates.format(result.{{alias}}, '{{format}}')} : ''"></td>
 {{else if isNumber}}
 {{#if format}}
-							<td class="text-right" th:text="${result.{{alias}} != null} ? ${#numbers.formatDecimal(result.{{alias}}, 1, 2)} : ''"></td>
+							<td class="text-right" th:text="${result.{{alias}} != null} ? ${#numbers.formatDecimal(result.{{alias}}, 1, '{{numberGrouping}}', {{numberDecimals}}, 'POINT')} : ''"></td>
 {{else}}
 							<td class="text-right" th:text="{{concat "${result." alias "}"}}"></td>
 {{/if}}

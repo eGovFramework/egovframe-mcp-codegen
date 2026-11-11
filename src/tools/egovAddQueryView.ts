@@ -104,6 +104,17 @@ export const AddQueryViewInputSchema = z
 
     const aliases = new Set(val.columns.map((c) => c.alias));
 
+    // Number format 은 화면의 #numbers.formatDecimal 인자로 변환되므로 변환 가능한 형식만 허용한다.
+    val.columns.forEach((c, i) => {
+      if (c.type === "Number" && c.format !== undefined && !parseNumberFormat(c.format)) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["columns", i, "format"],
+          message: `columns[${i}].format '${c.format}' 은 지원하지 않는 Number 형식입니다. '#,##0.00', '#,##0', '0.00' 처럼 0, #, 콤마, 소수점만 사용하세요.`,
+        });
+      }
+    });
+
     // searchable 은 columns 에 선언된 alias 만 허용 — 오타를 조용히 무시하지 않는다.
     for (const s of val.searchable) {
       if (!aliases.has(s)) {
@@ -153,6 +164,19 @@ const JAVA_TYPE_BY_COLUMN_TYPE: Record<QueryColumnType, string> = {
   Number: "java.math.BigDecimal",
   Boolean: "java.lang.Boolean",
 };
+
+/**
+ * Number 컬럼 format(예: '#,##0.00')을 Thymeleaf `#numbers.formatDecimal` 인자로 바꾼다.
+ * 0·#·콤마·소수점만 허용하며, 콤마가 있으면 천 단위 구분, 소수점 뒤 글자 수가 소수 자릿수다
+ * (소수 자릿수는 고정 표시). 지원하지 않는 형식이면 null.
+ */
+export function parseNumberFormat(
+  format: string,
+): { grouping: "COMMA" | "NONE"; decimals: number } | null {
+  const m = /^([#0][#0,]*)(?:\.([#0]+))?$/.exec(format.trim());
+  if (!m) return null;
+  return { grouping: m[1].includes(",") ? "COMMA" : "NONE", decimals: m[2]?.length ?? 0 };
+}
 
 const DEFAULT_FORMAT_BY_COLUMN_TYPE: Partial<Record<QueryColumnType, string>> = {
   Date: "yyyy-MM-dd",
@@ -214,6 +238,11 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
       isNumber: t === "Number",
       isBoolean: t === "Boolean",
       format: c.format ?? DEFAULT_FORMAT_BY_COLUMN_TYPE[t] ?? null,
+      // Number format → #numbers.formatDecimal(값, 1, 천단위구분, 소수자릿수, 'POINT')
+      ...(() => {
+        const spec = t === "Number" && c.format ? parseNumberFormat(c.format) : null;
+        return { numberGrouping: spec?.grouping ?? "NONE", numberDecimals: spec?.decimals ?? 0 };
+      })(),
     };
   });
 

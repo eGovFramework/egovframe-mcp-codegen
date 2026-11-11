@@ -260,7 +260,7 @@ server.registerTool(
               .string()
               .optional()
               .describe(
-                "Date/Timestamp/Number 의 화면 포맷 (예: 'yyyy-MM-dd', '#,##0.00'). 미지정 시 타입별 기본값 사용.",
+                "Date/Timestamp/Number 의 화면 포맷. Date/Timestamp 는 날짜 패턴(예: 'yyyy-MM-dd'), Number 는 0·#·콤마·소수점 조합(예: '#,##0.00' — 콤마는 천 단위 구분, 소수점 뒤 글자 수만큼 소수 자릿수를 고정 표시). 미지정 시 Date/Timestamp 는 기본 패턴, Number 는 값을 그대로 표시.",
               ),
           }),
         )
