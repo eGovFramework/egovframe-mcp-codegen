@@ -3,7 +3,7 @@
  * 사용자에게 직접 확인한다. 질문을 던질 수 없는 상황(미지원 클라이언트, 시간 초과, 호출 오류,
  * 값 없는 accept)에서는 `needsUserDecision` 을 반환해 호출 AI 가 사용자에게 묻고 재호출하게 한다.
  */
-import type { Server } from "@modelcontextprotocol/sdk/server/index.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { detectAttachFileInfra, detectProjectStack } from "./projectDetector.js";
 import { completionFooter, retryAfterAction } from "./toolMessages.js";
 
@@ -14,7 +14,8 @@ export type AttachmentDecision =
   | { kind: "needsUserDecision" }
   | { kind: "cancelled" };
 
-type ElicitingServer = Pick<Server, "elicitInput">;
+// elicitInput 은 저수준 Server 에만 있다. deprecated 인 Server 를 직접 참조하지 않도록 McpServer.server 로 인덱싱한다.
+type ElicitingServer = Pick<McpServer["server"], "elicitInput">;
 
 export async function resolveAttachmentDecision(args: {
   server: ElicitingServer;
