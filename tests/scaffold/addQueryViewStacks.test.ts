@@ -201,13 +201,14 @@ for (const stack of ["boot43", "war43"] as const) {
         expect(c, f).toMatch(/^nav\.payReport=PayReport$/m);
         if (isWar) {
           // 아이디 = 아이디, 이름 = 이름
-          expect(c, f).toMatch(/^title\.payReport\.id=\\uc544\\uc774\\ub514$/m);
-          expect(c, f).toMatch(/^title\.payReport\.name=\\uc774\\ub984$/m);
+          expect(c, f).toMatch(/^title\.payReport\.id=\\uC544\\uC774\\uB514$/m);
+          expect(c, f).toMatch(/^title\.payReport\.name=\\uC774\\uB984$/m);
           expect(c, f).not.toContain("아이디");
         } else {
           expect(c, f).toMatch(/^title\.payReport\.id=아이디$/m);
           expect(c, f).toMatch(/^title\.payReport\.name=이름$/m);
-          expect(c, f).not.toContain("\\uc544");
+          // Boot 는 라벨을 이스케이프하지 않는다 (템플릿 고정 문구의 \uXXXX 와 구분하기 위해 라벨 줄만 본다)
+          expect(c, f).not.toMatch(/^title\.payReport\.id=\\u/m);
         }
       }
     });
@@ -289,7 +290,7 @@ for (const stack of ["boot43", "war43"] as const) {
       await expect(egovAddQueryView(args({ autoApplyMessages: true, columns: changed }))).rejects.toThrow(/충돌로 거부/);
       // 기존 메시지는 그대로
       const ko = await read(`${MSG_DIR}/message-common_ko.properties`);
-      expect(ko).not.toMatch(/성명|\\uc131\\uba85/);
+      expect(ko).not.toMatch(/성명|\\uC131\\uBA85/);
     });
 
     it("sql 에 < 가 있어도 mapper XML 이 CDATA 로 보호된다", async () => {
@@ -331,7 +332,7 @@ describe("egov_add_query_view — 스택별 메시지 이스케이프 세부 동
     );
     const c = await read(`${MSG_DIR}/message-common_en.properties`);
     expect(c).toMatch(/^title\.payReport\.id=ID$/m);
-    expect(c).toMatch(/^title\.payReport\.name=\\uc774\\ub984\(Name\)$/m);
+    expect(c).toMatch(/^title\.payReport\.name=\\uC774\\uB984\(Name\)$/m);
   });
 
   it("WAR 이스케이프 후 동일 인자 재호출이 충돌 없이 변경 없음으로 처리된다", async () => {

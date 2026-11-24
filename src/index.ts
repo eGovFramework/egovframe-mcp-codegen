@@ -54,7 +54,7 @@ server.registerTool(
       entityName: z
         .string()
         .describe("Entity name in PascalCase (e.g., 'Board', 'Article')"),
-      ddl: z.string().describe("CREATE TABLE DDL statement for the entity. 컬럼/테이블 COMMENT 는 화면 라벨(메시지 번들 title/nav 값)로 사용됩니다. 콤마가 있거나, 괄호 앞이 비어 있거나, 괄호 앞부분이 10자를 넘는 코멘트는 설명문으로 보고 컬럼명 표기를 사용합니다."),
+      ddl: z.string().describe("CREATE TABLE DDL statement for the entity. 컬럼/테이블 COMMENT 는 화면 라벨(메시지 번들 title/nav 값)로 사용됩니다. 괄호 밖에 구분 문자(, / ; :)가 있거나, 괄호 앞이 비어 있거나, 괄호 앞부분이 10자를 넘는 코멘트는 설명문으로 보고 컬럼명 표기를 사용합니다."),
       description: z
         .string()
         .optional()
@@ -136,7 +136,7 @@ server.registerTool(
       entityName: z
         .string()
         .describe("엔티티 이름 (PascalCase, 예: 'Article')"),
-      ddl: z.string().describe("엔티티에 해당하는 CREATE TABLE DDL 문. 컬럼/테이블 COMMENT 는 화면 라벨(메시지 번들 title/nav 값)로 사용됩니다. 콤마가 있거나, 괄호 앞이 비어 있거나, 괄호 앞부분이 10자를 넘는 코멘트는 설명문으로 보고 컬럼명 표기를 사용합니다."),
+      ddl: z.string().describe("엔티티에 해당하는 CREATE TABLE DDL 문. 컬럼/테이블 COMMENT 는 화면 라벨(메시지 번들 title/nav 값)로 사용됩니다. 괄호 밖에 구분 문자(, / ; :)가 있거나, 괄호 앞이 비어 있거나, 괄호 앞부분이 10자를 넘는 코멘트는 설명문으로 보고 컬럼명 표기를 사용합니다."),
       description: z.string().optional().describe("엔티티 설명 (선택)"),
       normalizeDdl: z
         .boolean()

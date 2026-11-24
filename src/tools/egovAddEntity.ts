@@ -977,10 +977,14 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       );
       if (ctx.hasTableLabel) {
         lines.push(`   엔티티 표시명: ${ctx.entityLabel} (테이블 COMMENT → 메뉴·제목)`);
+      } else if (ctx.tableComment !== null) {
+        lines.push(
+          `   테이블 COMMENT '${ctx.tableComment}' 은 규칙에 걸려 엔티티명 ${ctx.entityName} 을(를) 사용합니다 (메뉴·제목)`,
+        );
       }
       if (excludedByRule.length > 0) {
         lines.push(
-          `   규칙으로 제외된 컬럼: ${excludedByRule.map((c) => c.columnName).join(", ")} (콤마 포함·괄호 앞 공백·10자 초과 코멘트는 컬럼명 표기 사용)`,
+          `   규칙으로 제외된 컬럼: ${excludedByRule.map((c) => c.columnName).join(", ")} (괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기 사용)`,
         );
       }
     }

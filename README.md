@@ -38,7 +38,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | packageName   | string | ✓    | Base Java 패키지 (예: `egovframework.example.board`)              |
 | outputPath    | string | ✓    | 프로젝트 폴더가 생성될 부모 디렉터리                                |
 | entityName    | string | ✓    | PascalCase 엔티티 이름 (예: `Board`)                              |
-| ddl           | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 콤마 포함·괄호 앞 공백·10자 초과 코멘트는 컬럼명 표기로 폴백) |
+| ddl           | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
 | projectType   | string |      | `boot` (기본) / `war`                                             |
 | stackVersion  | string |      | `5.0` (기본) / `4.3`                                              |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
@@ -58,7 +58,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | projectPath         | string | ✓    | 기존 eGovFrame 프로젝트 루트 (`pom.xml` 존재 필수)                    |
 | packageName         | string | ✓    | 새 엔티티의 풀 Java 패키지                                            |
 | entityName          | string | ✓    | PascalCase 엔티티 이름                                                |
-| ddl                 | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 콤마 포함·괄호 앞 공백·10자 초과 코멘트는 컬럼명 표기로 폴백) |
+| ddl                 | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
 | autoApplyMigration  | bool   |      | 시드 SQL 파일에 마이그레이션 DDL append (기본 true)                  |
 | autoApplyMessages   | bool   |      | 메시지 번들 3종에 키 자동 append (기본 true)                          |
 | autoApplyMenu       | bool   |      | nav fragment 자동 재생성 + 기존 List 화면에 include 라인 삽입 (기본 false) |

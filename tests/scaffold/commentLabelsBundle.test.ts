@@ -174,6 +174,22 @@ describe("코멘트 라벨 — egov_add_entity (boot50 프로젝트에 NOTICE �
   });
 });
 
+describe("코멘트 라벨 — 테이블 코멘트가 규칙에 걸린 경우 (egov_add_entity)", () => {
+  it("결과 메시지에 테이블 코멘트 폴백 사유를 안내하고 메뉴명은 엔티티명을 쓴다", async () => {
+    const projectDir = await scaffold({ projectType: "boot", stackVersion: "5.0", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-tbl-fallback" });
+    const out = await egovAddEntity({
+      projectPath: projectDir,
+      packageName: "egovframework.example.faq",
+      entityName: "Faq",
+      ddl: `CREATE TABLE FAQ (FAQ_ID VARCHAR(20) NOT NULL PRIMARY KEY COMMENT 'FAQ ID', QESTN VARCHAR(500) COMMENT '질문') COMMENT='자주 묻는 질문을 저장하는 테이블'`,
+    });
+    expect(out).toMatch(/테이블 COMMENT '자주 묻는 질문을 저장하는 테이블' 은 규칙에 걸려 엔티티명 Faq 을\(를\) 사용/);
+    const b = await readBundles(projectDir);
+    expectLine(b.ko, "nav.faq", "Faq");
+    expectLine(b.ko, "title.faq.qestn", "질문");
+  });
+});
+
 describe("코멘트 없는 DDL 은 현행과 동일", () => {
   it("boot50", async () => {
     const b = await readBundles(

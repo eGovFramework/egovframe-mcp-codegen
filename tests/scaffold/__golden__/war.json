@@ -157,11 +157,11 @@
     },
     {
       "path": "src/main/resources/egovframework/message/message-common_ko.properties",
-      "sha256": "ceec38df26de4a2cb6b863cdbedb0b88b853c8b6d9179b893183e12e43fea13d"
+      "sha256": "e8c5dc49233b438ee22d32c929966d2bb7264ae395cf6f5d1586c7e115da631c"
     },
     {
       "path": "src/main/resources/egovframework/message/message-common.properties",
-      "sha256": "ceec38df26de4a2cb6b863cdbedb0b88b853c8b6d9179b893183e12e43fea13d"
+      "sha256": "e8c5dc49233b438ee22d32c929966d2bb7264ae395cf6f5d1586c7e115da631c"
     },
     {
       "path": "src/main/resources/egovframework/spring/context-aspect.xml",
