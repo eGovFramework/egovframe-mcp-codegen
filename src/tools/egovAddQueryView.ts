@@ -37,6 +37,7 @@ import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRoll
 import { resolveStack, type StackEntry } from "../utils/scaffold/stackMatrix.js";
 import { completionFooter, nonRetryable, retryAfterAction } from "../utils/scaffold/toolMessages.js";
 import { validateRenderedFiles } from "../utils/scaffold/outputValidator.js";
+import { escapeNonAscii } from "../utils/scaffold/messageLabel.js";
 
 /** 컬럼 타입 — Java 필드 타입과 화면 렌더링 분기에 모두 사용된다. */
 const COLUMN_TYPES = ["String", "Date", "Timestamp", "Number", "Boolean"] as const;
@@ -579,11 +580,6 @@ interface MessageKeyContext {
   viewName: string;
   columns: { alias: string; label: string }[];
   stack: Pick<StackEntry, "messageUnicodeEscape">;
-}
-
-/** ASCII 가 아닌 문자를 properties 의 \uXXXX 이스케이프로 바꾼다 (UTF-16 코드 유닛 단위). */
-function escapeNonAscii(s: string): string {
-  return s.replace(/[^\x20-\x7e]/g, (ch) => "\\u" + ch.charCodeAt(0).toString(16).padStart(4, "0"));
 }
 
 /**
