@@ -7,8 +7,9 @@
  *
  * 알려진 한계
  * ----------
- * - 컬럼 정의 안의 `COMMENT 'x, y'` 처럼 콤마가 포함된 리터럴은 컬럼 구분자로
- *   오인할 수 있다. AST 파서가 도입되면서 이 케이스는 AST 경로가 흡수한다.
+ * - 컬럼 분리와 본문 추출은 `sqlText` 의 따옴표 인식 스캐너를 쓰므로 `COMMENT 'x, y'` 같은
+ *   리터럴 안의 콤마·괄호는 안전하다. 그 외 토큰 해석(이름/타입)은 여전히 공백 분리 기반이다.
+ * - 코멘트는 인라인 `COMMENT '...'` 와 후속 `COMMENT ON COLUMN/TABLE ... IS '...'` 문장만 읽는다.
  * - 외래키, CHECK 제약, GENERATED 열 등 복잡한 DDL 문법은 무시한다.
  *
  * `parseDDL` 의 공식 진입점은 `ddlParser.ts` 이며, 이 모듈은 그쪽에서만
@@ -16,7 +17,8 @@
  */
 import { getJavaClassName } from "./dataTypes.js"
 import type { Column, ParsedDDLCore } from "./ddlParser.js"
-import { computeIsLongText, computeIsYnFlag } from "./ddlParser.js"
+import { computeIsLongText, computeIsYnFlag, normalizeComment } from "./ddlParser.js"
+import { findMatchingParen, splitTopLevel, unquoteSqlString } from "../sqlText.js"
 
 const DATE_JAVA_TYPES = new Set([
 	"java.sql.Date",
@@ -34,23 +36,33 @@ function convertCamelcaseToPascalcase(name: string): string {
 	return name.charAt(0).toUpperCase() + name.slice(1)
 }
 
+/** SQL 문자열 리터럴 (`'...'` 또는 `"..."`, 내부 `''`/`""` 이스케이프 허용) */
+const SQL_STRING_LITERAL = `('(?:[^']|'')*'|"(?:[^"]|"")*")`
+
 export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 	ddl = ddl.replace(/\s+/g, " ").trim()
 
-	const tableNameMatch = RegExp(/^\s*CREATE\s+(?:MEMORY\s+)?TABLE\s+[`]?(\w+)[`]?/i).exec(ddl)
+	// 문장 분리 — 첫 문장이 CREATE TABLE, 이후는 COMMENT ON ... 등 후속 문장.
+	const statements = splitTopLevel(ddl, ";").map((s) => s.trim()).filter((s) => s.length > 0)
+	const createStmt = statements[0] ?? ddl
+	const trailingStmts = statements.slice(1)
+
+	const tableNameMatch = RegExp(/^\s*CREATE\s+(?:MEMORY\s+)?TABLE\s+[`]?(\w+)[`]?/i).exec(createStmt)
 	if (!tableNameMatch) {
 		throw new Error("Unable to parse table name from DDL")
 	}
 	const tableName = convertCamelcaseToPascalcase(convertToCamelCase(tableNameMatch[1]))
 
-	const columnDefinitionsMatch = RegExp(/\((.*)\)/s).exec(ddl)
-	if (!columnDefinitionsMatch) {
+	// 컬럼 본문: 첫 '(' 와 (따옴표를 무시하며) 짝이 되는 ')' 사이. 그 뒤는 테이블 옵션 꼬리.
+	const openIdx = createStmt.indexOf("(")
+	const closeIdx = openIdx === -1 ? -1 : findMatchingParen(createStmt, openIdx)
+	if (openIdx === -1 || closeIdx === -1) {
 		throw new Error("Unable to parse column definitions from DDL")
 	}
 
-	const columnDefinitions = columnDefinitionsMatch[1]
-	const columnsArray = columnDefinitions
-		.split(/,(?![^(]*\))/)
+	const columnDefinitions = createStmt.slice(openIdx + 1, closeIdx)
+	const tableTail = createStmt.slice(closeIdx + 1)
+	const columnsArray = splitTopLevel(columnDefinitions, ",")
 		.map((column) => column.trim())
 		.filter(
 			(column) =>
@@ -134,6 +146,10 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		else if (defNull) defaultValue = "NULL"
 		else if (defFunc) defaultValue = defFunc[1].toUpperCase()
 
+		// 인라인 COMMENT '...' — 후속 COMMENT ON COLUMN 문보다 우선한다.
+		const inlineCommentMatch = new RegExp(`\\bCOMMENT\\s+${SQL_STRING_LITERAL}`, "i").exec(columnDef)
+		const comment = inlineCommentMatch ? normalizeComment(unquoteSqlString(inlineCommentMatch[1])) : null
+
 		const column: Column = {
 			ccName,
 			columnName,
@@ -149,6 +165,7 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 			fk: constraintFk ?? inlineFk,
 			isNotNull,
 			defaultValue,
+			comment,
 		}
 
 		attributes.push(column)
@@ -161,5 +178,28 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		throw new Error("No valid columns found in DDL")
 	}
 
-	return { tableName, attributes, pkAttributes }
+	// 테이블 코멘트: `) COMMENT[=]'...'` 꼬리, 또는 후속 `COMMENT ON TABLE t IS '...'` 문장.
+	let tableComment: string | null = null
+	const tailCommentMatch = new RegExp(`\\bCOMMENT\\s*=?\\s*${SQL_STRING_LITERAL}`, "i").exec(tableTail)
+	if (tailCommentMatch) tableComment = normalizeComment(unquoteSqlString(tailCommentMatch[1]))
+
+	const commentOnTable = new RegExp(`^COMMENT\\s+ON\\s+TABLE\\s+[\`"]?\\w+[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`, "i")
+	const commentOnColumn = new RegExp(
+		`^COMMENT\\s+ON\\s+COLUMN\\s+(?:[\`"]?\\w+[\`"]?\\.)?[\`"]?(\\w+)[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`,
+		"i",
+	)
+	for (const stmt of trailingStmts) {
+		const t = commentOnTable.exec(stmt)
+		if (t) {
+			if (tableComment === null) tableComment = normalizeComment(unquoteSqlString(t[1]))
+			continue
+		}
+		const c = commentOnColumn.exec(stmt)
+		if (c) {
+			const target = attributes.find((a) => a.columnName.toUpperCase() === c[1].toUpperCase())
+			if (target && target.comment === null) target.comment = normalizeComment(unquoteSqlString(c[2]))
+		}
+	}
+
+	return { tableName, attributes, pkAttributes, tableComment }
 }

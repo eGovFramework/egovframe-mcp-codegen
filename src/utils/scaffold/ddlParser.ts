@@ -98,6 +98,20 @@ export interface Column {
    * 없으면 null.
    */
   defaultValue: string | null;
+  /**
+   * 컬럼 COMMENT 원문 (trim 만 적용). 없거나 빈 문자열이면 null.
+   *
+   * AST 경로는 인라인 `COMMENT '...'`, legacy 경로는 인라인과 `COMMENT ON COLUMN t.c IS '...'`
+   * (Oracle/Tibero/PostgreSQL) 둘 다에서 채운다. 화면 라벨로 쓸지의 판정(콤마·괄호·길이 규칙)은
+   * 여기서 하지 않고 `messageLabel.deriveLabelFromComment` 가 생성 컨텍스트 단계에서 적용한다.
+   */
+  comment: string | null;
+  /**
+   * 화면 라벨 — 런타임에 채워진다 (파서가 채우지 않음).
+   * `scaffoldGenerator.applyLabels` 가 `comment` 규칙 → FK 부모 엔티티명 → `pcName` 순으로 결정한다.
+   * 메시지 번들 템플릿 전용 필드.
+   */
+  label?: string;
 }
 
 /**
@@ -201,6 +215,21 @@ export interface ParsedDDLCore {
   tableName: string;
   attributes: Column[];
   pkAttributes: Column[];
+  /**
+   * 테이블 COMMENT 원문 (trim 만 적용). 없으면 null.
+   * MySQL `) COMMENT='...'` 와 `COMMENT ON TABLE t IS '...'` 둘 다에서 채운다.
+   */
+  tableComment: string | null;
+}
+
+/**
+ * 파서가 읽은 코멘트 값을 IR 형식으로 정규화한다: 문자열이면 trim, 빈 문자열/비문자열이면 null.
+ * 두 파서가 같은 규칙을 쓰도록 공용 헬퍼로 둔다.
+ */
+export function normalizeComment(raw: unknown): string | null {
+  if (typeof raw !== "string") return null;
+  const t = raw.trim();
+  return t === "" ? null : t;
 }
 
 export interface ParsedDDL extends ParsedDDLCore {

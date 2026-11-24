@@ -23,7 +23,13 @@
 import nodeSqlParser from "node-sql-parser";
 import { getJavaClassName } from "./dataTypes.js";
 import type { Column, ParsedDDLCore } from "./ddlParser.js";
-import { computeIsLongText, computeIsYnFlag, renderDefaultValue } from "./ddlParser.js";
+import {
+  computeIsLongText,
+  computeIsYnFlag,
+  normalizeComment,
+  renderDefaultValue,
+} from "./ddlParser.js";
+import { unquoteSqlString } from "../sqlText.js";
 
 const { Parser } = nodeSqlParser as unknown as {
   Parser: new () => { astify(sql: string, opt?: { database: string }): unknown };
@@ -59,7 +65,8 @@ interface AstColumnDefinition {
   nullable?: { type: "not null" | "null"; value: string };
   primary_key?: string;
   unique?: string;
-  comment?: unknown;
+  /** `COMMENT '...'` — node-sql-parser 는 { type: "comment", value: { type: "<quote>_string", value } } 로 돌려준다. */
+  comment?: { value?: { value?: unknown } } | null;
   default_val?: unknown;
 }
 
@@ -90,6 +97,8 @@ interface AstCreateTable {
   keyword: string; // 'table'
   table: Array<{ db: string | null; table: string }>;
   create_definitions: AstCreateDefinition[];
+  /** `) COMMENT='...' ENGINE=...` 등 테이블 옵션. comment 의 value 는 따옴표를 포함한 리터럴 문자열. */
+  table_options?: Array<{ keyword?: string; value?: unknown }> | null;
 }
 
 function isColumnDefinition(d: AstCreateDefinition): d is AstColumnDefinition {
@@ -221,6 +230,7 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
       fk: inlineFk,
       isNotNull,
       defaultValue,
+      comment: normalizeComment(def.comment?.value?.value),
     };
     attributes.push(col);
     columnByName.set(columnName, col);
@@ -265,7 +275,18 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
     throw new Error("No valid columns found in DDL");
   }
 
-  return { tableName, attributes, pkAttributes };
+  const tableComment = extractTableComment(node);
+
+  return { tableName, attributes, pkAttributes, tableComment };
+}
+
+/** `) COMMENT='공지사항'` 테이블 옵션에서 코멘트를 읽는다. 없으면 null. */
+function extractTableComment(node: AstCreateTable): string | null {
+  const opt = (node.table_options ?? []).find(
+    (o) => typeof o?.keyword === "string" && o.keyword.toLowerCase() === "comment",
+  );
+  if (!opt || typeof opt.value !== "string") return null;
+  return normalizeComment(unquoteSqlString(opt.value));
 }
 
 function isCreateTable(node: unknown): node is AstCreateTable {

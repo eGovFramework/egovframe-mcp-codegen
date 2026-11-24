@@ -408,3 +408,68 @@ describe("parseDDLWithDiagnostics — 경로 추적", () => {
     expect(r.astError).toBeDefined();
   });
 });
+
+describe("parseDDL — comments", () => {
+  it("[AST] 인라인 COMMENT 와 테이블 COMMENT= 를 읽는다", () => {
+    const r = parseDDL(`CREATE TABLE NOTICE (
+      NTT_ID NUMERIC(20) NOT NULL COMMENT '공지사항ID',
+      NTT_SJ VARCHAR(2000) COMMENT "공지사항제목",
+      NTT_CN TEXT,
+      PRIMARY KEY (NTT_ID)) COMMENT='공지사항'`);
+    expect(r.parserUsed).toBe("ast");
+    expect(r.attributes.map((a) => a.comment)).toEqual(["공지사항ID", "공지사항제목", null]);
+    expect(r.tableComment).toBe("공지사항");
+  });
+
+  it("[AST] 빈 COMMENT '' 는 null", () => {
+    const r = parseDDL(`CREATE TABLE T (A INT COMMENT '', B INT COMMENT '  ')`);
+    expect(r.parserUsed).toBe("ast");
+    expect(r.attributes.map((a) => a.comment)).toEqual([null, null]);
+    expect(r.tableComment).toBeNull();
+  });
+
+  it("[legacy] 인라인 COMMENT 와 '' 복원", () => {
+    const r = parseDDL(
+      `CREATE TABLE T (ID NUMBER(10) PRIMARY KEY COMMENT 'it''s id', NM VARCHAR2(50) COMMENT "이름")`,
+    );
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.attributes.map((a) => a.comment)).toEqual(["it's id", "이름"]);
+  });
+
+  it("[legacy] COMMENT ON COLUMN / TABLE 문을 읽고 컬럼명은 대소문자 무관 매칭", () => {
+    const r = parseDDL(`CREATE TABLE NOTICE (NTT_ID NUMBER(20) NOT NULL, ntt_sj VARCHAR2(2000), PRIMARY KEY (NTT_ID));
+      COMMENT ON TABLE NOTICE IS '공지사항';
+      COMMENT ON COLUMN NOTICE.NTT_SJ IS '공지사항제목';
+      COMMENT ON COLUMN notice.ntt_id IS 'ID';`);
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.attributes).toHaveLength(2);
+    expect(r.attributes.find((a) => a.columnName === "ntt_sj")?.comment).toBe("공지사항제목");
+    expect(r.attributes.find((a) => a.columnName === "NTT_ID")?.comment).toBe("ID");
+    expect(r.tableComment).toBe("공지사항");
+  });
+
+  it("[legacy] 테이블 COMMENT 에 괄호가 있어도 컬럼 본문 추출이 깨지지 않는다", () => {
+    const r = parseDDL(`CREATE TABLE T (ID NUMBER(10) PRIMARY KEY, NM VARCHAR2(50)) COMMENT='공지(사항)'`);
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.attributes.map((a) => a.columnName)).toEqual(["ID", "NM"]);
+    expect(r.tableComment).toBe("공지(사항)");
+  });
+
+  it("[legacy] COMMENT 리터럴 안의 콤마를 컬럼 구분자로 보지 않는다", () => {
+    const r = parseDDL(`CREATE TABLE T (ID NUMBER(10) PRIMARY KEY COMMENT 'a, b', NM VARCHAR2(50))`);
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.attributes).toHaveLength(2);
+    expect(r.attributes[0].comment).toBe("a, b");
+  });
+
+  it("코멘트가 없으면 두 경로 모두 null", () => {
+    const ast = parseDDL(`CREATE TABLE T (A INT PRIMARY KEY)`);
+    expect(ast.parserUsed).toBe("ast");
+    expect(ast.attributes[0].comment).toBeNull();
+    expect(ast.tableComment).toBeNull();
+    const legacy = parseDDL(`CREATE TABLE T (A NUMBER(5) PRIMARY KEY)`);
+    expect(legacy.parserUsed).toBe("legacy");
+    expect(legacy.attributes[0].comment).toBeNull();
+    expect(legacy.tableComment).toBeNull();
+  });
+});
