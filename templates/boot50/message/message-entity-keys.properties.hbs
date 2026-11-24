@@ -1,14 +1,14 @@
 
 # === entity '{{entityName}}' keys (egov_add_entity 가 append) ===
-list.{{entityNameLower}}=List {{entityName}}
-title.{{entityNameLower}}.sample={{entityName}} 목록
-nav.{{entityNameLower}}={{entityName}}
+list.{{entityNameLower}}={{#if hasTableLabel}}{{msg entityLabel}} 목록{{else}}List {{entityName}}{{/if}}
+title.{{entityNameLower}}.sample={{msg entityLabel}} 목록
+nav.{{entityNameLower}}={{msg entityLabel}}
 {{#each attributes}}
-title.{{../entityNameLower}}.{{ccName}}={{#if fkParent}}{{fkParent.entityName}}{{else}}{{pcName}}{{/if}}
+title.{{../entityNameLower}}.{{ccName}}={{msg label}}
 {{/each}}
 {{#each nonPkAttributes}}
 {{#if (eq javaType "java.lang.String")}}
-confirm.required.{{../entityNameLower}}.{{ccName}}={{pcName}}은(는) 필수 입력값입니다.
+confirm.required.{{../entityNameLower}}.{{ccName}}={{msg label}}은(는) 필수 입력값입니다.
 {{/if}}
 {{/each}}
 {{#if withAttachment}}

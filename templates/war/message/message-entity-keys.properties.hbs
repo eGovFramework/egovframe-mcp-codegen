@@ -1,14 +1,14 @@
 
 # === entity '{{entityName}}' keys (egov_add_entity 가 append) ===
-list.{{entityNameLower}}={{entityName}} List
-title.{{entityNameLower}}={{entityName}}
-nav.{{entityNameLower}}={{entityName}}
+list.{{entityNameLower}}={{#if hasTableLabel}}{{msg entityLabel}} \uBAA9\uB85D{{else}}{{entityName}} List{{/if}}
+title.{{entityNameLower}}={{msg entityLabel}}
+nav.{{entityNameLower}}={{msg entityLabel}}
 {{#each attributes}}
-title.{{../entityNameLower}}.{{ccName}}={{#if fkParent}}{{fkParent.entityName}}{{else}}{{pcName}}{{/if}}
+title.{{../entityNameLower}}.{{ccName}}={{msg label}}
 {{/each}}
 {{#each nonPkAttributes}}
 {{#if (eq javaType "java.lang.String")}}
-confirm.required.{{../entityNameLower}}.{{ccName}}={{pcName}} is required.
+confirm.required.{{../entityNameLower}}.{{ccName}}={{msg label}} is required.
 {{/if}}
 {{/each}}
 {{#if withAttachment}}

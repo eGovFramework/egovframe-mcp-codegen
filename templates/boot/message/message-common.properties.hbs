@@ -1,5 +1,5 @@
 #UI resource#
-list.{{entityNameLower}}=List {{entityName}}
+list.{{entityNameLower}}={{#if hasTableLabel}}{{msg entityLabel}} \uBAA9\uB85D{{else}}List {{entityName}}{{/if}}
 button.search=\uAC80\uC0C9
 button.list=\uBAA9\uB85D
 button.modify=\uC218\uC815
@@ -12,10 +12,10 @@ search.error=\uAC80\uC0C9\uC5B4\uB97C \uC785\uB825\uD574\uC57C \uD569\uB2C8\uB2E
 input.yes=\uC608
 input.no=\uC544\uB2C8\uC624
 {{#each attributes}}
-title.{{../entityNameLower}}.{{ccName}}={{#if fkParent}}{{fkParent.entityName}}{{else}}{{pcName}}{{/if}}
+title.{{../entityNameLower}}.{{ccName}}={{msg label}}
 {{/each}}
-title.{{entityNameLower}}.sample={{entityName}} \uBAA9\uB85D
-nav.{{entityNameLower}}={{entityName}}
+title.{{entityNameLower}}.sample={{msg entityLabel}} \uBAA9\uB85D
+nav.{{entityNameLower}}={{msg entityLabel}}
 
 # confirm message #
 info.nodata.msg=\uD574\uB2F9 \uB370\uC774\uD130\uAC00 \uC5C6\uC2B5\uB2C8\uB2E4.
@@ -28,7 +28,7 @@ delete.confirm=\uC0AD\uC81C\uD558\uC2DC\uACA0\uC2B5\uB2C8\uAE4C?
 delete.confirm.success=\uC0AD\uC81C\uB418\uC5C8\uC2B5\uB2C8\uB2E4.
 {{#each nonPkAttributes}}
 {{#if (eq javaType "java.lang.String")}}
-confirm.required.{{../entityNameLower}}.{{ccName}}={{pcName}}\uC740(\uB294) \uD544\uC218 \uC785\uB825\uAC12\uC785\uB2C8\uB2E4.
+confirm.required.{{../entityNameLower}}.{{ccName}}={{msg label}}\uC740(\uB294) \uD544\uC218 \uC785\uB825\uAC12\uC785\uB2C8\uB2E4.
 {{/if}}
 {{/each}}
 {{#if withAttachment}}

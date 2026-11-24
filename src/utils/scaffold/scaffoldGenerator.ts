@@ -215,6 +215,13 @@ function extractRawTableName(ddl: string): string {
  */
 export function registerScaffoldHelpers() {
   Handlebars.registerHelper("eq", function (a: any, b: any) { return a === b; });
+  // 메시지 번들 값 출력용. 스택이 번들을 ISO-8859-1 로 읽으면(WAR 4.3, stack.messageUnicodeEscape)
+  // 비ASCII 를 \uXXXX 로 이스케이프한다. SafeString 으로 돌려 Handlebars 의 HTML 이스케이프를 막는다.
+  Handlebars.registerHelper("msg", function (value: unknown, options: Handlebars.HelperOptions) {
+    const root = options?.data?.root as { stack?: { messageUnicodeEscape?: boolean } } | undefined;
+    const unicodeEscape = root?.stack?.messageUnicodeEscape === true;
+    return new Handlebars.SafeString(escapePropertiesValue(value == null ? "" : String(value), unicodeEscape));
+  });
   Handlebars.registerHelper("concat", function (...args: any[]) { return args.slice(0, -1).join(""); });
   Handlebars.registerHelper("lowercase", function (str: string) { return typeof str === "string" ? str.toLowerCase() : ""; });
   Handlebars.registerHelper("uppercase", function (str: string) { return typeof str === "string" ? str.toUpperCase() : ""; });
