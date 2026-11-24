@@ -166,6 +166,12 @@ describe("코멘트 라벨 — egov_add_entity (boot50 프로젝트에 NOTICE �
     expectLine(b.en, "title.notice.nttSj", "NttSj");
     expectLine(b.en, "nav.notice", "Notice");
   });
+
+  it("결과 메시지에 반영 컬럼 수·제외 컬럼·엔티티 표시명을 안내한다", () => {
+    expect(out).toMatch(/코멘트 라벨 반영: 3개 컬럼/);
+    expect(out).toMatch(/규칙으로 제외된 컬럼: NTT_CN, TAGS/);
+    expect(out).toMatch(/엔티티 표시명: 공지사항/);
+  });
 });
 
 describe("코멘트 없는 DDL 은 현행과 동일", () => {

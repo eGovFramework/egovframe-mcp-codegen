@@ -40,14 +40,16 @@ interface Manifest {
   files: ManifestEntry[];
 }
 
+// title 은 코멘트가 라벨로 반영되고, content 는 10자 초과 설명문이라 컬럼명 표기로 폴백한다.
+// 테이블 COMMENT 는 메뉴·제목(nav/title/list) 에 반영된다. (DDL COMMENT 라벨 기능의 회귀 고정)
 const SHARED_DDL = `CREATE TABLE board (
   board_id VARCHAR(36) NOT NULL,
-  title VARCHAR(200) NOT NULL,
-  content TEXT,
+  title VARCHAR(200) NOT NULL COMMENT '제목',
+  content TEXT COMMENT '본문 내용을 저장하는 긴 설명 컬럼',
   author VARCHAR(50),
   created_at TIMESTAMP,
   PRIMARY KEY (board_id)
-)`;
+) COMMENT='게시판'`;
 
 const SCENARIOS = [
   {

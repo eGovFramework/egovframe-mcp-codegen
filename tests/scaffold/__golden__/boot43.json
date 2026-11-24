@@ -217,11 +217,11 @@
     },
     {
       "path": "src/main/resources/egovframework/message/message-common_ko.properties",
-      "sha256": "f5ec676d9a3492e1b32e46252ff5fe5c0a14bc89458519afce38c769f6f3d330"
+      "sha256": "990fb18e9c402c14f69caa6faa9a478670a3cf92665f33cea9619b96fc9063e0"
     },
     {
       "path": "src/main/resources/egovframework/message/message-common.properties",
-      "sha256": "f5ec676d9a3492e1b32e46252ff5fe5c0a14bc89458519afce38c769f6f3d330"
+      "sha256": "990fb18e9c402c14f69caa6faa9a478670a3cf92665f33cea9619b96fc9063e0"
     },
     {
       "path": "src/main/resources/egovframework/sqlmap/board/mappers/EgovBoard_Board_SQL.xml",

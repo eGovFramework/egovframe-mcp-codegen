@@ -89,4 +89,15 @@ describe("도구 등록 inputSchema ↔ 모듈 스키마 동기화", () => {
     // .describe() 누락 방지 — LLM-facing 설명이 있어야 클라이언트가 옵션 의미를 안다.
     expect(field?.description).toBeTruthy();
   });
+
+  // DDL COMMENT 가 화면 라벨로 쓰인다는 사실은 LLM 이 DDL 을 작성/정리할 때 알아야 하므로 설명문에 있어야 한다.
+  it.each(["egov_scaffold_project", "egov_add_entity"])(
+    "%s 의 ddl 설명문이 COMMENT 라벨 반영 규칙을 안내한다",
+    (toolName) => {
+      const props = listedSchemas.get(toolName) ?? {};
+      const field = props["ddl"] as { description?: string } | undefined;
+      expect(field?.description).toMatch(/COMMENT/);
+      expect(field?.description).toMatch(/10자/);
+    },
+  );
 });

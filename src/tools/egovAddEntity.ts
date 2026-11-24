@@ -30,6 +30,7 @@ import {
   applyLabels,
   type ScaffoldParams,
 } from "../utils/scaffold/scaffoldGenerator.js";
+import { deriveLabelFromComment } from "../utils/scaffold/messageLabel.js";
 import { resolveManifest } from "../utils/scaffold/manifestLoader.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
@@ -962,6 +963,26 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
         `   해결: 부모 엔티티를 (이 프로젝트에 먼저) 추가한 뒤 본 엔티티를 다시 만드세요.`,
         `   주의: 이미 만들어진 산출물은 보존됩니다 — 부모 추가 후 같은 엔티티 재생성을 원하면 산출물을 직접 삭제하거나 별도 도구가 필요합니다.`,
       );
+    }
+
+    // 코멘트 라벨 반영 결과 — DDL COMMENT 가 라벨로 쓰인 컬럼 수와, 코멘트는 있으나 규칙에 걸려
+    // 컬럼명 표기로 폴백된 컬럼을 안내한다. 코멘트가 전혀 없는 DDL 이면 아무 것도 출력하지 않는다.
+    const commentedCols = ctx.attributes.filter((c) => c.comment !== null);
+    const labeledFromComment = commentedCols.filter((c) => deriveLabelFromComment(c.comment) !== null);
+    const excludedByRule = commentedCols.filter((c) => deriveLabelFromComment(c.comment) === null);
+    if (commentedCols.length > 0 || ctx.hasTableLabel) {
+      lines.push(
+        ``,
+        `🏷️  코멘트 라벨 반영: ${labeledFromComment.length}개 컬럼 (DDL COMMENT 가 화면 라벨·메시지 번들 값으로 사용됨)`,
+      );
+      if (ctx.hasTableLabel) {
+        lines.push(`   엔티티 표시명: ${ctx.entityLabel} (테이블 COMMENT → 메뉴·제목)`);
+      }
+      if (excludedByRule.length > 0) {
+        lines.push(
+          `   규칙으로 제외된 컬럼: ${excludedByRule.map((c) => c.columnName).join(", ")} (콤마 포함·괄호 앞 공백·10자 초과 코멘트는 컬럼명 표기 사용)`,
+        );
+      }
     }
 
     // 운영 DB 용 방언별 마이그레이션 SQL — 7개 방언 폴더 각각에 단일 엔티티 파일.
