@@ -4,6 +4,7 @@ import { writeFile } from "fs/promises";
 import { fileURLToPath } from "url";
 import Handlebars from "handlebars";
 import { parseDDL, Column } from "./ddlParser.js";
+import { deriveLabelFromComment, escapePropertiesValue } from "./messageLabel.js";
 import { resolveStack, type StackEntry } from "./stackMatrix.js";
 import { resolveManifest, type ResolvedFileMapping } from "./manifestLoader.js";
 import { dialectFullType, type Dialect } from "./dialectTypes.js";
@@ -73,6 +74,16 @@ export interface ScaffoldContext {
   tableName: string;
   attributes: Column[];
   pkAttributes: Column[];
+  /** 테이블 COMMENT 원문 (파서 IR 그대로). 없으면 null. */
+  tableComment: string | null;
+  /**
+   * 엔티티 표시명 — 메시지 번들의 `nav.<entity>`, `title.<entity>[.sample]`, `list.<entity>` 값.
+   * 테이블 코멘트가 라벨 규칙(`deriveLabelFromComment`)을 통과하면 그 값, 아니면 `entityName`.
+   * `applyLabels` 가 채운다.
+   */
+  entityLabel: string;
+  /** `entityLabel` 이 테이블 코멘트에서 왔는지. 템플릿이 "List X" / "X 목록" 문구를 분기할 때 사용. */
+  hasTableLabel: boolean;
   /**
    * DDL 파싱에 사용된 파서 경로. "legacy" 면 AST(MySQL dialect) 파싱이 실패해
    * 정규식 파서로 폴백한 것 — 입력 DDL 이 비표준일 가능성이 있어 도구 결과
@@ -292,7 +303,7 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     )
   ).sort();
 
-  return {
+  const ctx: ScaffoldContext = {
     projectName,
     groupId,
     artifactId: projectName,
@@ -314,6 +325,9 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     tableName: rawTableName,
     attributes: parsed.attributes,
     pkAttributes: parsed.pkAttributes,
+    tableComment: parsed.tableComment,
+    entityLabel: entityName,
+    hasTableLabel: false,
     ddlParserUsed: parsed.parserUsed,
     ddlWarnings: parsed.warnings,
     nonPkAttributes,
@@ -347,6 +361,24 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     idGenerationAuto: true,
     idGenerationManual: false,
   };
+  applyLabels(ctx);
+  return ctx;
+}
+
+/**
+ * 메시지 번들용 라벨을 채운다. 멱등이며, `fkParent` 가 나중에 채워지는 `egov_add_entity` 는
+ * FK 해석 뒤에 다시 호출해야 한다.
+ *
+ * - 컬럼: 코멘트 규칙 통과값 → `fkParent.entityName` → `pcName`
+ * - 엔티티: 테이블 코멘트 규칙 통과값 → `entityName`
+ */
+export function applyLabels(ctx: ScaffoldContext): void {
+  for (const col of ctx.attributes) {
+    col.label = deriveLabelFromComment(col.comment) ?? col.fkParent?.entityName ?? col.pcName;
+  }
+  const tableLabel = deriveLabelFromComment(ctx.tableComment);
+  ctx.entityLabel = tableLabel ?? ctx.entityName;
+  ctx.hasTableLabel = tableLabel !== null;
 }
 
 /**

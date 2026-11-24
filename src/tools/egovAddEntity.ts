@@ -27,6 +27,7 @@ import {
   buildContext,
   getScaffoldTemplatePath,
   registerScaffoldHelpers,
+  applyLabels,
   type ScaffoldParams,
 } from "../utils/scaffold/scaffoldGenerator.js";
 import { resolveManifest } from "../utils/scaffold/manifestLoader.js";
@@ -661,6 +662,8 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       });
     }
     ctx.hasFk = ctx.resolvedFks.length > 0;
+    // FK 부모가 채워진 뒤 라벨을 다시 계산한다 (코멘트 없는 FK 컬럼은 부모 엔티티명이 라벨).
+    applyLabels(ctx);
 
     // 5) entity-scope 항목만 추려 최종 출력 경로 산출
     const mappings = resolveManifest(
