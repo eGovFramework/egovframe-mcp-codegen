@@ -473,3 +473,40 @@ describe("parseDDL — comments", () => {
     expect(legacy.tableComment).toBeNull();
   });
 });
+
+describe("parseDDL — comments (리뷰 보강)", () => {
+  it("[legacy] 코멘트 리터럴 안의 키워드(PRIMARY KEY/NOT NULL/DEFAULT)를 제약으로 오인하지 않는다", () => {
+    const r = parseDDL(
+      `CREATE TABLE T (ID NUMBER(10) PRIMARY KEY, A VARCHAR2(10) COMMENT 'PRIMARY KEY 참조', B VARCHAR2(10) COMMENT 'NOT NULL 여부', C NUMBER(3) COMMENT '상태 (DEFAULT 0: 대기)')`,
+    );
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.pkAttributes.map((a) => a.columnName)).toEqual(["ID"]);
+    expect(r.attributes.find((a) => a.columnName === "B")?.isNotNull).toBe(false);
+    const c = r.attributes.find((a) => a.columnName === "C")!;
+    expect(c.defaultValue).toBeNull();
+    expect(c.comment).toBe("상태 (DEFAULT 0: 대기)");
+  });
+
+  it("[legacy] 스키마 한정·따옴표 식별자 COMMENT ON 을 읽는다", () => {
+    const r = parseDDL(`CREATE TABLE NOTICE (NTT_ID NUMBER(20) PRIMARY KEY, NTT_SJ VARCHAR2(200));
+      COMMENT ON TABLE SCOTT.NOTICE IS '공지사항';
+      COMMENT ON COLUMN SCOTT.NOTICE.NTT_SJ IS '제목';
+      COMMENT ON COLUMN "SCOTT"."NOTICE"."NTT_ID" IS 'ID';`);
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.tableComment).toBe("공지사항");
+    expect(r.attributes.map((a) => a.comment)).toEqual(["ID", "제목"]);
+  });
+
+  it("[legacy] -- 줄 주석 안의 아포스트로피가 뒤 컬럼을 삼키지 않는다", () => {
+    const r = parseDDL(`CREATE TABLE T (\n A NUMBER(5) -- it's the id\n , B NUMBER(5),\n PRIMARY KEY (A)\n)`);
+    expect(r.parserUsed).toBe("legacy");
+    expect(r.attributes.map((a) => a.columnName)).toEqual(["A", "B"]);
+    expect(r.pkAttributes.map((a) => a.columnName)).toEqual(["A"]);
+  });
+
+  it("[AST] COMMENT 리터럴의 '' / \"\" 이스케이프를 복원한다", () => {
+    const r = parseDDL(`CREATE TABLE T (A INT COMMENT 'it''s', B INT COMMENT "dq ""x""")`);
+    expect(r.parserUsed).toBe("ast");
+    expect(r.attributes.map((a) => a.comment)).toEqual(["it's", 'dq "x"']);
+  });
+});

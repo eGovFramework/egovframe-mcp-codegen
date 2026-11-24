@@ -66,7 +66,7 @@ interface AstColumnDefinition {
   primary_key?: string;
   unique?: string;
   /** `COMMENT '...'` — node-sql-parser 는 { type: "comment", value: { type: "<quote>_string", value } } 로 돌려준다. */
-  comment?: { value?: { value?: unknown } } | null;
+  comment?: { value?: { type?: string; value?: unknown } } | null;
   default_val?: unknown;
 }
 
@@ -230,7 +230,7 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
       fk: inlineFk,
       isNotNull,
       defaultValue,
-      comment: normalizeComment(def.comment?.value?.value),
+      comment: normalizeComment(foldQuotedComment(def.comment?.value)),
     };
     attributes.push(col);
     columnByName.set(columnName, col);
@@ -278,6 +278,17 @@ export function parseDDLWithAst(ddl: string): ParsedDDLCore {
   const tableComment = extractTableComment(node);
 
   return { tableName, attributes, pkAttributes, tableComment };
+}
+
+/**
+ * node-sql-parser 는 문자열 리터럴 안의 `''` / `""` 이스케이프를 풀지 않고 돌려준다.
+ * 리터럴 종류(type) 에 맞춰 접어 legacy 파서(`unquoteSqlString`)와 같은 결과를 만든다.
+ */
+function foldQuotedComment(node: { type?: string; value?: unknown } | undefined): unknown {
+  if (!node || typeof node.value !== "string") return node?.value;
+  if (node.type === "single_quote_string") return node.value.split("''").join("'");
+  if (node.type === "double_quote_string") return node.value.split('""').join('"');
+  return node.value;
 }
 
 /** `) COMMENT='공지사항'` 테이블 옵션에서 코멘트를 읽는다. 없으면 null. */

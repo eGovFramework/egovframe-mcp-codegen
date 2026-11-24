@@ -2,7 +2,7 @@
  * sqlText 단위 테스트 — 따옴표·괄호를 인식하는 SQL 텍스트 분리 유틸.
  */
 import { describe, it, expect } from "vitest";
-import { splitTopLevel, findMatchingParen, unquoteSqlString } from "../../src/utils/sqlText.js";
+import { splitTopLevel, findMatchingParen, unquoteSqlString, stripSqlComments } from "../../src/utils/sqlText.js";
 
 describe("splitTopLevel", () => {
   it("따옴표 안의 콤마에서 나누지 않는다", () =>
@@ -36,4 +36,13 @@ describe("unquoteSqlString", () => {
   it("'' 를 ' 로 복원한다", () => expect(unquoteSqlString("'it''s'")).toBe("it's"));
   it("큰따옴표도 벗긴다", () => expect(unquoteSqlString('"공지"')).toBe("공지"));
   it("따옴표가 없으면 trim 만 한다", () => expect(unquoteSqlString("  x ")).toBe("x"));
+});
+
+describe("stripSqlComments", () => {
+  it("-- 줄 주석을 제거한다 (아포스트로피가 들어 있어도 줄바꿈은 유지)", () =>
+    expect(stripSqlComments("A INT -- it's the id\n, B INT")).toBe("A INT \n, B INT"));
+  it("/* */ 블록 주석을 공백 하나로 바꾼다", () =>
+    expect(stripSqlComments("A INT/* x, 'y' */, B INT")).toBe("A INT , B INT"));
+  it("문자열 리터럴 안의 -- 와 /* 는 보존한다", () =>
+    expect(stripSqlComments("A INT COMMENT 'a -- b /* c */'")).toBe("A INT COMMENT 'a -- b /* c */'"));
 });

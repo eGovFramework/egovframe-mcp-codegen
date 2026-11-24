@@ -14,7 +14,7 @@
  *   표준 미준수는 `report.issues` 로만 보고한다.
  */
 
-import { splitTopLevel } from "./sqlText.js";
+import { findMatchingParen, splitTopLevel, stripSqlComments } from "./sqlText.js";
 
 const KNOWN_DATA_TYPES = new Set<string>([
   // dataTypes.ts 와 일치시킨다. 파서 사전을 직접 import 하지 않는 것은
@@ -57,7 +57,8 @@ export interface NormalizationChange {
     | "identifier_quote"
     | "data_type_case"
     | "whitespace"
-    | "escape_sequence";
+    | "escape_sequence"
+    | "sql_comment";
   before: string;
   after: string;
   /** 컬럼/제약 라인 번호 (DDL body 안에서 0-base). 메타 변경(전체 trim 등)은 생략 */
@@ -134,6 +135,12 @@ export function normalizeDdl(
   ddl = repaired.ddl;
   changes.push(...repaired.changes);
 
+  // 0-b) SQL 주석(`-- ...`, `/* ... */`) 제거. 주석 안의 따옴표·괄호·콤마가 아래 분리 로직을
+  //      오염시키지 않도록 먼저 걷어내고, 제거 사실은 보고서에 남긴다 (문자열 리터럴 안은 보존).
+  ddl = stripSqlComments(ddl, (comment) => {
+    changes.push({ kind: "sql_comment", before: comment, after: "", lineIndex: -1 });
+  });
+
   // 1) 테이블 헤더와 컬럼 본문 분리
   const headerMatch = /^\s*CREATE\s+(?:MEMORY\s+)?TABLE\s+([`"]?)(\w+)\1\s*\(/i.exec(
     ddl,
@@ -149,9 +156,10 @@ export function normalizeDdl(
   const tableName = headerMatch[2];
   const headerEnd = headerMatch.index + headerMatch[0].length;
 
-  // 2) 본문 마지막 ')' 찾기 (가장 바깥쪽)
+  // 2) 본문을 닫는 ')' 찾기 — 헤더 끝의 '(' 와 짝이 되는 괄호. 코멘트 리터럴 안의 ')' 나
+  //    후속 COMMENT ON 문장의 괄호를 본문 끝으로 오인하지 않도록 따옴표 인식 스캐너를 쓴다.
   const bodyStart = headerEnd;
-  const bodyEnd = ddl.lastIndexOf(")");
+  const bodyEnd = findMatchingParen(ddl, headerEnd - 1);
   if (bodyEnd <= bodyStart) {
     return {
       normalizedDdl: ddl,

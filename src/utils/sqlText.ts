@@ -60,6 +60,53 @@ export function splitTopLevel(text: string, separator: "," | ";"): string[] {
 }
 
 /**
+ * SQL 주석을 제거한다. `-- ...` 는 줄 끝까지(줄바꿈은 보존), `/* ... *\/` 는 공백 하나로 바꾼다.
+ * 문자열 리터럴 안의 `--` 와 `/*` 는 주석이 아니므로 그대로 둔다.
+ * `onComment` 를 넘기면 제거한 주석 원문(trim)을 순서대로 알려 준다 — 정규화 보고서용.
+ */
+export function stripSqlComments(text: string, onComment?: (comment: string) => void): string {
+  let out = "";
+  let quote: QuoteChar | null = null;
+  let i = 0;
+  while (i < text.length) {
+    const ch = text[i];
+    if (quote) {
+      out += ch;
+      if (ch === quote) {
+        if (text[i + 1] === quote) {
+          out += text[i + 1];
+          i += 2;
+          continue;
+        }
+        quote = null;
+      }
+      i++;
+      continue;
+    }
+    if (isQuote(ch)) {
+      quote = ch;
+      out += ch;
+      i++;
+    } else if (ch === "-" && text[i + 1] === "-") {
+      let end = text.indexOf("\n", i);
+      if (end === -1) end = text.length;
+      onComment?.(text.slice(i, end).trim());
+      i = end; // 줄바꿈 문자는 다음 반복에서 그대로 출력된다
+    } else if (ch === "/" && text[i + 1] === "*") {
+      let end = text.indexOf("*/", i + 2);
+      end = end === -1 ? text.length : end + 2;
+      onComment?.(text.slice(i, end).trim());
+      out += " ";
+      i = end;
+    } else {
+      out += ch;
+      i++;
+    }
+  }
+  return out;
+}
+
+/**
  * `openIndex` 위치의 `(` 와 짝이 되는 `)` 의 인덱스를 돌려준다. 따옴표 안의 괄호는 무시한다.
  * 짝이 없거나 `openIndex` 가 `(` 가 아니면 -1.
  */

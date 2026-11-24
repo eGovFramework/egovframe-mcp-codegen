@@ -18,7 +18,7 @@
 import { getJavaClassName } from "./dataTypes.js"
 import type { Column, ParsedDDLCore } from "./ddlParser.js"
 import { computeIsLongText, computeIsYnFlag, normalizeComment } from "./ddlParser.js"
-import { findMatchingParen, splitTopLevel, unquoteSqlString } from "../sqlText.js"
+import { findMatchingParen, splitTopLevel, stripSqlComments, unquoteSqlString } from "../sqlText.js"
 
 const DATE_JAVA_TYPES = new Set([
 	"java.sql.Date",
@@ -40,7 +40,8 @@ function convertCamelcaseToPascalcase(name: string): string {
 const SQL_STRING_LITERAL = `('(?:[^']|'')*'|"(?:[^"]|"")*")`
 
 export function parseDDLLegacy(ddl: string): ParsedDDLCore {
-	ddl = ddl.replace(/\s+/g, " ").trim()
+	// SQL 주석을 먼저 제거한다 — 공백을 한 칸으로 합치면 `-- ...` 의 줄 끝 경계가 사라지기 때문.
+	ddl = stripSqlComments(ddl).replace(/\s+/g, " ").trim()
 
 	// 문장 분리 — 첫 문장이 CREATE TABLE, 이후는 COMMENT ON ... 등 후속 문장.
 	const statements = splitTopLevel(ddl, ";").map((s) => s.trim()).filter((s) => s.length > 0)
@@ -97,6 +98,13 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 			return
 		}
 
+		// 인라인 COMMENT '...' 를 먼저 떼어낸다 (후속 COMMENT ON COLUMN 문보다 우선). 리터럴 안의
+		// PRIMARY KEY / NOT NULL / DEFAULT / REFERENCES 같은 단어가 제약으로 오인되지 않도록
+		// 이후 키워드 검사는 코멘트를 제거한 defSansComment 로 수행한다.
+		const inlineCommentMatch = new RegExp(`\\bCOMMENT\\s+${SQL_STRING_LITERAL}`, "i").exec(columnDef)
+		const comment = inlineCommentMatch ? normalizeComment(unquoteSqlString(inlineCommentMatch[1])) : null
+		const defSansComment = inlineCommentMatch ? columnDef.replace(inlineCommentMatch[0], " ") : columnDef
+
 		const parts = columnDef.split(" ").filter((part) => part.trim())
 		const columnName = parts[0]?.replace(/[`"']/g, "")
 		const rawDataType = parts[1] ? parts[1].toUpperCase() : ""
@@ -114,7 +122,7 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		// DECIMAL(p,s) / NUMBER(p,s) 의 두 번째 인자 — 소수 자릿수
 		const scaleMatch = RegExp(/\(\s*\d+\s*,\s*(\d+)\s*\)/).exec(rawDataType)
 		const scale = scaleMatch ? parseInt(scaleMatch[1], 10) : 0
-		const isPrimaryKey = primaryKeyColumns.includes(columnName) || columnDef.toUpperCase().includes("PRIMARY KEY")
+		const isPrimaryKey = primaryKeyColumns.includes(columnName) || defSansComment.toUpperCase().includes("PRIMARY KEY")
 		const ccName = convertToCamelCase(columnName)
 
 		const javaType = getJavaClassName(dataType)
@@ -122,7 +130,7 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		// 인라인 REFERENCES: `col TYPE [NOT NULL] REFERENCES PARENT(PK)`
 		// columnDef 안에서 REFERENCES 절을 정규식으로 찾는다.
 		let inlineFk: { targetTable: string; targetColumn: string } | null = null
-		const inlineFkMatch = /REFERENCES\s+([`"']?\w+[`"']?)\s*\(\s*([`"']?\w+[`"']?)\s*\)/i.exec(columnDef)
+		const inlineFkMatch = /REFERENCES\s+([`"']?\w+[`"']?)\s*\(\s*([`"']?\w+[`"']?)\s*\)/i.exec(defSansComment)
 		if (inlineFkMatch) {
 			inlineFk = {
 				targetTable: inlineFkMatch[1].replace(/[`"']/g, ""),
@@ -133,22 +141,18 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		const constraintFk = fkByLocalCol.get(columnName)
 
 		// NOT NULL 추출 — 데이터 타입 뒤 어딘가에 "NOT NULL" 토큰이 있으면 true
-		const isNotNull = /\bNOT\s+NULL\b/i.test(columnDef)
+		const isNotNull = /\bNOT\s+NULL\b/i.test(defSansComment)
 
 		// DEFAULT 추출 — DEFAULT 'literal' | DEFAULT NUMBER | DEFAULT FUNC[(args)] | DEFAULT NULL
 		let defaultValue: string | null = null
-		const defStr = /DEFAULT\s+'((?:[^']|'')*)'/i.exec(columnDef)
-		const defNum = /DEFAULT\s+(-?\d+(?:\.\d+)?)\b/i.exec(columnDef)
-		const defFunc = /DEFAULT\s+([A-Z_][A-Z0-9_]*)\s*(?:\(\s*\))?/i.exec(columnDef)
-		const defNull = /DEFAULT\s+NULL\b/i.exec(columnDef)
+		const defStr = /DEFAULT\s+'((?:[^']|'')*)'/i.exec(defSansComment)
+		const defNum = /DEFAULT\s+(-?\d+(?:\.\d+)?)\b/i.exec(defSansComment)
+		const defFunc = /DEFAULT\s+([A-Z_][A-Z0-9_]*)\s*(?:\(\s*\))?/i.exec(defSansComment)
+		const defNull = /DEFAULT\s+NULL\b/i.exec(defSansComment)
 		if (defStr) defaultValue = `'${defStr[1].replace(/''/g, "'")}'`
 		else if (defNum) defaultValue = defNum[1]
 		else if (defNull) defaultValue = "NULL"
 		else if (defFunc) defaultValue = defFunc[1].toUpperCase()
-
-		// 인라인 COMMENT '...' — 후속 COMMENT ON COLUMN 문보다 우선한다.
-		const inlineCommentMatch = new RegExp(`\\bCOMMENT\\s+${SQL_STRING_LITERAL}`, "i").exec(columnDef)
-		const comment = inlineCommentMatch ? normalizeComment(unquoteSqlString(inlineCommentMatch[1])) : null
 
 		const column: Column = {
 			ccName,
@@ -178,14 +182,15 @@ export function parseDDLLegacy(ddl: string): ParsedDDLCore {
 		throw new Error("No valid columns found in DDL")
 	}
 
-	// 테이블 코멘트: `) COMMENT[=]'...'` 꼬리, 또는 후속 `COMMENT ON TABLE t IS '...'` 문장.
+	// 테이블 코멘트: `) COMMENT[=]'...'` 꼬리, 또는 후속 `COMMENT ON TABLE [schema.]t IS '...'` 문장.
+	// COMMENT ON COLUMN 은 `[schema.][table.]col` 접두를 허용하고 마지막 식별자만 컬럼명으로 본다.
 	let tableComment: string | null = null
 	const tailCommentMatch = new RegExp(`\\bCOMMENT\\s*=?\\s*${SQL_STRING_LITERAL}`, "i").exec(tableTail)
 	if (tailCommentMatch) tableComment = normalizeComment(unquoteSqlString(tailCommentMatch[1]))
 
-	const commentOnTable = new RegExp(`^COMMENT\\s+ON\\s+TABLE\\s+[\`"]?\\w+[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`, "i")
+	const commentOnTable = new RegExp(`^COMMENT\\s+ON\\s+TABLE\\s+(?:[\`"]?\\w+[\`"]?\\.)?[\`"]?\\w+[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`, "i")
 	const commentOnColumn = new RegExp(
-		`^COMMENT\\s+ON\\s+COLUMN\\s+(?:[\`"]?\\w+[\`"]?\\.)?[\`"]?(\\w+)[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`,
+		`^COMMENT\\s+ON\\s+COLUMN\\s+(?:[\`"]?\\w+[\`"]?\\.){0,2}[\`"]?(\\w+)[\`"]?\\s+IS\\s+${SQL_STRING_LITERAL}`,
 		"i",
 	)
 	for (const stmt of trailingStmts) {

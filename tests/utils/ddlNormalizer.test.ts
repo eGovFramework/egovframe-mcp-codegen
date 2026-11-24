@@ -239,3 +239,25 @@ describe("normalizeDdl — COMMENT 리터럴 보존", () => {
     expect(r.normalizedDdl).toMatch(/COMMENT 'Notice Title'/);
   });
 });
+
+describe("normalizeDdl — 코멘트 리터럴 안의 괄호와 SQL 주석", () => {
+  it("테이블 COMMENT 리터럴 안의 ')' 를 본문 끝으로 오인하지 않는다", () => {
+    const r = normalizeDdl(`CREATE TABLE T (ID NUMBER(10) PRIMARY KEY, NM VARCHAR2(50)) COMMENT='공지(사항)'`);
+    expect(r.normalizedDdl).toMatch(/\) COMMENT='공지\(사항\)'$/);
+    expect(r.normalizedDdl.split("\n").filter((l) => /^ {2}\S/.test(l))).toHaveLength(2);
+  });
+  it("COMMENT ON 문장 리터럴 안의 ')' 도 본문 끝으로 오인하지 않는다", () => {
+    const r = normalizeDdl(
+      `CREATE TABLE T (ID NUMBER(10) PRIMARY KEY, USE_YN CHAR(1));\nCOMMENT ON COLUMN T.USE_YN IS '사용여부(Y/N)';`,
+    );
+    expect(r.normalizedDdl).toMatch(/IS '사용여부\(Y\/N\)';$/);
+    expect(parseDDL(r.normalizedDdl).attributes.find((a) => a.columnName === "USE_YN")?.comment).toBe("사용여부(Y/N)");
+  });
+  it("-- 줄 주석 안의 아포스트로피가 뒤 컬럼을 삼키지 않는다 (회귀)", () => {
+    const r = normalizeDdl(`CREATE TABLE T (\n  A INT -- it's the id\n , B INT,\n PRIMARY KEY (A)\n)`);
+    const p = parseDDL(r.normalizedDdl);
+    expect(p.attributes.map((a) => a.columnName)).toEqual(["A", "B"]);
+    expect(p.pkAttributes.map((a) => a.columnName)).toEqual(["A"]);
+    expect(r.report.changes.some((c) => c.kind === "sql_comment")).toBe(true);
+  });
+});
