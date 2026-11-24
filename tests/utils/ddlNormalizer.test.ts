@@ -227,3 +227,15 @@ describe("formatNormalizationReport", () => {
     expect(out).toMatch(/표준 미준수 경고/);
   });
 });
+
+describe("normalizeDdl — COMMENT 리터럴 보존", () => {
+  it("COMMENT 리터럴 안의 콤마에서 줄을 쪼개지 않는다", () => {
+    const r = normalizeDdl(`CREATE TABLE T (A INT COMMENT '내용, 본문', B INT)`);
+    expect(r.normalizedDdl).toMatch(/COMMENT '내용, 본문'/);
+    expect(r.normalizedDdl.split("\n").filter((l) => /^\s*[AB] /.test(l))).toHaveLength(2);
+  });
+  it("COMMENT 리터럴의 영문 대소문자를 바꾸지 않는다", () => {
+    const r = normalizeDdl(`CREATE TABLE t (a INT COMMENT 'Notice Title')`);
+    expect(r.normalizedDdl).toMatch(/COMMENT 'Notice Title'/);
+  });
+});

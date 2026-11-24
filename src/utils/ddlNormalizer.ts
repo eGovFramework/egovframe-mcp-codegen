@@ -14,6 +14,8 @@
  *   표준 미준수는 `report.issues` 로만 보고한다.
  */
 
+import { splitTopLevel } from "./sqlText.js";
+
 const KNOWN_DATA_TYPES = new Set<string>([
   // dataTypes.ts 와 일치시킨다. 파서 사전을 직접 import 하지 않는 것은
   // 정규화가 파서보다 먼저 실행되기 때문 — 사전 변경 시 양쪽을 함께 갱신한다.
@@ -244,26 +246,12 @@ export function repairEscapeSequences(ddl: string): {
  * 괄호 안 콤마를 보호하면서 top-level 콤마로 split.
  * `VARCHAR(36)` 같은 타입 인자가 split 되지 않게 한다.
  */
+/**
+ * 본문을 최상위 콤마에서 나눈다. 괄호 안(`DECIMAL(10,2)`) 과 따옴표 안(`COMMENT 'x, y'`) 의
+ * 콤마는 구분자로 보지 않는다 — 구현은 `sqlText.splitTopLevel` 에 위임한다.
+ */
 function splitTopLevelCommas(body: string): string[] {
-  const out: string[] = [];
-  let depth = 0;
-  let buf = "";
-  for (const ch of body) {
-    if (ch === "(") {
-      depth++;
-      buf += ch;
-    } else if (ch === ")") {
-      depth--;
-      buf += ch;
-    } else if (ch === "," && depth === 0) {
-      out.push(buf);
-      buf = "";
-    } else {
-      buf += ch;
-    }
-  }
-  if (buf.trim().length > 0) out.push(buf);
-  return out;
+  return splitTopLevel(body, ",");
 }
 
 interface NormalizeOpts {
