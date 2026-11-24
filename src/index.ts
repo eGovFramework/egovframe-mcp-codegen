@@ -14,6 +14,7 @@
  * 2) src/tools/<name>.ts 의 정제된 zod 스키마 — refine/superRefine 으로 도메인 규칙 (WAR+5.0 금지 등) 재검증
  */
 
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { z } from "zod";
@@ -29,9 +30,12 @@ import {
   resolveAttachmentDecision,
 } from "./utils/scaffold/attachmentDecision.js";
 
+// 서버 이름과 버전은 package.json 한 곳에서만 관리한다 (build/index.js 기준 한 단계 위).
+const packageJson = createRequire(import.meta.url)("../package.json") as { name: string; version: string };
+
 const server = new McpServer({
-  name: "egovframe-mcp-codegen",
-  version: "1.0.0",
+  name: packageJson.name,
+  version: packageJson.version,
 });
 
 // ─── egov_scaffold_project ──────────────────────────────────────────────────

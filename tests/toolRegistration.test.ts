@@ -12,6 +12,7 @@
  */
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { existsSync } from "node:fs";
+import { createRequire } from "node:module";
 import { fileURLToPath } from "node:url";
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
@@ -60,6 +61,14 @@ describe("도구 등록 inputSchema ↔ 모듈 스키마 동기화", () => {
 
   afterAll(async () => {
     await client?.close();
+  });
+
+  // 서버 정보(name/version)는 package.json 한 곳에서만 관리한다 — 릴리스 때 버전을 두 군데 고치는 실수를 막는다.
+  it("initialize 응답의 serverInfo 가 package.json 의 name/version 과 일치한다", () => {
+    const pkg = createRequire(import.meta.url)("../package.json") as { name: string; version: string };
+    const info = client.getServerVersion();
+    expect(info?.name).toBe(pkg.name);
+    expect(info?.version).toBe(pkg.version);
   });
 
   it("4개 도구가 모두 노출된다", () => {
