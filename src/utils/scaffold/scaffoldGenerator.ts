@@ -12,7 +12,7 @@ import { emitSkillFiles, emitDocFiles } from "./skillsEmitter.js";
 import { assertInsideProject } from "./pathGuard.js";
 import { osJunkCopyFilter } from "../fsCopyFilter.js";
 import { validateRenderedFiles } from "./outputValidator.js";
-import { nonRetryable } from "./toolMessages.js";
+import { nonRetryable, retryAfterAction } from "./toolMessages.js";
 import { applyAttachmentContext } from "./attachmentContext.js";
 
 export interface ScaffoldParams {
@@ -406,6 +406,20 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
   }
   const templateBasePath = getScaffoldTemplatePath();
   const projectDir = path.join(params.outputPath, params.projectName);
+
+  // 기존 프로젝트 덮어쓰기 방지 — 같은 이름의 폴더가 있고 비어 있지 않으면 어떤 파일도 쓰지 않고 거부한다.
+  // (egov_add_entity 의 충돌 거부와 같은 보호. 사용자가 수정한 파일이 무경고로 사라지는 것을 막는다.)
+  if (await fs.pathExists(projectDir)) {
+    const entries = (await fs.readdir(projectDir)).filter((e) => e !== ".DS_Store");
+    if (entries.length > 0) {
+      throw retryAfterAction(
+        `outputPath 아래에 '${params.projectName}' 폴더가 이미 존재하고 비어 있지 않습니다 (${entries.length}개 항목). ` +
+          `기존 내용을 보호하기 위해 어떤 파일도 작성하지 않았습니다. ` +
+          `다른 projectName 을 지정하거나 기존 폴더를 비운(또는 옮긴) 뒤 다시 호출하세요. ` +
+          `기존 프로젝트에 기능을 추가하려면 egov_add_entity / egov_add_query_view / egov_add_attach_file_infrastructure 를 사용하세요.`,
+      );
+    }
+  }
 
   await fs.ensureDir(projectDir);
 

@@ -154,12 +154,14 @@ describe("egov_scaffold_project — withAttachment", () => {
     expect((err as Error).message.match(/\[조치 후 재시도 가능\]/g)).toHaveLength(1);
   });
 
-  it("설치 실패 시 복구 방법을 안내한다", async () => {
+  it("프로젝트 폴더에 기존 파일이 있으면 생성 전에 거부하고 기존 프로젝트용 도구를 안내한다", async () => {
+    // 예전에는 여기서 첨부 설정 파일 충돌로 '설치 실패 → 복구 안내' 경로를 검증했지만,
+    // 비어 있지 않은 폴더는 이제 scaffold 진입 시점에 거부되어 그 경로에 닿지 않는다.
     await fs.outputFile(attachConfigPath, "// different");
     await expect(egovScaffoldProject(boardArgs({ withAttachment: true }))).rejects.toThrow(
-      /^\[조치 후 재시도 가능\].*egov_add_attach_file_infrastructure/s,
+      /^\[조치 후 재시도 가능\].*이미 존재.*egov_add_attach_file_infrastructure/s,
     );
-    expect(await fs.pathExists(path.join(projectDir, "pom.xml"))).toBe(true);
-    expect(detectAttachFileInfra(projectDir).present).toBe(false);
+    expect(await fs.pathExists(path.join(projectDir, "pom.xml"))).toBe(false);
+    expect(await fs.readFile(attachConfigPath, "utf-8")).toBe("// different");
   });
 });
