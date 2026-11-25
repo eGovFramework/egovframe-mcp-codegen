@@ -35,7 +35,7 @@ let projectDir: string;
 let seedPath: string;
 let attachConfigPath: string;
 
-async function scaffold(stackVersion: "5.0" | "4.3"): Promise<string> {
+async function scaffold(stackVersion: "5.1" | "4.3"): Promise<string> {
   await generateScaffoldProject({
     projectName: "board-app",
     packageName: "egovframework.example.board",
@@ -67,7 +67,7 @@ async function removeInfraFiles(dir: string): Promise<void> {
 beforeEach(async () => {
   vi.spyOn(console, "error").mockImplementation(() => {});
   tmpRoot = await fs.mkdtemp(path.join(os.tmpdir(), "egov-auto-infra-"));
-  projectDir = await scaffold("5.0");
+  projectDir = await scaffold("5.1");
   seedPath = path.join(projectDir, "src/main/resources/db/boarddb.sql");
   attachConfigPath = path.join(
     projectDir,

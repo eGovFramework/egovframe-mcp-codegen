@@ -15,7 +15,7 @@
  *
  * 현재 한계
  * ------------
- * - **Boot(5.0, 4.3) 만 지원.** WAR 은 다음 페이즈.
+ * - **Boot(5.1, 4.3) 만 지원.** WAR 은 다음 페이즈.
  * - 매니페스트 mode `append-fallback` 은 본 도구에서는 사용 안 함 (운영 DB DDL 은 `create` 로
  *   `db/migrations/<dialect>/` 에 fan-out). HSQL 임베디드 시드 머지는 매니페스트 외부에서
  *   `decideMigrationStrategy` + `planHsqlSeedMerge` 로 별도 처리 — 시드 파일명이 프로젝트마다
@@ -66,7 +66,7 @@ export async function egovAddAttachFileInfrastructure(rawParams: unknown): Promi
     await withWriteRollback(projectDir, journal, () => applyAttachFileInfra(plan, journal));
 
   // 9) 결과 메시지
-  const egovLabel = detected.stackVersion === "5.0" ? "eGovFrame 5.0" : "eGovFrame 4.3";
+  const egovLabel = detected.stackVersion === "5.1" ? "eGovFrame 5.1" : "eGovFrame 4.3";
   const kindLabel = detected.projectType === "war" ? "WAR" : "Spring Boot";
   // 모든 항목이 기존 내용과 같아 건너뛴 경우 — 이미 설치된 프로젝트에 다시 호출한 경우다.
   const changed =

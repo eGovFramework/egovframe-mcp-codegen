@@ -228,7 +228,7 @@ export function detectProjectStack(projectPath: string): DetectedStack {
 
   const hasWarPackaging = /<packaging>\s*war\s*<\/packaging>/i.test(pom);
   if (hasWarPackaging) {
-    // WAR + 5.0 조합은 매트릭스에 존재하지 않는다 (egov_scaffold_project 도 거부).
+    // WAR + 5.1 조합은 매트릭스에 존재하지 않는다 (egov_scaffold_project 도 거부).
     return {
       projectType: "war",
       stackVersion: "4.3",
@@ -246,9 +246,9 @@ export function detectProjectStack(projectPath: string): DetectedStack {
   if (parentArtifactId === "egovframe-boot-starter-parent") {
     return {
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
       reason:
-        "parent.artifactId=egovframe-boot-starter-parent → eGovFrame 5.0 Boot",
+        "parent.artifactId=egovframe-boot-starter-parent → eGovFrame 5.1 Boot",
     };
   }
 
@@ -282,7 +282,7 @@ export function detectProjectStack(projectPath: string): DetectedStack {
   throw new Error(
     "pom.xml 에서 eGovFrame 스택을 감지하지 못했습니다. 감지 가능한 마커:\n" +
       "  - <packaging>war</packaging>                                           → eGovFrame 4.3 WAR\n" +
-      "  - parent.artifactId=egovframe-boot-starter-parent                       → eGovFrame 5.0 Boot\n" +
+      "  - parent.artifactId=egovframe-boot-starter-parent                       → eGovFrame 5.1 Boot\n" +
       "  - parent.artifactId=org.egovframe.boot.starter.parent                   → eGovFrame 4.3 Boot\n" +
       "  - parent.artifactId=spring-boot-starter-parent + org.egovframe.rte      → eGovFrame 4.3 Boot (공식 부모 전환 전 scaffold)\n\n" +
       "이 프로젝트는 표준 eGovFrame scaffold 구조가 아닌 것으로 보입니다. egov_add_entity 는 " +

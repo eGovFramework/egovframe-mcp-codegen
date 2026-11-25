@@ -6,7 +6,6 @@ import * as path from "node:path";
 import {
   ATTACHMENT_ELICIT_TIMEOUT_MS,
   describeAddEntityAttachmentPrompt,
-  describeScaffoldAttachmentPrompt,
   resolveAttachmentDecision,
 } from "../../src/utils/scaffold/attachmentDecision.js";
 import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
@@ -96,29 +95,11 @@ describe("resolveAttachmentDecision — signal", () => {
   });
 });
 
-describe("describeScaffoldAttachmentPrompt", () => {
-  it("기본값(5.0 Boot)은 지원, 문구는 설계 문서와 같다", () => {
-    expect(describeScaffoldAttachmentPrompt({})).toEqual({
-      supported: true,
-      message: "이 프로젝트에 표준 첨부파일 기능을 포함할까요?",
-    });
-  });
-  it.each([
-    [{ projectType: "war" as const }],
-    [{ projectType: "war" as const, stackVersion: "4.3" as const }],
-  ])("WAR 조합은 미지원: %j", (a) => {
-    expect(describeScaffoldAttachmentPrompt(a).supported).toBe(false);
-  });
-  it("4.3 Boot 는 지원", () => {
-    expect(describeScaffoldAttachmentPrompt({ stackVersion: "4.3" }).supported).toBe(true);
-  });
-});
-
 describe("describeAddEntityAttachmentPrompt", () => {
   let tmpRoot: string;
   const DDL = `CREATE TABLE BOARD (\n  ID VARCHAR(16) NOT NULL PRIMARY KEY,\n  TITLE VARCHAR(200)\n)`;
 
-  async function scaffold(stackVersion: "5.0" | "4.3") {
+  async function scaffold(stackVersion: "5.1" | "4.3") {
     await generateScaffoldProject({
       projectName: "board-app",
       packageName: "egovframework.example.board",
@@ -139,8 +120,8 @@ describe("describeAddEntityAttachmentPrompt", () => {
     await fs.remove(tmpRoot);
   });
 
-  it("5.0 Boot 인프라 없음: 함께 설치 문구", async () => {
-    const dir = await scaffold("5.0");
+  it("5.1 Boot 인프라 없음: 함께 설치 문구", async () => {
+    const dir = await scaffold("5.1");
     expect(describeAddEntityAttachmentPrompt(dir, "Article")).toEqual({
       supported: true,
       message:
@@ -148,8 +129,8 @@ describe("describeAddEntityAttachmentPrompt", () => {
     });
   });
 
-  it("5.0 Boot 인프라 있음: 기본 문구", async () => {
-    const dir = await scaffold("5.0");
+  it("5.1 Boot 인프라 있음: 기본 문구", async () => {
+    const dir = await scaffold("5.1");
     await egovAddAttachFileInfrastructure({ projectPath: dir });
     expect(describeAddEntityAttachmentPrompt(dir, "Article")).toEqual({
       supported: true,

@@ -88,7 +88,7 @@ public class Egov{{entityName}}Controller {
 
 	/**
 	 * 메뉴(nav fragment) 진입용 목록 주소. nav 의 링크와 활성 메뉴 판별이 이 주소를 기준으로 한다.
-	 * Boot 5.0 · WAR · query view 와 같은 `/egov{Entity}List.do` 규칙을 따른다.
+	 * Boot 5.1 · WAR · query view 와 같은 `/egov{Entity}List.do` 규칙을 따른다.
 	 */
 	@GetMapping("/egov{{entityName}}List.do")
 	public String listByMenu(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO, Model model) throws Exception {

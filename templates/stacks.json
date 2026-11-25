@@ -4,7 +4,7 @@
   "stacks": {
     "boot50": {
       "projectType": "boot",
-      "stackVersion": "5.0",
+      "stackVersion": "5.1",
       "egovframe": "5.1.0",
       "springBoot": "3.5.16",
       "spring": null,
@@ -110,7 +110,7 @@
     }
   },
   "selection": [
-    { "projectType": "boot", "stackVersion": "5.0", "stack": "boot50" },
+    { "projectType": "boot", "stackVersion": "5.1", "stack": "boot50" },
     { "projectType": "boot", "stackVersion": "4.3", "stack": "boot43" },
     { "projectType": "war", "stackVersion": "4.3", "stack": "war43" }
   ]

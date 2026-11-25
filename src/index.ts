@@ -11,7 +11,7 @@
  *
  * 각 도구의 입력은 두 단계로 검증됩니다:
  * 1) 여기 정의된 raw zod shape — MCP SDK 가 tools/list 의 JSON Schema 생성과 호출 시 1차 검증에 사용
- * 2) src/tools/<name>.ts 의 정제된 zod 스키마 — refine/superRefine 으로 도메인 규칙 (WAR+5.0 금지 등) 재검증
+ * 2) src/tools/<name>.ts 의 정제된 zod 스키마 — refine/superRefine 으로 도메인 규칙 (WAR+5.1 금지 등) 재검증
  */
 
 import { createRequire } from "node:module";
@@ -23,10 +23,14 @@ import { egovAddEntity, AddEntityInputSchema } from "./tools/egovAddEntity.js";
 import { egovAddQueryView } from "./tools/egovAddQueryView.js";
 import { egovAddAttachFileInfrastructure } from "./tools/egovAddAttachFileInfrastructure.js";
 import {
+  resolveScaffoldDecision,
+  scaffoldCancelledMessage,
+  scaffoldDecisionRequiredError,
+} from "./utils/scaffold/scaffoldDecision.js";
+import {
   attachmentCancelledMessage,
   attachmentDecisionRequiredError,
   describeAddEntityAttachmentPrompt,
-  describeScaffoldAttachmentPrompt,
   resolveAttachmentDecision,
 } from "./utils/scaffold/attachmentDecision.js";
 
@@ -44,7 +48,7 @@ server.registerTool(
   {
     title: "Scaffold eGovFrame Project",
     description:
-      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. 기본은 eGovFrame 5.0 Boot(Jakarta+Thymeleaf Spring6+KRDS). stackVersion='4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용. CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. 5.0 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. withAttachment 를 생략하면 Boot(5.0, 4.3)에서 서버가 사용자에게 첨부파일 포함 여부를 직접 묻고(Elicitation), 지원하지 않는 클라이언트면 사용자에게 물은 뒤 true/false 로 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다.",
+      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. stackVersion='5.1'이면 eGovFrame 5.1 Boot(Jakarta+Thymeleaf Spring6+KRDS), '4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용(4.3 전용). CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. 5.1 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. Boot 에서 stackVersion 또는 withAttachment 를 생략하면 서버가 사용자에게 직접 묻습니다(Elicitation, 둘 다 생략하면 질문 하나로 함께 묻음). 지원하지 않는 클라이언트면 사용자에게 물은 뒤 해당 인자를 지정해 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다.",
     inputSchema: {
       projectName: z
         .string()
@@ -70,10 +74,10 @@ server.registerTool(
           "Project type. 'boot' (default) = Spring Boot JAR, 'war' = traditional WAR + JSP + Tomcat",
         ),
       stackVersion: z
-        .enum(["4.3", "5.0"])
+        .enum(["4.3", "5.1"])
         .optional()
         .describe(
-          "eGovFrame stack version. '5.0' (default) for Boot only. WAR + '5.0' is rejected (WAR only supports '4.3').",
+          "eGovFrame 스택 버전. '5.1' = Spring Boot 3 / Java 17 / Jakarta, '4.3' = Spring Boot 2.7 / Java 8 / javax. 사용자가 요청에서 버전을 밝히지 않았다면 이 인자를 생략하세요 — 임의로 채우면 안 됩니다. 생략하면 Boot 에서는 서버가 사용자에게 직접 확인하고, WAR 는 4.3 으로 확정합니다. WAR + '5.1' 은 거부됩니다 (WAR 는 '4.3' 만 지원). 구 명칭 '5.0' 은 더 이상 받지 않으므로 '5.1' 을 사용하세요.",
         ),
       normalizeDdl: z
         .boolean()
@@ -85,7 +89,7 @@ server.registerTool(
         .boolean()
         .optional()
         .describe(
-          "첫 엔티티를 첨부파일(atchFileId) 연결 형태로 생성하고 첨부파일 인프라(EgovFileMngService, EgovConfigAttachFile, COMTNFILE 계열 테이블 등)를 프로젝트 생성 직후 함께 설치할지 여부. 사용자가 요청에서 첨부파일 포함 여부를 밝히지 않았다면 이 인자를 생략하세요 — 임의로 false 를 넣으면 안 됩니다. 생략하면 서버가 사용자에게 직접 확인합니다. true 이면 인프라를 자동으로 설치합니다. eGovFrame Boot(5.0, 4.3)에서만 지원하며 WAR 에 true 를 주면 거부됩니다. 인프라 설치가 실패하면 프로젝트는 남고 egov_add_attach_file_infrastructure 로 복구할 수 있습니다.",
+          "첫 엔티티를 첨부파일(atchFileId) 연결 형태로 생성하고 첨부파일 인프라(EgovFileMngService, EgovConfigAttachFile, COMTNFILE 계열 테이블 등)를 프로젝트 생성 직후 함께 설치할지 여부. 사용자가 요청에서 첨부파일 포함 여부를 밝히지 않았다면 이 인자를 생략하세요 — 임의로 false 를 넣으면 안 됩니다. 생략하면 서버가 사용자에게 직접 확인합니다. true 이면 인프라를 자동으로 설치합니다. eGovFrame Boot(5.1, 4.3)에서만 지원하며 WAR 에 true 를 주면 거부됩니다. 인프라 설치가 실패하면 프로젝트는 남고 egov_add_attach_file_infrastructure 로 복구할 수 있습니다.",
         ),
     },
   },
@@ -96,19 +100,23 @@ server.registerTool(
       if (!valid.success) {
         return { content: [{ type: "text", text: await egovScaffoldProject(args) }] };
       }
-      const prompt = describeScaffoldAttachmentPrompt(valid.data);
-      const decision = await resolveAttachmentDecision({
+      // 생략된 stackVersion / withAttachment 는 form 하나로 사용자에게 함께 묻는다 (WAR 는 질문 없이 확정).
+      const decision = await resolveScaffoldDecision({
         server: server.server,
-        provided: args.withAttachment,
-        supported: prompt.supported,
-        message: prompt.message,
+        projectType: valid.data.projectType,
+        stackVersion: args.stackVersion,
+        withAttachment: args.withAttachment,
         signal: extra.signal,
       });
-      if (decision.kind === "needsUserDecision") throw attachmentDecisionRequiredError();
+      if (decision.kind === "needsUserDecision") throw scaffoldDecisionRequiredError(decision.missing);
       if (decision.kind === "cancelled") {
-        return { content: [{ type: "text", text: attachmentCancelledMessage() }] };
+        return { content: [{ type: "text", text: scaffoldCancelledMessage() }] };
       }
-      const result = await egovScaffoldProject({ ...args, withAttachment: decision.value });
+      const result = await egovScaffoldProject({
+        ...args,
+        stackVersion: decision.stackVersion,
+        withAttachment: decision.withAttachment,
+      });
       return { content: [{ type: "text", text: result }] };
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
@@ -127,7 +135,7 @@ server.registerTool(
   {
     title: "Add Entity to eGovFrame Project",
     description:
-      "이미 생성된 eGovFrame 프로젝트에 새 엔티티의 CRUD 코드(Controller/Service/ServiceImpl/Mapper.java/Mapper.xml/VO/View)를 DDL 한 줄로 추가합니다. projectType(boot/war) 과 stackVersion(4.3/5.0) 은 기존 pom.xml 에서 자동 감지하므로 지정할 필요가 없습니다. 표준 eGovFrame scaffold 구조가 아니면 명확한 에러로 거부합니다. 생성될 파일 중 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다 (덮어쓰기 옵션 없음). pom.xml/application.properties/sql-mapper-config.xml 같은 프로젝트 공용 설정은 건드리지 않습니다. 단 withAttachment=true 이고 첨부파일 인프라(EgovFileMngService/EgovConfigAttachFile)가 없으면 기본 옵션으로 인프라를 함께 설치하므로 이 경우에 한해 공용 설정(application.properties, 메시지 번들, 시드 SQL 등)도 수정됩니다 (Boot 만 지원: 5.0, 4.3). withAttachment 를 생략했을 때 클라이언트가 Elicitation 을 지원하면 서버가 사용자에게 직접 묻고, 지원하지 않으면 사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 다시 호출하라는 오류를 반환합니다.",
+      "이미 생성된 eGovFrame 프로젝트에 새 엔티티의 CRUD 코드(Controller/Service/ServiceImpl/Mapper.java/Mapper.xml/VO/View)를 DDL 한 줄로 추가합니다. projectType(boot/war) 과 stackVersion(4.3/5.1) 은 기존 pom.xml 에서 자동 감지하므로 지정할 필요가 없습니다. 표준 eGovFrame scaffold 구조가 아니면 명확한 에러로 거부합니다. 생성될 파일 중 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다 (덮어쓰기 옵션 없음). pom.xml/application.properties/sql-mapper-config.xml 같은 프로젝트 공용 설정은 건드리지 않습니다. 단 withAttachment=true 이고 첨부파일 인프라(EgovFileMngService/EgovConfigAttachFile)가 없으면 기본 옵션으로 인프라를 함께 설치하므로 이 경우에 한해 공용 설정(application.properties, 메시지 번들, 시드 SQL 등)도 수정됩니다 (Boot 만 지원: 5.1, 4.3). withAttachment 를 생략했을 때 클라이언트가 Elicitation 을 지원하면 서버가 사용자에게 직접 묻고, 지원하지 않으면 사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 다시 호출하라는 오류를 반환합니다.",
     inputSchema: {
       projectPath: z
         .string()
@@ -229,11 +237,11 @@ server.registerTool(
   {
     title: "Add Read-only Query View",
     description:
-      "이미 생성된 eGovFrame 프로젝트(5.0 Boot, 4.3 Boot, 4.3 WAR)에 다중 테이블 JOIN/컬럼 프로젝션 기반 read-only 조회 화면 (리포트성 View) 을 추가합니다. 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 List 화면 + 페이징 + 검색만 갖춥니다. 사용자가 작성한 SELECT SQL 본문을 그대로 사용하면서, 컬럼 메타(alias/label/type/format) 를 별도로 받아 화면 렌더링에 적용합니다. SQL 은 derived table 로 wrapping 되어 페이징/검색이 외부에서 안전하게 적용됩니다. projectType/stackVersion 은 pom.xml 에서 자동 감지하며, 5.0 Boot 와 4.3 Boot 는 Thymeleaf 화면, 4.3 WAR 는 JSP 화면을 생성합니다.",
+      "이미 생성된 eGovFrame 프로젝트(5.1 Boot, 4.3 Boot, 4.3 WAR)에 다중 테이블 JOIN/컬럼 프로젝션 기반 read-only 조회 화면 (리포트성 View) 을 추가합니다. 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 List 화면 + 페이징 + 검색만 갖춥니다. 사용자가 작성한 SELECT SQL 본문을 그대로 사용하면서, 컬럼 메타(alias/label/type/format) 를 별도로 받아 화면 렌더링에 적용합니다. SQL 은 derived table 로 wrapping 되어 페이징/검색이 외부에서 안전하게 적용됩니다. projectType/stackVersion 은 pom.xml 에서 자동 감지하며, 5.1 Boot 와 4.3 Boot 는 Thymeleaf 화면, 4.3 WAR 는 JSP 화면을 생성합니다.",
     inputSchema: {
       projectPath: z
         .string()
-        .describe("기존 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR) 루트 경로"),
+        .describe("기존 eGovFrame 프로젝트(5.1 Boot / 4.3 Boot / 4.3 WAR) 루트 경로"),
       packageName: z
         .string()
         .describe(
@@ -320,12 +328,12 @@ server.registerTool(
   {
     title: "Install Standard Attach-File Infrastructure",
     description:
-      "이미 생성된 eGovFrame Boot(5.0, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다. 구성: COMTNFILE/COMTNFILEDETAIL 두 테이블 + 시퀀스 관리 테이블(COMTECOPSEQ) + EgovFileMngService/Impl, FileVO, EgovFileMngUtil, FileManageMapper, EgovFileDownloadController, EgovConfigAttachFile Bean. atchFileId 채번은 EgovTableIdGnrServiceImpl(prefix='FILE_', cipers=15) — 정확히 CHAR(20) PK 와 길이 일치. projectType/stackVersion 은 pom.xml 에서 자동 감지. Boot(5.0, 4.3)만 지원하며 WAR 은 지원하지 않습니다. 충돌 시 거부 (force/overwrite 옵션 없음). skipIfPresent=true(기본) 면 모든 출력이 내용까지 동일하게 이미 존재할 때 no-op + 성공. 새 프로젝트나 새 엔티티에 첨부파일을 넣는 요청은 egov_scaffold_project / egov_add_entity 의 withAttachment 를 사용하세요 (인프라도 함께 설치됨). 본 도구는 인프라만 단독으로 설치하거나 파일 저장 경로·용량·확장자 정책 등 기본값이 아닌 설정이 필요할 때 사용합니다.",
+      "이미 생성된 eGovFrame Boot(5.1, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다. 구성: COMTNFILE/COMTNFILEDETAIL 두 테이블 + 시퀀스 관리 테이블(COMTECOPSEQ) + EgovFileMngService/Impl, FileVO, EgovFileMngUtil, FileManageMapper, EgovFileDownloadController, EgovConfigAttachFile Bean. atchFileId 채번은 EgovTableIdGnrServiceImpl(prefix='FILE_', cipers=15) — 정확히 CHAR(20) PK 와 길이 일치. projectType/stackVersion 은 pom.xml 에서 자동 감지. Boot(5.1, 4.3)만 지원하며 WAR 은 지원하지 않습니다. 충돌 시 거부 (force/overwrite 옵션 없음). skipIfPresent=true(기본) 면 모든 출력이 내용까지 동일하게 이미 존재할 때 no-op + 성공. 새 프로젝트나 새 엔티티에 첨부파일을 넣는 요청은 egov_scaffold_project / egov_add_entity 의 withAttachment 를 사용하세요 (인프라도 함께 설치됨). 본 도구는 인프라만 단독으로 설치하거나 파일 저장 경로·용량·확장자 정책 등 기본값이 아닌 설정이 필요할 때 사용합니다.",
     inputSchema: {
       projectPath: z
         .string()
         .describe(
-          "기존 eGovFrame Boot(5.0, 4.3) 프로젝트 루트 경로 (pom.xml 이 있어야 함)",
+          "기존 eGovFrame Boot(5.1, 4.3) 프로젝트 루트 경로 (pom.xml 이 있어야 함)",
         ),
       fileStorePath: z
         .string()

@@ -32,7 +32,7 @@ let tmpRoot: string;
 
 async function scaffold(opts: {
   projectType: "boot" | "war";
-  stackVersion: "4.3" | "5.0";
+  stackVersion: "4.3" | "5.1";
   entityName: string;
   ddl: string;
   projectName: string;
@@ -80,7 +80,7 @@ describe("코멘트 라벨 — boot50 scaffold", () => {
   let b: Awaited<ReturnType<typeof readBundles>>;
   beforeAll(async () => {
     b = await readBundles(
-      await scaffold({ projectType: "boot", stackVersion: "5.0", entityName: "Notice", ddl: NOTICE_DDL, projectName: "n-boot50" }),
+      await scaffold({ projectType: "boot", stackVersion: "5.1", entityName: "Notice", ddl: NOTICE_DDL, projectName: "n-boot50" }),
     );
   });
 
@@ -141,7 +141,7 @@ describe("코멘트 라벨 — egov_add_entity (boot50 프로젝트에 NOTICE �
   let b: Awaited<ReturnType<typeof readBundles>>;
   let out: string;
   beforeAll(async () => {
-    const projectDir = await scaffold({ projectType: "boot", stackVersion: "5.0", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-add" });
+    const projectDir = await scaffold({ projectType: "boot", stackVersion: "5.1", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-add" });
     out = await egovAddEntity({
       projectPath: projectDir,
       packageName: "egovframework.example.notice",
@@ -176,7 +176,7 @@ describe("코멘트 라벨 — egov_add_entity (boot50 프로젝트에 NOTICE �
 
 describe("코멘트 라벨 — 테이블 코멘트가 규칙에 걸린 경우 (egov_add_entity)", () => {
   it("결과 메시지에 테이블 코멘트 폴백 사유를 안내하고 메뉴명은 엔티티명을 쓴다", async () => {
-    const projectDir = await scaffold({ projectType: "boot", stackVersion: "5.0", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-tbl-fallback" });
+    const projectDir = await scaffold({ projectType: "boot", stackVersion: "5.1", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-tbl-fallback" });
     const out = await egovAddEntity({
       projectPath: projectDir,
       packageName: "egovframework.example.faq",
@@ -193,7 +193,7 @@ describe("코멘트 라벨 — 테이블 코멘트가 규칙에 걸린 경우 (e
 describe("코멘트 없는 DDL 은 현행과 동일", () => {
   it("boot50", async () => {
     const b = await readBundles(
-      await scaffold({ projectType: "boot", stackVersion: "5.0", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-boot50" }),
+      await scaffold({ projectType: "boot", stackVersion: "5.1", entityName: "Member", ddl: PLAIN_DDL, projectName: "m-boot50" }),
     );
     expectLine(b.def, "list.member", "List Member");
     expectLine(b.def, "title.member.sample", `Member ${U("목록")}`);

@@ -12,7 +12,7 @@
  * - **외부 경로 오버라이드**: `EGOVFRAME_SCAFFOLD_TEMPLATE_PATH` 또는
  *   `EGOVFRAME_STACK_MATRIX_PATH` 로 매트릭스 위치를 바꿀 수 있다. 조직별
  *   커스텀 스택을 검증할 때 유용하다.
- * - **모순 조합 차단**: `egov_scaffold_project` 의 Zod 스키마가 WAR + 5.0 을 이미
+ * - **모순 조합 차단**: `egov_scaffold_project` 의 Zod 스키마가 WAR + 5.1 을 이미
  *   차단하지만, 매트릭스에도 명시적으로 등재되지 않은 조합은 여기서 다시 막는다.
  *
  * 매트릭스 키 형식은 `templates/stacks.json` 의 `$comment` 를 참고할 것.
@@ -23,7 +23,7 @@ import * as path from "path";
 import { fileURLToPath } from "url";
 
 export type ProjectType = "boot" | "war";
-export type StackVersion = "4.3" | "5.0";
+export type StackVersion = "4.3" | "5.1";
 
 export interface StackEntry {
   projectType: ProjectType;
@@ -38,7 +38,7 @@ export interface StackEntry {
   java: string;
   /** Jakarta EE 이주 여부 (true=jakarta.*, false=javax.*) */
   jakarta: boolean;
-  /** egovframe-rte 의존성 버전. Boot 5.0 처럼 starter-parent 가 대체하면 null. */
+  /** egovframe-rte 의존성 버전. Boot 5.1 처럼 starter-parent 가 대체하면 null. */
   rteVersion: string | null;
   /** pom.xml `<parent>` 의 groupId. 없는 스택은 null. */
   starterParentGroupId: string | null;

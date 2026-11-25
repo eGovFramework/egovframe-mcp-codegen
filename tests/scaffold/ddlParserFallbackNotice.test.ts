@@ -83,7 +83,7 @@ describe("egov_add_entity — DDL 파서 폴백 안내", () => {
       ddl: STANDARD_DDL,
       description: "",
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
     });
     projectDir = path.join(tmpRoot, "board-app");
   });

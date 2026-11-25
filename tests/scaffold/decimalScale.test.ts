@@ -69,7 +69,7 @@ describe("생성된 DDL 의 scale", () => {
   });
 
   it.each([
-    ["boot", "5.0"],
+    ["boot", "5.1"],
     ["boot", "4.3"],
     ["war", "4.3"],
   ] as const)("%s %s 스캐폴드의 시드와 마이그레이션에 scale 이 남는다", async (projectType, stackVersion) => {
@@ -98,7 +98,7 @@ describe("생성된 DDL 의 scale", () => {
       ddl: "CREATE TABLE DEPARTMENT (ID VARCHAR(20) NOT NULL PRIMARY KEY, NAME VARCHAR(100))",
       description: "",
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
     });
     await egovAddEntity({
       projectPath: projectDir,

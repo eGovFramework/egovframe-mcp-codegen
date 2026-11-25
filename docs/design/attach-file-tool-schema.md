@@ -59,7 +59,7 @@ export const AddAttachFileInfrastructureInputSchema = z.object({
 ```
 
 **Auto-detect** (입력 X — `egov_add_entity` 와 동일하게 pom.xml 에서 추출):
-- `stackVersion`: `"5.0"` | `"4.3"`
+- `stackVersion`: `"5.1"` | `"4.3"`
 - `projectType`: `"boot"` | `"war"`
 - `basePackage`: e.g. `egovframework.example`
 
@@ -72,7 +72,7 @@ export const AddAttachFileInfrastructureInputSchema = z.object({
 - `mode: append-fallback` = `autoApplyMigration: false` 또는 안전조건 불충족 시 별도 파일 fallback
 - `expandDialects: true` = 8개 RDBMS(mysql/mariadb/oracle/tibero/postgres/cubrid/altibase/goldilocks) 각각
 
-**boot (eGovFrame 5.0 / 4.3 Boot 공용) 출력**
+**boot (eGovFrame 5.1 / 4.3 Boot 공용) 출력**
 
 | # | template | output (relative to projectPath) | mode |
 |---|---|---|---|
@@ -88,7 +88,7 @@ export const AddAttachFileInfrastructureInputSchema = z.object({
 | 10 | `attach-file/boot/properties/attach-file.properties.hbs` | `src/main/resources/application.properties` (append: `Globals.fileStorePath=…`) | append-idempotent |
 | 11 | `attach-file/boot/properties/attach-file-globals.properties.hbs` | `src/main/resources/egovframework/egovProps/globals.properties` (append) | append-idempotent |
 
-- 5.0 과 4.3 은 `attach-file/boot/` 템플릿과 `manifests/boot.json` 을 공유한다. `javax.*` / `jakarta.*` import, `@Mapper` / `@EgovMapper` 등의 차이는 렌더 컨텍스트(`eeNamespace`, `useEgovMapper`)로 분기한다.
+- 5.1 과 4.3 은 `attach-file/boot/` 템플릿과 `manifests/boot.json` 을 공유한다. `javax.*` / `jakarta.*` import, `@Mapper` / `@EgovMapper` 등의 차이는 렌더 컨텍스트(`eeNamespace`, `useEgovMapper`)로 분기한다.
 
 **war43 (전통 WAR + JSP) 출력**
 
@@ -155,7 +155,7 @@ public class EgovConfigAttachFile {
 `throw new Error("...")` 로 던지되 다음 7가지 케이스만 다루면 충분:
 
 1. **프로젝트 미식별** — `projectPath` 에 `pom.xml` 이 없거나 egovframe RTE 의존이 없음.
-2. **stack 자동감지 실패** — pom.xml 에서 5.0 / 4.3 / war 어느 것도 매칭 안 됨.
+2. **stack 자동감지 실패** — pom.xml 에서 5.1 / 4.3 / war 어느 것도 매칭 안 됨.
 3. **충돌 파일** — create 모드 파일 중 하나라도 다른 내용으로 존재. 충돌 목록 포함.
 4. **충돌 속성** — `Globals.fileStorePath` 가 다른 값으로 이미 정의됨. 기존 값 vs 요청 값 표시.
 5. **충돌 시드** — 기존 시드에 `COMTNFILE` 이 다른 스키마로 정의됨.
@@ -167,7 +167,7 @@ public class EgovConfigAttachFile {
 ```jsonc
 {
   "status": "ok",
-  "stackVersion": "5.0",
+  "stackVersion": "5.1",
   "projectType": "boot",
   "basePackage": "egovframework.example",
   "filesCreated":    ["src/main/java/.../cmm/service/EgovFileMngService.java", "…"],
@@ -205,9 +205,9 @@ templates/
 ├── boot/  boot50/  static/  static50/  ...    # 기존
 └── attach-file/                        # ★ 신규
     ├── manifests/
-    │   ├── boot.json                   # 5.0 / 4.3 Boot 공용 (위 1.2 표의 boot 행)
+    │   ├── boot.json                   # 5.1 / 4.3 Boot 공용 (위 1.2 표의 boot 행)
     │   └── war43.json                  # (미구현 — WAR 지원 시 추가)
-    ├── boot/                           # 5.0 / 4.3 Boot 공용 — javax/jakarta, @Mapper/@EgovMapper 차이는 렌더 컨텍스트로 분기
+    ├── boot/                           # 5.1 / 4.3 Boot 공용 — javax/jakarta, @Mapper/@EgovMapper 차이는 렌더 컨텍스트로 분기
     │   ├── java/
     │   │   ├── EgovFileMngService.hbs
     │   │   ├── EgovFileMngServiceImpl.hbs
@@ -240,7 +240,7 @@ type AttachFileTemplateContext = {
   // 기존 ScaffoldContext 와 호환되는 부분
   basePackage: string;          // "egovframework.example"
   basePackagePath: string;      // "egovframework/example"
-  stackVersion: "5.0" | "4.3";
+  stackVersion: "5.1" | "4.3";
   projectType: "boot" | "war";
 
   // 인프라 도구 고유
@@ -292,7 +292,7 @@ export const AddEntityInputSchema = z.object({
   /**
    * true 면 생성되는 엔티티가 eGov 표준 첨부파일(atchFileId) 와이어드 형태로 emit 된다.
    * 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로 자동 설치한다
-   * (엔티티 사전 검사 통과 후, 엔티티 파일과 하나의 롤백 저널로 기록). Boot(5.0, 4.3) 만 지원 — WAR 은 거부.
+   * (엔티티 사전 검사 통과 후, 엔티티 파일과 하나의 롤백 저널로 기록). Boot(5.1, 4.3) 만 지원 — WAR 은 거부.
    * 세부 옵션이 필요하면 먼저 `egov_add_attach_file_infrastructure` 를 호출한다.
    * 생략 시: Elicitation 지원 클라이언트는 서버가 사용자에게 직접 묻고, 미지원이면 파일을 만들지 않고
    * "사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 재호출" 오류를 반환한다.
@@ -331,11 +331,11 @@ export const AddEntityInputSchema = z.object({
 
 ### 3.3 새 에러 / 거부 케이스
 
-- **인프라 미설치** — 더 이상 거부하지 않는다. `withAttachment: true` 면 기본 옵션으로 자동 설치한다 (Boot 5.0, 4.3 한정, WAR 은 거부).
+- **인프라 미설치** — 더 이상 거부하지 않는다. `withAttachment: true` 면 기본 옵션으로 자동 설치한다 (Boot 5.1, 4.3 한정, WAR 은 거부).
 - **withAttachment 미지정** — Elicitation 미지원 클라이언트에서는 오류(`isError`)로 사용자 확인을 요청하고 아무 파일도 만들지 않는다. 사용자가 취소하면 오류 없이 "생성하지 않았다"는 안내만 반환한다.
 - **DDL 첨부 필드 타입 충돌** — 사용자 DDL 에 `ATCH_FILE_ID` 가 있지만 타입이 `CHAR(20)` 이 아니거나 NOT NULL/길이가 다름.
 - **필드명 충돌** — `attachmentFieldName` 이 DDL 의 다른 컬럼명과 겹침.
-- **WAR + 5.0 미지원** — `egov_scaffold_project` 정책상 5.0 은 boot 전용. `egov_add_query_view` 와 동일. (`withAttachment` 는 5.0 / 4.3 Boot 에서 지원하고 WAR 은 거부한다.)
+- **WAR + 5.1 미지원** — `egov_scaffold_project` 정책상 5.1 은 boot 전용. `egov_add_query_view` 와 동일. (`withAttachment` 는 5.1 / 4.3 Boot 에서 지원하고 WAR 은 거부한다.)
 
 ### 3.4 인프라 존재 자동 감지 로직
 
@@ -378,12 +378,12 @@ skill (`egovframe-attach-file-pattern.md`) 의 7개 invariants 가 도구 출력
 ## 6. 합의 후 다음 단계 (이 문서 승인되면)
 
 1. `templates/attach-file/` 디렉터리 생성 + 각 `.hbs` 파일 본문 작성 (공통컴포넌트 코드 기반, stack 별 차이 반영)
-2. `templates/attach-file/manifests/{boot,war43}.json` 작성 (boot 는 5.0/4.3 공용)
+2. `templates/attach-file/manifests/{boot,war43}.json` 작성 (boot 는 5.1/4.3 공용)
 3. `src/utils/scaffold/manifestLoader.ts` 에 `mode` / `appendTarget` 필드 지원 추가
 4. `src/tools/egovAddAttachFileInfrastructure.ts` 신규 — `egovAddEntity.ts` 의 사전검사·충돌처리 로직 일부 재사용
 5. `src/tools/egovAddEntity.ts` 에 `withAttachment` 분기 추가 + `detectAttachFileInfra` 유틸 추가
 6. `src/index.ts` 에 신규 tool 등록 (4번째 tool)
-7. `tests/` 골든 스냅샷: boot(5.0/4.3 공용) 인프라 emit / war43 각 1건 + withAttachment=true 엔티티 1건
+7. `tests/` 골든 스냅샷: boot(5.1/4.3 공용) 인프라 emit / war43 각 1건 + withAttachment=true 엔티티 1건
 8. README 도구 카탈로그 업데이트
 
 추정 변경량: 신규 TS 약 600~900 LoC + 템플릿 약 15~20 파일 + 매니페스트 3 + 골든 4건.

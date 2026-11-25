@@ -1,5 +1,5 @@
 {
-  "$comment": "eGovFrame 5.0 Spring Boot 3 scaffold 의 파일 매니페스트. 각 항목의 output 은 Handlebars 로 렌더링되며, 사용 가능한 변수는 ScaffoldContext 와 동일하다 (basePackagePath, packagePath, entityName, entityModule, entityNameLower 등). 새 파일 추가 시 이 배열에 한 줄을 추가하면 코드 수정 없이 반영된다. 'scope' 필드는 항목의 생명주기를 표시한다: 'framework'(기본, 프로젝트당 1회 생성) 또는 'entity'(엔티티마다 생성 — egov_add_entity 가 이 항목들만 골라 추가한다).",
+  "$comment": "eGovFrame 5.1 Spring Boot 3 scaffold 의 파일 매니페스트. 각 항목의 output 은 Handlebars 로 렌더링되며, 사용 가능한 변수는 ScaffoldContext 와 동일하다 (basePackagePath, packagePath, entityName, entityModule, entityNameLower 등). 새 파일 추가 시 이 배열에 한 줄을 추가하면 코드 수정 없이 반영된다. 'scope' 필드는 항목의 생명주기를 표시한다: 'framework'(기본, 프로젝트당 1회 생성) 또는 'entity'(엔티티마다 생성 — egov_add_entity 가 이 항목들만 골라 추가한다).",
   "name": "boot50",
   "files": [
     { "template": "boot50/pom.xml.hbs", "output": "pom.xml" },

@@ -26,8 +26,8 @@ describe("stackMatrix — 기본 매트릭스 로드", () => {
     expect(matrix.stacks.boot50.jakarta).toBe(true);
   });
 
-  it("boot/5.0 → boot50 항목을 돌려준다", () => {
-    const s = resolveStack("boot", "5.0");
+  it("boot/5.1 → boot50 항목을 돌려준다", () => {
+    const s = resolveStack("boot", "5.1");
     expect(s.frameworkLabel).toBe("eGovFrame Boot 5.1.0");
     expect(s.springBoot).toBe("3.5.16");
     expect(s.staticAssets).toBe("static50");
@@ -87,7 +87,7 @@ describe("stackMatrix — 환경변수 오버라이드", () => {
         stacks: {
           custom: {
             projectType: "boot",
-            stackVersion: "5.0",
+            stackVersion: "5.1",
             egovframe: "5.0.0",
             springBoot: "3.9.9-CUSTOM",
             spring: null,
@@ -101,13 +101,13 @@ describe("stackMatrix — 환경변수 오버라이드", () => {
             staticAssets: "static50",
           },
         },
-        selection: [{ projectType: "boot", stackVersion: "5.0", stack: "custom" }],
+        selection: [{ projectType: "boot", stackVersion: "5.1", stack: "custom" }],
       }),
     );
     process.env[ENV_KEY] = custom;
 
     expect(resolveStackMatrixPath()).toBe(custom);
-    const s = resolveStack("boot", "5.0");
+    const s = resolveStack("boot", "5.1");
     expect(s.springBoot).toBe("3.9.9-CUSTOM");
     expect(s.java).toBe("21");
     expect(s.frameworkLabel).toBe("Custom 9.9.9");
@@ -135,20 +135,20 @@ describe("stackMatrix — 에러 처리", () => {
     }
   });
 
-  it("등재되지 않은 조합(war + 5.0)은 명확한 에러를 던진다", () => {
-    expect(() => resolveStack("war", "5.0")).toThrow(/지원하지 않는 스택 조합/);
+  it("등재되지 않은 조합(war + 5.1)은 명확한 에러를 던진다", () => {
+    expect(() => resolveStack("war", "5.1")).toThrow(/지원하지 않는 스택 조합/);
   });
 
   it("파일이 없으면 에러 메시지에 경로가 포함된다", () => {
     process.env[ENV_KEY] = path.join(tmpDir, "missing.json");
-    expect(() => resolveStack("boot", "5.0")).toThrow(/Stack matrix 를 읽을 수 없습니다/);
+    expect(() => resolveStack("boot", "5.1")).toThrow(/Stack matrix 를 읽을 수 없습니다/);
   });
 
   it("JSON 파싱 실패는 명확한 에러를 던진다", () => {
     const bad = path.join(tmpDir, "stacks.json");
     fs.writeFileSync(bad, "{ not json ");
     process.env[ENV_KEY] = bad;
-    expect(() => resolveStack("boot", "5.0")).toThrow(/Stack matrix 파싱 실패/);
+    expect(() => resolveStack("boot", "5.1")).toThrow(/Stack matrix 파싱 실패/);
   });
 
   it("selection 이 stacks 에 없는 키를 참조하면 에러를 던진다", () => {
@@ -158,7 +158,7 @@ describe("stackMatrix — 에러 처리", () => {
       JSON.stringify({
         version: 1,
         stacks: {},
-        selection: [{ projectType: "boot", stackVersion: "5.0", stack: "ghost" }],
+        selection: [{ projectType: "boot", stackVersion: "5.1", stack: "ghost" }],
       }),
     );
     process.env[ENV_KEY] = bad;
@@ -188,11 +188,11 @@ describe("stackMatrix — 에러 처리", () => {
             staticAssets: "static",
           },
         },
-        // selection 이 boot/5.0 으로 'mismatch' 항목을 가리키지만, 그 항목 자체는 war/4.3 이다.
-        selection: [{ projectType: "boot", stackVersion: "5.0", stack: "mismatch" }],
+        // selection 이 boot/5.1 으로 'mismatch' 항목을 가리키지만, 그 항목 자체는 war/4.3 이다.
+        selection: [{ projectType: "boot", stackVersion: "5.1", stack: "mismatch" }],
       }),
     );
     process.env[ENV_KEY] = bad;
-    expect(() => resolveStack("boot", "5.0")).toThrow(/무결성 위반/);
+    expect(() => resolveStack("boot", "5.1")).toThrow(/무결성 위반/);
   });
 });

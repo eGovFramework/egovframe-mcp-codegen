@@ -37,7 +37,7 @@ beforeEach(async () => {
     ddl: "CREATE TABLE EMPLOYEE (ID VARCHAR(20) NOT NULL PRIMARY KEY, SALARY DECIMAL(12,2))",
     description: "",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
 });
 

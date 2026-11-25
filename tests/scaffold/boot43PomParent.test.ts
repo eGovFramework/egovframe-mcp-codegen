@@ -35,7 +35,7 @@ afterEach(async () => {
   await fs.remove(tmpRoot);
 });
 
-async function generatePom(stackVersion: "4.3" | "5.0"): Promise<string> {
+async function generatePom(stackVersion: "4.3" | "5.1"): Promise<string> {
   await generateScaffoldProject({
     projectName: "board-app",
     packageName: "egovframework.example.board",
@@ -180,7 +180,7 @@ describe("boot43 pom.xml — 공식 eGovFrame Boot 4.3.2 부모 상속", () => {
   });
 
   it("boot50 pom.xml 은 영향받지 않는다 (egovframe-boot-starter-parent, 재정의 없음)", async () => {
-    const pom = stripComments(await generatePom("5.0"));
+    const pom = stripComments(await generatePom("5.1"));
     expect(pom).toContain("<artifactId>egovframe-boot-starter-parent</artifactId>");
     expect(pom).not.toContain("org.egovframe.boot.starter.parent");
     expect(pom).not.toContain("commons-lang3.version");

@@ -1,7 +1,7 @@
 /**
  * Tool: egov_add_query_view
  *
- * 이미 생성된 eGovFrame 프로젝트(Boot 5.0 / Boot 4.3 / WAR 4.3)에 다중 테이블
+ * 이미 생성된 eGovFrame 프로젝트(Boot 5.1 / Boot 4.3 / WAR 4.3)에 다중 테이블
  * JOIN/컬럼 프로젝션 기반 read-only 조회 화면(리포트성 View) 을 추가한다. CRUD 와
  * 달리 등록/수정/삭제 산출물은 만들지 않으며, List 화면 + 페이징 + 검색만 갖춘다.
  * 산출물 목록(템플릿 → 출력 경로)은 스택별로 templates/stacks.json 의 `queryView` 에 정의된다.

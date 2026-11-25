@@ -26,7 +26,7 @@ async function scaffoldAcademicApp() {
     ddl: "CREATE TABLE DEPARTMENT (DEPT_ID VARCHAR(20) NOT NULL PRIMARY KEY, DEPT_NAME VARCHAR(100))",
     description: "",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
   return path.join(tmpRoot, "academic-app");
 }

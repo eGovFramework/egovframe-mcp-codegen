@@ -90,7 +90,7 @@ describe("성공 결과의 completionFooter", () => {
       ddl: BOARD_DDL,
       description: "",
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
     });
     const projectDir = path.join(tmpRoot, "board-app");
 

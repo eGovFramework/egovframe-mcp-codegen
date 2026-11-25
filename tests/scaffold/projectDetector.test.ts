@@ -3,7 +3,7 @@
  *
  * 감지 규칙
  * - `<packaging>war</packaging>`                                   → war / 4.3
- * - parent.artifactId = egovframe-boot-starter-parent             → boot / 5.0
+ * - parent.artifactId = egovframe-boot-starter-parent             → boot / 5.1
  * - parent.artifactId = org.egovframe.boot.starter.parent         → boot / 4.3 (공식 부모, 현재 scaffold)
  * - parent.artifactId = spring-boot-starter-parent + org.egovframe.rte → boot / 4.3 (공식 부모 전환 전 scaffold)
  *
@@ -92,11 +92,11 @@ describe("detectProjectStack — 마커별 감지", () => {
     expect(() => detectProjectStack(dir)).toThrow(/org\.egovframe\.rte/);
   });
 
-  it("egovframe-boot-starter-parent → boot / 5.0", async () => {
+  it("egovframe-boot-starter-parent → boot / 5.1", async () => {
     const dir = await writePom(bootPom("egovframe-boot-starter-parent", "org.egovframe.boot", "5.1.0"));
     const d = detectProjectStack(dir);
     expect(d.projectType).toBe("boot");
-    expect(d.stackVersion).toBe("5.0");
+    expect(d.stackVersion).toBe("5.1");
   });
 
   it("<packaging>war</packaging> → war / 4.3", async () => {

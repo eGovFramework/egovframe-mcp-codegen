@@ -2,7 +2,7 @@
  * egov_add_query_view — Boot 4.3 / WAR 4.3 스택 지원 테스트.
  *
  * 산출물 경로·Mapper 어노테이션·Controller 관례·nav/메시지 자동 적용·타입별 렌더링·멱등/충돌·
- * Date format 검증을 스택별로 검증한다. Boot 5.0 은 addQueryView.test.ts / golden.test.ts 가 담당한다.
+ * Date format 검증을 스택별로 검증한다. Boot 5.1 은 addQueryView.test.ts / golden.test.ts 가 담당한다.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import * as fs from "fs-extra";

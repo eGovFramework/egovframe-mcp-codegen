@@ -46,7 +46,7 @@ function boardArgs(extra: Record<string, unknown> = {}) {
     entityName: "Board",
     ddl: BOARD_DDL,
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
     ...extra,
   };
 }

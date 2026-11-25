@@ -23,7 +23,7 @@ export interface ScaffoldParams {
   ddl: string;
   description: string;
   projectType: "boot" | "war";
-  stackVersion: "4.3" | "5.0";
+  stackVersion: "4.3" | "5.1";
   /**
    * true 이면 첫 엔티티를 첨부파일 연결(`withAttachment`) 형태로 렌더링한다.
    * 인프라 설치는 이 함수가 아니라 도구 계층(`egovScaffoldProject`)이 생성 직후 수행한다.
@@ -54,7 +54,7 @@ export interface ScaffoldContext {
   artifactId: string;
   description: string;
   projectType: "boot" | "war";
-  stackVersion: "4.3" | "5.0";
+  stackVersion: "4.3" | "5.1";
   /**
    * 첫 엔티티 여부. 템플릿에서 한 프로젝트당 1개만 있어야 하는 산출물을 분기 처리할 때 사용.
    * `egov_scaffold_project` 의 기본값은 `true`, `egov_add_entity` 는 항상 `false`.
@@ -314,7 +314,7 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     projectName,
     groupId,
     artifactId: projectName,
-    description: description || `eGovFrame ${stackVersion === "5.0" ? "5.0" : "4.3"} ${entityName} Project`,
+    description: description || `eGovFrame ${stackVersion === "5.1" ? "5.1" : "4.3"} ${entityName} Project`,
     projectType,
     stackVersion,
     isPrimaryEntity: params.isPrimaryEntity ?? true,
@@ -454,7 +454,7 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
   }
 
   // Static assets copy — 디렉터리명은 호환성 매트릭스의 stack.staticAssets 에서 가져온다.
-  // (Boot 5.0 = static50, 그 외 = static)
+  // (Boot 5.1 = static50, 그 외 = static)
   const staticDirName = ctx.stack.staticAssets;
   const staticSrcDir = path.join(templateBasePath, staticDirName);
   if (await fs.pathExists(staticSrcDir)) {

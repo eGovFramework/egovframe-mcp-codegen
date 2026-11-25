@@ -41,7 +41,7 @@ async function scaffoldAndInstallAttachFile() {
     ddl: BOARD_DDL,
     description: "",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
   const pdir = path.join(tmpRoot, "board-app");
   await egovAddAttachFileInfrastructure({ projectPath: pdir, autoMergeHsqlSeed: false });

@@ -12,7 +12,7 @@
 
 **eGovFrame MCP Codegen** 은 이 MCP 표준을 따르는 코드 생성 전용 서버입니다. LLM 이 사용자의 자연어 요청을 받으면 서버가 노출한 4개의 Tool 중 적절한 것을 호출하고, 서버는 DDL 파싱 → Handlebars 템플릿 렌더링 → 파일 시스템 출력까지를 결정적(deterministic)으로 수행합니다. LLM 은 코드를 한 줄도 직접 생성하지 않습니다 — 모든 산출물은 eGovFrame 표준 템플릿으로부터 나옵니다.
 
-이 서버는 **eGovFrame 4.3 Boot / 4.3 WAR / 5.0 Boot** 세 스택의 표준 레이아웃(Controller/Service/ServiceImpl/Mapper/VO + Thymeleaf 또는 JSP 화면)을 알고 있으며, 충돌 시 거부(no force-overwrite), 공용 설정 파일은 건드리지 않는 안전 우선 동작을 기본으로 합니다.
+이 서버는 **eGovFrame 4.3 Boot / 4.3 WAR / 5.1 Boot** 세 스택의 표준 레이아웃(Controller/Service/ServiceImpl/Mapper/VO + Thymeleaf 또는 JSP 화면)을 알고 있으며, 충돌 시 거부(no force-overwrite), 공용 설정 파일은 건드리지 않는 안전 우선 동작을 기본으로 합니다.
 
 ## 🛠️ 제공 도구 (Tools)
 
@@ -22,11 +22,12 @@
 
 DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니다.
 
-- **기본 스택**: eGovFrame 5.0 Boot (Jakarta + Thymeleaf Spring6 + KRDS)
+- `stackVersion: "5.1"` → eGovFrame 5.1 Boot (JDK 17 기준, Jakarta + Thymeleaf Spring6 + KRDS)
 - `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5)
-- `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.0 조합은 거부)
+- Boot 에서 `stackVersion` 을 생략하면 서버가 Elicitation 으로 사용자에게 버전을 직접 묻습니다 (기본값 없음). `withAttachment` 도 함께 생략되면 질문 하나로 두 항목을 같이 묻습니다. 구 명칭 `"5.0"` 은 더 이상 받지 않습니다
+- `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.1 조합은 거부)
 - CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
-- 5.0 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
+- 5.1 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
   (`EgovConfigWebSecurity`)을 기본 포함 — 보안 응답 헤더, CSRF 보호(기본 활성,
   `egov.security.csrf` 로 토글), 명시적 StrictHttpFirewall, 프로퍼티 구동 CORS(기본 비활성).
   4.3 Boot / WAR 산출물에는 적용되지 않음 (Phase A — `docs/design/security-config-templates.md`)
@@ -40,10 +41,10 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | entityName    | string | ✓    | PascalCase 엔티티 이름 (예: `Board`)                              |
 | ddl           | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
 | projectType   | string |      | `boot` (기본) / `war`                                             |
-| stackVersion  | string |      | `5.0` (기본) / `4.3`                                              |
+| stackVersion  | string |      | `5.1` / `4.3`. Boot 에서 생략하면 Elicitation 으로 사용자에게 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 지정해 재호출하라는 오류 반환. WAR 는 생략 시 `4.3` 으로 확정. `5.0` 은 거부 |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
 | description   | string |      | 프로젝트 한 줄 설명                                                |
-| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.0, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
+| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고 (`stackVersion` 도 생략됐으면 같은 질문에 함께), 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.1, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
 
 ### 2. `egov_add_entity`
 
@@ -51,7 +52,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 - `projectType` / `stackVersion` 은 기존 `pom.xml` 에서 자동 감지 (지정 불필요)
 - 생성될 파일 중 하나라도 충돌하면 **전체 거부** (덮어쓰기 옵션 없음)
-- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (Boot 만 지원: 5.0, 4.3)
+- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (Boot 만 지원: 5.1, 4.3)
 
 | 파라미터              | 타입    | 필수 | 설명                                                                 |
 |---------------------|--------|------|----------------------------------------------------------------------|
@@ -62,21 +63,21 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | autoApplyMigration  | bool   |      | 시드 SQL 파일에 마이그레이션 DDL append (기본 true)                  |
 | autoApplyMessages   | bool   |      | 메시지 번들 3종에 키 자동 append (기본 true)                          |
 | autoApplyMenu       | bool   |      | nav fragment 자동 재생성 + 기존 List 화면에 include 라인 삽입 (기본 false) |
-| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (Boot 전용: 5.0, 4.3). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
+| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (Boot 전용: 5.1, 4.3). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
 | idGeneration        | string |      | `auto` (기본, EgovTableIdGnrServiceImpl) / `manual` (코드 마스터 테이블) |
 
 ### 3. `egov_add_query_view`
 
-이미 생성된 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR)에 다중 JOIN 기반 read-only 조회 화면(리포트성 View) 을 추가합니다.
+이미 생성된 eGovFrame 프로젝트(5.1 Boot / 4.3 Boot / 4.3 WAR)에 다중 JOIN 기반 read-only 조회 화면(리포트성 View) 을 추가합니다.
 
 - 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 **List + 페이징 + 검색**만 생성
 - 사용자가 작성한 raw `SELECT` SQL 본문을 그대로 사용. 도구는 derived table 로 wrapping 해 페이징/검색을 외부에서 안전하게 적용
 - 컬럼 메타(alias / label / type / format) 가 VO 필드와 화면 렌더링을 모두 결정
-- 5.0 Boot / 4.3 Boot (Thymeleaf 화면), 4.3 WAR (JSP 화면) 지원. 스택은 `pom.xml` 에서 자동 감지
+- 5.1 Boot / 4.3 Boot (Thymeleaf 화면), 4.3 WAR (JSP 화면) 지원. 스택은 `pom.xml` 에서 자동 감지
 
 | 파라미터          | 타입     | 필수 | 설명                                                                |
 |-----------------|---------|------|---------------------------------------------------------------------|
-| projectPath     | string  | ✓    | 기존 eGovFrame 프로젝트(5.0 Boot / 4.3 Boot / 4.3 WAR) 루트          |
+| projectPath     | string  | ✓    | 기존 eGovFrame 프로젝트(5.1 Boot / 4.3 Boot / 4.3 WAR) 루트          |
 | packageName     | string  | ✓    | Query view 를 둘 Java 패키지                                         |
 | viewName        | string  | ✓    | PascalCase view 이름 (예: `StudentEnrollmentReport`)                |
 | sql             | string  | ✓    | 조회 본문 `SELECT` 문 (LIMIT/OFFSET 제외, alias 명시 필수)            |
@@ -88,7 +89,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 ### 4. `egov_add_attach_file_infrastructure`
 
-eGovFrame Boot(5.0, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다 — **자체 보안 정책 + multipart 한도 + 업로드 에러 UX 까지 포함된 완성형**.
+eGovFrame Boot(5.1, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다 — **자체 보안 정책 + multipart 한도 + 업로드 에러 UX 까지 포함된 완성형**.
 
 **구성 (자동 생성/등록되는 산출물 19종)**
 
@@ -107,7 +108,7 @@ eGovFrame Boot(5.0, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 �
 
 | 파라미터              | 타입       | 필수 | 설명                                                              |
 |---------------------|-----------|------|-------------------------------------------------------------------|
-| projectPath         | string    | ✓    | 기존 eGovFrame Boot(5.0, 4.3) 프로젝트 루트                              |
+| projectPath         | string    | ✓    | 기존 eGovFrame Boot(5.1, 4.3) 프로젝트 루트                              |
 | fileStorePath       | string    |      | `Globals.fileStorePath` 절대경로. 비우면 OS 임시 디렉터리 fallback |
 | idGnrPrefix         | string    |      | atchFileId 채번 prefix (기본 `FILE_`)                              |
 | idGnrCipers         | number    |      | atchFileId 채번 자릿수 (기본 15, prefix+cipers=20 강제)            |
@@ -137,7 +138,7 @@ eGovFrame Boot(5.0, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 �
 
 ⚠️ **여전히 외부 조치가 필요한 부분** (이번 인프라가 자동으로 해주지 않는 것):
 
-- **다운로드 URL 인증/인가** (`/cmm/fms/FileDown.do`) — 5.0 은 Spring Security 정책으로 보호 권장, 4.3 은 접근 제어가 없으므로 인증 체계 도입 시 보호. 기본은 열려 있어 `atchFileId`+`fileSn` 만 알면 누구나 다운로드 가능 (IDOR)
+- **다운로드 URL 인증/인가** (`/cmm/fms/FileDown.do`) — 5.1 은 Spring Security 정책으로 보호 권장, 4.3 은 접근 제어가 없으므로 인증 체계 도입 시 보호. 기본은 열려 있어 `atchFileId`+`fileSn` 만 알면 누구나 다운로드 가능 (IDOR)
 - **antivirus 스캔** — 자체 후크 없음. 운영 환경에서는 ClamAV 등 외부 스캔 권장
 - **MIME 매직넘버 검증** — 확장자만 검사하며 실제 내용은 검증 안 함 (`.jpg` 로 리네임된 `.exe` 우회 가능. 다만 다운로드 시 `octet-stream` 강제라 인라인 실행은 막힘)
 
@@ -209,10 +210,10 @@ npm run build
 
 ## 💡 사용 예시 (Usage Examples)
 
-### 예시 1. 새 프로젝트 생성 (eGovFrame 5.0 Boot)
+### 예시 1. 새 프로젝트 생성 (eGovFrame 5.1 Boot)
 
 ```
-User: "다음 DDL 로 eGovFrame 5.0 Boot 게시판 프로젝트를 /workspace 에 만들어줘.
+User: "다음 DDL 로 eGovFrame 5.1 Boot 게시판 프로젝트를 /workspace 에 만들어줘.
        CREATE TABLE board (
          board_id   VARCHAR(36)  PRIMARY KEY,
          title      VARCHAR(200) NOT NULL,
@@ -233,9 +234,13 @@ LLM 이 자동 구성하는 도구 입력 예:
   "packageName": "egovframework.example.board",
   "outputPath": "/workspace",
   "entityName": "Board",
-  "ddl": "CREATE TABLE board (board_id VARCHAR(36) PRIMARY KEY, ...)"
+  "ddl": "CREATE TABLE board (board_id VARCHAR(36) PRIMARY KEY, ...)",
+  "stackVersion": "5.1"
 }
 ```
+
+사용자가 버전을 말하지 않았다면 LLM 은 `stackVersion` 을 생략하고, 서버가 Elicitation 으로
+"표준프레임워크 5.1 (Spring Boot 3, Java 17)" / "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" 중 하나를 고르게 합니다.
 
 ### 예시 2. 기존 프로젝트에 엔티티 추가
 
@@ -343,13 +348,13 @@ egovframe-mcp-codegen/
 │
 ├── templates/                                  # Handlebars 템플릿
 │   ├── boot/                                   # eGovFrame 4.3 Boot
-│   ├── boot50/                                 # eGovFrame 5.0 Boot
+│   ├── boot50/                                 # eGovFrame 5.1 Boot
 │   ├── war/                                    # eGovFrame 4.3 WAR
 │   ├── static/                                 # 4.3 정적 리소스
-│   ├── static50/                               # 5.0 정적 리소스
+│   ├── static50/                               # 5.1 정적 리소스
 │   ├── attach-file/                            # 첨부파일 인프라 템플릿
-│   │   ├── manifests/   # boot.json (5.0/4.3 공용)
-│   │   └── boot/        # 5.0/4.3 공용 (stack 차이는 렌더 컨텍스트로 분기)
+│   │   ├── manifests/   # boot.json (5.1/4.3 공용)
+│   │   └── boot/        # 5.1/4.3 공용 (stack 차이는 렌더 컨텍스트로 분기)
 │   │       ├── java/        # 8개 Java 클래스 (Service/Util/Mapper/Controller/Config/ExceptionAdvice)
 │   │       ├── thymeleaf/   # cmm/uploadError.html + _fragments/alertMessages.html
 │   │       ├── messages/    # 메시지 번들 append fragment (ko/base/en)
@@ -404,7 +409,7 @@ npm run inspector
 - **충돌 시 거부**: 출력 파일이 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다. 강제 덮어쓰기 옵션은 의도적으로 제공하지 않습니다.
 - **공용 설정 불간섭**: `pom.xml`, `application.properties`, `sql-mapper-config.xml` 같은 프로젝트 공용 설정은 신규 엔티티 추가 시 건드리지 않습니다.
 - **DDL 정규화는 보수적**: 의미를 바꾸지 않는 케이스/공백/인용부호 변환만 수행하며, 변경 항목은 진단 보고서로 사용자에게 반드시 통지합니다.
-- **스택 호환성 검증**: WAR + 5.0 같은 미지원 조합은 진입 시점에 명확한 에러로 거부합니다.
+- **스택 호환성 검증**: WAR + 5.1 같은 미지원 조합은 진입 시점에 명확한 에러로 거부합니다.
 
 ## 🔗 함께 쓰는 자매 MCP
 

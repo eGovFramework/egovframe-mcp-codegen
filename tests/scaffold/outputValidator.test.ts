@@ -156,9 +156,9 @@ const GOLDEN_SHARED_DDL = `CREATE TABLE board (
 const GOLDEN_SCENARIOS: {
   name: string;
   projectType: "boot" | "war";
-  stackVersion: "4.3" | "5.0";
+  stackVersion: "4.3" | "5.1";
 }[] = [
-  { name: "boot50", projectType: "boot", stackVersion: "5.0" },
+  { name: "boot50", projectType: "boot", stackVersion: "5.1" },
   { name: "boot43", projectType: "boot", stackVersion: "4.3" },
   { name: "war", projectType: "war", stackVersion: "4.3" },
 ];

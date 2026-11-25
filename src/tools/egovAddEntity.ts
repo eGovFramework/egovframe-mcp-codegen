@@ -143,7 +143,7 @@ export const AddEntityInputSchema = z.object({
    * - 등록/수정 화면(`...Register.html`)에 `<input type="file" name="file_1" multiple>` 추가
    *
    * 첨부파일 인프라(`EgovFileMngService.java` + `EgovConfigAttachFile.java`)가 없으면 기본 옵션으로
-   * 자동 설치한다 (Boot 만 지원: 5.0, 4.3 — WAR 은 거부). 설치는 엔티티 사전 검사가 모두 통과한 뒤
+   * 자동 설치한다 (Boot 만 지원: 5.1, 4.3 — WAR 은 거부). 설치는 엔티티 사전 검사가 모두 통과한 뒤
    * 엔티티 파일 쓰기와 하나의 롤백 저널로 수행된다. 세부 옵션이 필요하면 먼저
    * `egov_add_attach_file_infrastructure` 를 호출한다.
    */
@@ -905,7 +905,7 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
     }
 
     // 8) 결과 메시지 구성
-    const egovLabel = detected.stackVersion === "5.0" ? "eGovFrame 5.0" : "eGovFrame 4.3";
+    const egovLabel = detected.stackVersion === "5.1" ? "eGovFrame 5.1" : "eGovFrame 4.3";
     const kindLabel = detected.projectType === "war" ? "WAR" : "Spring Boot";
 
     const lines = [

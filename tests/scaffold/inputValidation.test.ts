@@ -34,12 +34,12 @@ describe("ScaffoldInputSchema", () => {
     expect(r.success).toBe(true);
   });
 
-  it("WAR + 5.0 조합은 거부한다", () => {
+  it("WAR + 5.1 조합은 거부한다", () => {
     const r = ScaffoldInputSchema.safeParse({
       ...baseParams,
       outputPath: "/tmp/x",
       projectType: "war",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
     });
     expect(r.success).toBe(false);
     if (!r.success) {
@@ -93,14 +93,32 @@ describe("ScaffoldInputSchema", () => {
     expect(r.success).toBe(false);
   });
 
-  it("기본값이 적용된다 (projectType=boot, stackVersion=5.0)", () => {
+  it("기본값이 적용된다 (projectType=boot, stackVersion=5.1)", () => {
     const r = ScaffoldInputSchema.parse({
       ...baseParams,
       outputPath: "/tmp/x",
     });
     expect(r.projectType).toBe("boot");
-    expect(r.stackVersion).toBe("5.0");
+    expect(r.stackVersion).toBe("5.1");
     expect(r.description).toBe("");
+  });
+
+  it("WAR 에서 stackVersion 을 생략하면 4.3 으로 채운다", () => {
+    const r = ScaffoldInputSchema.parse({
+      ...baseParams,
+      outputPath: "/tmp/x",
+      projectType: "war",
+    });
+    expect(r.stackVersion).toBe("4.3");
+  });
+
+  it("구 명칭 '5.0' 은 거부한다", () => {
+    const r = ScaffoldInputSchema.safeParse({
+      ...baseParams,
+      outputPath: "/tmp/x",
+      stackVersion: "5.0",
+    });
+    expect(r.success).toBe(false);
   });
 });
 
@@ -124,7 +142,7 @@ describe("egovScaffoldProject — 동작", () => {
         ...baseParams,
         outputPath: "/tmp/x",
         projectType: "war",
-        stackVersion: "5.0",
+        stackVersion: "5.1",
       }),
     ).rejects.toThrow(/war.*4\.3|4\.3.*war/i);
   });

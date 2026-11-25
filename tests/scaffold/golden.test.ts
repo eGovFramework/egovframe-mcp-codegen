@@ -54,7 +54,7 @@ const SHARED_DDL = `CREATE TABLE board (
 const SCENARIOS = [
   {
     name: "boot50",
-    params: { projectType: "boot" as const, stackVersion: "5.0" as const },
+    params: { projectType: "boot" as const, stackVersion: "5.1" as const },
   },
   {
     name: "boot43",

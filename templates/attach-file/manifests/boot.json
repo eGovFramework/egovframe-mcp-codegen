@@ -1,5 +1,5 @@
 {
-  "$comment": "eGovFrame Boot(5.0/4.3 공용) 첨부파일 인프라 매니페스트. 호출자: egov_add_attach_file_infrastructure 도구. 모든 항목 scope=framework (프로젝트당 1회). mode 별 의미는 manifestLoader.ts 의 ManifestMode 주석 참조. 변수: basePackage, basePackagePath, idGnrPrefix, idGnrCipers, fileStorePath, dialect(expandDialects).",
+  "$comment": "eGovFrame Boot(5.1/4.3 공용) 첨부파일 인프라 매니페스트. 호출자: egov_add_attach_file_infrastructure 도구. 모든 항목 scope=framework (프로젝트당 1회). mode 별 의미는 manifestLoader.ts 의 ManifestMode 주석 참조. 변수: basePackage, basePackagePath, idGnrPrefix, idGnrCipers, fileStorePath, dialect(expandDialects).",
   "name": "attach-file-boot",
   "files": [
     { "template": "attach-file/boot/java/EgovFileMngService.hbs",

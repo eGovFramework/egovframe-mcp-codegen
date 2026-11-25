@@ -1,21 +1,21 @@
 /**
- * 첨부파일 포함 여부 결정 — 호출자가 `withAttachment` 를 생략했을 때 MCP Elicitation 으로
- * 사용자에게 직접 확인한다. 질문을 던질 수 없는 상황(미지원 클라이언트, 시간 초과, 호출 오류,
- * 값 없는 accept)에서는 `needsUserDecision` 을 반환해 호출 AI 가 사용자에게 묻고 재호출하게 한다.
+ * 첨부파일 포함 여부 결정 (egov_add_entity) — 호출자가 `withAttachment` 를 생략했을 때 MCP
+ * Elicitation 으로 사용자에게 직접 확인한다. 질문을 던질 수 없는 상황(미지원 클라이언트, 시간
+ * 초과, 호출 오류, 값 없는 accept)에서는 `needsUserDecision` 을 반환해 호출 AI 가 사용자에게
+ * 묻고 재호출하게 한다.
+ *
+ * egov_scaffold_project 는 `stackVersion` 과 함께 묻기 위해 `scaffoldDecision.ts` 를 사용한다.
  */
-import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { detectAttachFileInfra, detectProjectStack } from "./projectDetector.js";
+import { ELICIT_TIMEOUT_MS, elicitForm, type ElicitingServer } from "./elicitForm.js";
 import { completionFooter, retryAfterAction } from "./toolMessages.js";
 
-export const ATTACHMENT_ELICIT_TIMEOUT_MS = 60_000;
+export const ATTACHMENT_ELICIT_TIMEOUT_MS = ELICIT_TIMEOUT_MS;
 
 export type AttachmentDecision =
   | { kind: "value"; value: boolean }
   | { kind: "needsUserDecision" }
   | { kind: "cancelled" };
-
-// elicitInput 은 저수준 Server 에만 있다. deprecated 인 Server 를 직접 참조하지 않도록 McpServer.server 로 인덱싱한다.
-type ElicitingServer = Pick<McpServer["server"], "elicitInput">;
 
 export async function resolveAttachmentDecision(args: {
   server: ElicitingServer;
@@ -29,46 +29,17 @@ export async function resolveAttachmentDecision(args: {
   if (provided !== undefined) return { kind: "value", value: provided };
   if (!supported) return { kind: "value", value: false };
 
-  // form capability 가 없는 클라이언트에는 SDK 가 요청을 보내기 전에 예외를 던지며, 아래 catch 에서 처리한다.
-  try {
-    const res = await server.elicitInput(
-      {
-        mode: "form",
-        message,
-        requestedSchema: {
-          type: "object",
-          properties: {
-            withAttachment: { type: "boolean", title: "첨부파일 포함" },
-          },
-          required: ["withAttachment"],
-        },
-      },
-      { timeout: ATTACHMENT_ELICIT_TIMEOUT_MS, ...(signal ? { signal } : {}) },
-    );
-    // 사용자가 늦게 답했더라도 호출이 이미 취소되었다면 아무 것도 생성하지 않는다.
-    if (signal?.aborted) return { kind: "cancelled" };
-    if (res.action === "cancel") return { kind: "cancelled" };
-    if (res.action === "decline") return { kind: "value", value: false };
-    const value = res.content?.withAttachment;
-    return typeof value === "boolean"
-      ? { kind: "value", value }
-      : { kind: "needsUserDecision" };
-  } catch {
-    if (signal?.aborted) return { kind: "cancelled" };
-    return { kind: "needsUserDecision" };
-  }
-}
-
-export function describeScaffoldAttachmentPrompt(args: {
-  projectType?: "boot" | "war";
-  stackVersion?: "4.3" | "5.0";
-}): { supported: boolean; message: string } {
-  const projectType = args.projectType ?? "boot";
-  const stackVersion = args.stackVersion ?? "5.0";
-  return {
-    supported: projectType === "boot",
-    message: "이 프로젝트에 표준 첨부파일 기능을 포함할까요?",
-  };
+  const res = await elicitForm({
+    server,
+    message,
+    fields: [{ name: "withAttachment", kind: "boolean", title: "첨부파일 포함" }],
+    signal,
+  });
+  if (res.kind === "cancelled") return { kind: "cancelled" };
+  if (res.kind === "declined") return { kind: "value", value: false };
+  if (res.kind === "unavailable") return { kind: "needsUserDecision" };
+  const value = res.values.withAttachment;
+  return typeof value === "boolean" ? { kind: "value", value } : { kind: "needsUserDecision" };
 }
 
 export function describeAddEntityAttachmentPrompt(

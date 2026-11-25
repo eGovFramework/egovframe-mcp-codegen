@@ -1,5 +1,5 @@
 /**
- * 첨부파일 하드닝 회귀 테스트 (5.0 Boot).
+ * 첨부파일 하드닝 회귀 테스트 (5.1 Boot).
  *
  * 요청으로 들어온 atchFileId 는 신뢰하지 않는다. 수정·삭제는 DB 에 저장된 값을 기준으로 처리한다.
  */
@@ -39,7 +39,7 @@ beforeEach(async () => {
     entityName: "Board",
     ddl: BOARD_DDL,
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
     withAttachment: true,
   });
 });
@@ -49,7 +49,7 @@ afterEach(async () => {
   await fs.remove(tmpRoot);
 });
 
-describe("요청 atchFileId 불신 (5.0 Boot)", () => {
+describe("요청 atchFileId 불신 (5.1 Boot)", () => {
   it("수정은 요청 값 대신 DB 의 atchFileId 를 사용한다", async () => {
     const c = await read(CONTROLLER);
     expect(c).toMatch(/BoardVO stored = boardService\.selectBoard\(boardVO\);/);
@@ -73,7 +73,7 @@ describe("요청 atchFileId 불신 (5.0 Boot)", () => {
 });
 
 describe("트랜잭션 포인트컷", () => {
-  it.each(["5.0", "4.3"] as const)("%s 트랜잭션 포인트컷은 기본 패키지 전체를 포함한다", async (stackVersion) => {
+  it.each(["5.1", "4.3"] as const)("%s 트랜잭션 포인트컷은 기본 패키지 전체를 포함한다", async (stackVersion) => {
     await generateScaffoldProject({
       projectName: "tx-app",
       packageName: "egovframework.example.board",
@@ -92,7 +92,7 @@ describe("트랜잭션 포인트컷", () => {
   });
 });
 
-describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
+describe("첨부파일 유틸 하드닝 (5.1 Boot)", () => {
   it("다운로드 헤더를 ContentDisposition 으로 생성한다", async () => {
     const u = await read(UTIL);
     expect(u).toMatch(/ContentDisposition\.builder\("attachment"\)\s*\.filename\([^,]+,\s*StandardCharsets\.UTF_8\)/);
@@ -122,7 +122,7 @@ describe("첨부파일 유틸 하드닝 (5.0 Boot)", () => {
   });
 });
 
-describe("첨부파일 개별 삭제 (5.0 Boot)", () => {
+describe("첨부파일 개별 삭제 (5.1 Boot)", () => {
   it("개별 삭제는 DB 행을 지운 뒤 디스크 파일을 삭제한다", async () => {
     const i = await read(IMPL);
     const body = /public void deleteFileInf\(FileVO fvo\)[\s\S]*?\n\t}/.exec(i)![0];
@@ -136,8 +136,8 @@ describe("첨부파일 개별 삭제 (5.0 Boot)", () => {
   });
 });
 
-describe("첨부파일 인프라 공용 템플릿 (5.0 Boot)", () => {
-  it("5.0 인프라는 jakarta 와 @EgovMapper 를 사용한다", async () => {
+describe("첨부파일 인프라 공용 템플릿 (5.1 Boot)", () => {
+  it("5.1 인프라는 jakarta 와 @EgovMapper 를 사용한다", async () => {
     expect(await read(UTIL)).toContain("import jakarta.annotation.Resource;");
     const mapper = await read("src/main/java/egovframework/example/cmm/service/impl/FileManageMapper.java");
     expect(mapper).toContain('@EgovMapper("fileManageMapper")');

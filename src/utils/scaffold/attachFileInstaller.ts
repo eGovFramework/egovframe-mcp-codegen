@@ -112,10 +112,10 @@ export function defaultAttachFileInstallOptions(projectPath: string): AttachFile
 }
 
 /**
- * stack → 매니페스트 경로 라우팅. Boot(5.0, 4.3)는 공용 매니페스트를 쓴다.
+ * stack → 매니페스트 경로 라우팅. Boot(5.1, 4.3)는 공용 매니페스트를 쓴다.
  * WAR 지원을 추가할 때 본 함수만 확장하면 된다.
  */
-function manifestForStack(stackVersion: "5.0" | "4.3", projectType: "boot" | "war"): string {
+function manifestForStack(stackVersion: "5.1" | "4.3", projectType: "boot" | "war"): string {
   if (projectType === "boot") {
     return "attach-file/manifests/boot.json";
   }
@@ -361,10 +361,10 @@ export async function planAttachFileInfra(options: AttachFileInstallOptions): Pr
     blockedExtensionsCsv: toUpperCsv(params.blockedExtensions),
     stackVersion: detected.stackVersion,
     projectType: detected.projectType,
-    // 스택별 차이: 5.0 은 jakarta + @EgovMapper, 4.3 은 javax + 실행환경 @Mapper.
+    // 스택별 차이: 5.1 은 jakarta + @EgovMapper, 4.3 은 javax + 실행환경 @Mapper.
     // 이전 버전이 생성한 4.3 프로젝트는 MyBatis @Mapper 로 스캔하므로 그 설정을 따른다.
-    eeNamespace: detected.stackVersion === "5.0" ? "jakarta" : "javax",
-    useEgovMapper: detected.stackVersion === "5.0",
+    eeNamespace: detected.stackVersion === "5.1" ? "jakarta" : "javax",
+    useEgovMapper: detected.stackVersion === "5.1",
     useApacheMapper: usesApacheMapperScan(projectDir),
   };
 
@@ -656,7 +656,7 @@ export function hsqlSeedSummaryLines(r: HsqlSeedApplyResult): string[] {
 }
 
 /** 다운로드 URL 보호 안내 문구 — 4.3 은 Spring Security 가 기본 구성에 없다. */
-export function downloadUrlProtectionNote(stackVersion: "5.0" | "4.3"): string {
+export function downloadUrlProtectionNote(stackVersion: "5.1" | "4.3"): string {
   return stackVersion === "4.3"
     ? `다운로드 URL /cmm/fms/FileDown.do 에는 접근 제어가 없습니다. 인증 체계를 도입할 때 보호하세요.`
     : `다운로드 URL /cmm/fms/FileDown.do 는 Spring Security 정책으로 보호하세요.`;

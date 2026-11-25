@@ -16,7 +16,7 @@ import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenera
 
 const STACKS = [
   { label: "Boot 4.3", projectType: "boot", stackVersion: "4.3", nav: "src/main/resources/templates/thymeleaf/_fragments/nav.html" },
-  { label: "Boot 5.0", projectType: "boot", stackVersion: "5.0", nav: "src/main/resources/templates/thymeleaf/_fragments/nav.html" },
+  { label: "Boot 5.1", projectType: "boot", stackVersion: "5.1", nav: "src/main/resources/templates/thymeleaf/_fragments/nav.html" },
   { label: "WAR 4.3", projectType: "war", stackVersion: "4.3", nav: "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp" },
 ] as const;
 

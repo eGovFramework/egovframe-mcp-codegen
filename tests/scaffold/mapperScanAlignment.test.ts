@@ -56,7 +56,7 @@ async function mapperAnnotation(relPath: string): Promise<string> {
   return importedFqcn(source, match![1]);
 }
 
-async function scaffold(projectType: "boot" | "war", stackVersion: "5.0" | "4.3"): Promise<void> {
+async function scaffold(projectType: "boot" | "war", stackVersion: "5.1" | "4.3"): Promise<void> {
   await generateScaffoldProject({
     projectName: "board-app",
     packageName: "egovframework.example.board",
@@ -90,7 +90,7 @@ afterEach(async () => {
 });
 
 describe.each([
-  ["5.0 Boot", "boot", "5.0", "org.egovframe.rte.psl.dataaccess.mapper.EgovMapper"],
+  ["5.1 Boot", "boot", "5.1", "org.egovframe.rte.psl.dataaccess.mapper.EgovMapper"],
   ["4.3 Boot", "boot", "4.3", "org.egovframe.rte.psl.dataaccess.mapper.Mapper"],
   ["4.3 WAR", "war", "4.3", "org.egovframe.rte.psl.dataaccess.mapper.Mapper"],
 ] as const)("%s 매퍼 스캔 설정", (_label, projectType, stackVersion, expected) => {
@@ -108,7 +108,7 @@ describe.each([
 });
 
 describe.each([
-  ["5.0 Boot", "5.0"],
+  ["5.1 Boot", "5.1"],
   ["4.3 Boot", "4.3"],
 ] as const)("%s 첨부파일 인프라 매퍼", (_label, stackVersion) => {
   it("FileManageMapper 가 annotationClass 와 일치한다", async () => {

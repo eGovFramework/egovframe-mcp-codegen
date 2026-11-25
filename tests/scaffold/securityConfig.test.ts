@@ -51,7 +51,7 @@ beforeAll(async () => {
     ddl: BOARD_DDL,
     description: "security config test",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
   projectDir = JSON.parse(resultJson).projectDir;
 });

@@ -100,7 +100,7 @@ describe("manifestLoader — output 렌더링", () => {
     );
   });
 
-  it("Boot 5.0 thymeleaf 경로는 entityModule 디렉터리를 포함한다", () => {
+  it("Boot 5.1 thymeleaf 경로는 entityModule 디렉터리를 포함한다", () => {
     const out = resolveManifest("manifests/boot50.json", SAMPLE_CONTEXT);
     const thList = out.find(
       (e) => e.template === "boot50/thymeleaf/entityList.html.hbs",

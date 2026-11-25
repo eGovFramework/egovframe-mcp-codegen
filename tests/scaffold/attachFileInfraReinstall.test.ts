@@ -17,7 +17,7 @@ const BOARD_DDL = "CREATE TABLE BOARD (ID VARCHAR(16) NOT NULL PRIMARY KEY, TITL
 let tmpRoot: string;
 let projectDir: string;
 
-async function scaffold(stackVersion: "5.0" | "4.3", withAttachment: boolean): Promise<void> {
+async function scaffold(stackVersion: "5.1" | "4.3", withAttachment: boolean): Promise<void> {
   await generateScaffoldProject({
     projectName: "board-app",
     packageName: "egovframework.example.board",
@@ -42,7 +42,7 @@ afterEach(async () => {
   await fs.remove(tmpRoot);
 });
 
-describe.each(["5.0", "4.3"] as const)("%s Boot 인프라 도구 응답", (stackVersion) => {
+describe.each(["5.1", "4.3"] as const)("%s Boot 인프라 도구 응답", (stackVersion) => {
   it("처음 설치하면 설치 완료와 자체 검증 결과를 알린다", async () => {
     await scaffold(stackVersion, false);
     const out = await egovAddAttachFileInfrastructure({ projectPath: projectDir });

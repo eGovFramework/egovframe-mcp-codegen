@@ -18,7 +18,7 @@
 `resolveAttachmentDecision`의 판정 순서는 다음과 같습니다.
 
 1. `withAttachment` 인자가 있으면 그 값을 사용하고 질문하지 않습니다.
-2. 5.0 Boot가 아니면 `false`로 처리합니다.
+2. Boot 가 아니면 `false`로 처리합니다.
 3. `elicitInput`을 `mode: "form"`, `{ timeout: 60_000, signal }`로 호출합니다.
 
 | 결과 | 처리 |
@@ -27,6 +27,14 @@
 | `decline` | `false`로 생성 |
 | `cancel` 또는 호출 취소 | 파일 없이 중단, `isError` 없음 |
 | 미지원 클라이언트의 SDK 예외, 시간 초과, 값 없는 `accept`, 기타 예외 | 파일 없이 `isError`, AI에게 사용자 확인 후 재호출 요청 |
+
+`egov_scaffold_project` 는 `resolveScaffoldDecision`(`scaffoldDecision.ts`)을 사용합니다. 판정 순서는 같지만 `stackVersion` 과 `withAttachment` 를 함께 다룹니다.
+
+1. WAR 는 질문 없이 `stackVersion=4.3`, `withAttachment=false` 로 확정합니다.
+2. Boot 에서 두 인자 중 생략된 것만 form 하나에 담아 한 번 묻습니다. `stackVersion` 은 `oneOf`(`5.1` / `4.3`, 제목 "표준프레임워크 5.1 (Spring Boot 3, Java 17)" / "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)") 단일 선택, `withAttachment` 는 boolean 입니다.
+3. `decline` 은 버전을 물었을 때는 취소(파일 없음), 첨부 여부만 물었을 때는 `false` 입니다. 답을 받지 못한 항목이 있으면 그 항목만 지정해 재호출하라는 오류를 돌려줍니다.
+
+두 모듈은 `elicitForm.ts` 의 공용 호출부(`mode: "form"`, 60초 제한, `signal`, 미지원 클라이언트 예외 처리)를 공유합니다.
 
 ## 3. 문서 비교
 

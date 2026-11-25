@@ -1,7 +1,7 @@
 /**
  * Tool: egov_scaffold_project
  *
- * DDL 한 줄에서 eGovFrame 5.0/4.3 Boot 또는 WAR 프로젝트를 완전 생성합니다.
+ * DDL 한 줄에서 eGovFrame 5.1/4.3 Boot 또는 WAR 프로젝트를 완전 생성합니다.
  */
 
 import path from "node:path";
@@ -32,7 +32,7 @@ import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRoll
  * - `projectName`: Maven artifactId 규약(소문자 시작, 영숫자+`-`)
  * - `packageName`: Java 패키지 명명 규약(점 구분, 식별자 시작 영문)
  * - `entityName`: PascalCase
- * - `projectType` / `stackVersion`: enum, 모순 조합 차단(WAR + 5.0 금지)
+ * - `projectType` / `stackVersion`: enum, 모순 조합 차단(WAR + 5.1 금지)
  */
 export const ScaffoldInputSchema = z
   .object({
@@ -65,7 +65,12 @@ export const ScaffoldInputSchema = z
       }),
     description: z.string().optional().default(""),
     projectType: z.enum(["boot", "war"]).optional().default("boot"),
-    stackVersion: z.enum(["4.3", "5.0"]).optional().default("5.0"),
+    /**
+     * MCP 계층(src/index.ts)은 생략 시 사용자에게 Elicitation 으로 묻고 확정값을 넘긴다.
+     * 여기서는 생략을 허용하되 아래 transform 에서 projectType 에 맞춰 채운다
+     * (WAR → '4.3', Boot → '5.1'). 이 기본값은 이 함수를 직접 호출하는 경로(테스트 등)만을 위한 것이다.
+     */
+    stackVersion: z.enum(["4.3", "5.1"]).optional(),
     /**
      * scaffold 진입 전 DDL 정규화(케이스/공백/인용부호) 수행 여부 (기본 true).
      * 의미를 바꾸지 않는 보수적 변환만 수행하므로 끄지 않는 것을 권장한다.
@@ -73,24 +78,24 @@ export const ScaffoldInputSchema = z
     normalizeDdl: z.boolean().optional().default(true),
     /**
      * true 이면 첫 엔티티를 첨부파일 연결 형태로 만들고 첨부파일 인프라를 함께 설치한다.
-     * eGovFrame Boot(5.0, 4.3) 에서만 지원한다.
+     * eGovFrame Boot(5.1, 4.3) 에서만 지원한다.
      */
     withAttachment: z
       .boolean()
       .optional()
       .default(false)
       .describe(
-        "true 이면 첫 엔티티에 첨부파일 업로드/다운로드를 연결하고 첨부파일 인프라를 함께 설치합니다 (eGovFrame Boot 전용: 5.0, 4.3).",
+        "true 이면 첫 엔티티에 첨부파일 업로드/다운로드를 연결하고 첨부파일 인프라를 함께 설치합니다 (eGovFrame Boot 전용: 5.1, 4.3).",
       ),
   })
   .superRefine((v, ctx) => {
     // WAR 는 4.3 만 지원한다. 모순 조합을 차단한다.
-    if (v.projectType === "war" && v.stackVersion === "5.0") {
+    if (v.projectType === "war" && v.stackVersion === "5.1") {
       ctx.addIssue({
         code: "custom",
         path: ["stackVersion"],
         message:
-          "projectType='war' 는 stackVersion='4.3' 만 지원합니다. WAR + 5.0 조합은 허용되지 않습니다.",
+          "projectType='war' 는 stackVersion='4.3' 만 지원합니다. WAR + 5.1 조합은 허용되지 않습니다.",
       });
     }
     if (v.withAttachment && v.projectType !== "boot") {
@@ -98,10 +103,17 @@ export const ScaffoldInputSchema = z
         code: "custom",
         path: ["withAttachment"],
         message:
-          "withAttachment=true 는 eGovFrame Boot(projectType='boot', 5.0 및 4.3) 만 지원합니다.",
+          "withAttachment=true 는 eGovFrame Boot(projectType='boot', 5.1 및 4.3) 만 지원합니다.",
       });
     }
-  });
+  })
+  // 생략된 stackVersion 을 projectType 에 맞춰 채운다 (WAR 는 4.3 전용). overwrite 는 스키마 타입(.shape)을 유지한다.
+  .overwrite((v) => ({ ...v, stackVersion: v.stackVersion ?? defaultStackVersion(v.projectType) }));
+
+/** 직접 호출 경로에서 stackVersion 이 생략됐을 때의 기본값. MCP 계층은 생략 시 사용자에게 묻는다. */
+export function defaultStackVersion(projectType: "boot" | "war"): "4.3" | "5.1" {
+  return projectType === "war" ? "4.3" : "5.1";
+}
 
 export type ScaffoldInput = z.infer<typeof ScaffoldInputSchema>;
 
@@ -120,6 +132,8 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
     throw nonRetryable(formatZodError(parsed.error));
   }
   const params = parsed.data;
+  // overwrite 가 이미 채웠지만 타입상 optional 이므로 한 번 더 좁힌다.
+  const stackVersion = params.stackVersion ?? defaultStackVersion(params.projectType);
 
   try {
     // 2) DDL 정규화 (옵션, 기본 on)
@@ -140,7 +154,7 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
       ddl: ddlForGenerator,
       description: params.description,
       projectType: params.projectType,
-      stackVersion: params.stackVersion,
+      stackVersion,
       withAttachment: params.withAttachment,
     });
 
@@ -172,8 +186,8 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
     }
 
     const isWar = result.projectType === "war";
-    const isBoot50 = result.stackVersion === "5.0";
-    const egovLabel = isBoot50 ? "eGovFrame 5.0" : "eGovFrame 4.3";
+    const isBoot50 = result.stackVersion === "5.1";
+    const egovLabel = isBoot50 ? "eGovFrame 5.1" : "eGovFrame 4.3";
 
     const lines = [
       `✅ ${egovLabel} ${isWar ? "WAR" : "Spring Boot"} 프로젝트 생성 완료!`,

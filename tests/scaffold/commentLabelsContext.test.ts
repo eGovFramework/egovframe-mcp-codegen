@@ -14,7 +14,7 @@ const base = {
   entityName: "Notice",
   description: "",
   projectType: "boot" as const,
-  stackVersion: "5.0" as const,
+  stackVersion: "5.1" as const,
 };
 
 describe("applyLabels", () => {

@@ -39,7 +39,7 @@ async function renderSelectFileInf(): Promise<string> {
     ddl: BOARD_DDL,
     description: "",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
   const projectDir = path.join(tmpRoot, "board-app");
   await egovAddAttachFileInfrastructure({ projectPath: projectDir });

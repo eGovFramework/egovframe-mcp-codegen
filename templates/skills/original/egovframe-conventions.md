@@ -3,11 +3,11 @@ name: egovframe-conventions
 description: 전자정부 표준프레임워크(eGovFrame) 5.x / Spring Boot 3.x / Java 17 / Jakarta EE 프로젝트의 Java 코드(Controller·Service·DAO·VO·Spring 설정·pom.xml 의존성)를 작성·수정·리뷰할 때 적용. 위반 시 컴파일 실패 또는 기동 실패로 직결되는 invariants 모음 — `@EgovMapper` (NOT `@Mapper`), `@EgovNullCheck` String 전용, `jakarta.*` (NOT `javax.*`), `EgovTableIdGnrServiceImpl` (NOT `EgovTableIdGnrService`), `ExceptionHandlerService` 는 `.manager` 하위, Bootstrap Bean 12종 수동 등록, eGovFrame Boot Parent 설정, RTE artifactId 네이밍 등. "표준프레임워크", "egovframe", "전자정부 프레임워크" 키워드 또는 `org.egovframe.rte.*` import 가 있는 코드 작업 시 트리거.
 ---
 
-# eGovFrame Coding Conventions (v5.0)
+# eGovFrame Coding Conventions (v5.1)
 
 > **언제 적용:** `org.egovframe.rte.*` 를 import 하는 **Java 코드**(Controller / Service / DAO / VO / Spring 설정 / pom.xml 의존성)를 작성·수정·리뷰할 때.
 > **적용 제외:** 프론트엔드(JSP/Thymeleaf 자체), `egovframework.rte.*`(3.10 이하 패키지), 일반 Spring 모범사례(별도로 알고 있다고 가정).
-> **요지:** eGovFrame 5.0 은 **Spring Boot 3.x / Spring 6.x / Java 17 / Jakarta EE 9+** 위에서 동작하며, RTE 의 artifactId·패키지 네이밍·일부 클래스명이 4.x 와 다르다. 본 룰은 **위반 시 컴파일 실패 또는 기동 실패로 직결되는 invariants** 만 모은 것 — 패턴 설명·예제 코드는 scaffold 가 생성한 실제 파일을 참고하거나 별도 `docs/egovframe-architecture.md` 문서를 참조한다.
+> **요지:** eGovFrame 5.1 은 **Spring Boot 3.x / Spring 6.x / Java 17 / Jakarta EE 9+** 위에서 동작하며, RTE 의 artifactId·패키지 네이밍·일부 클래스명이 4.x 와 다르다. 본 룰은 **위반 시 컴파일 실패 또는 기동 실패로 직결되는 invariants** 만 모은 것 — 패턴 설명·예제 코드는 scaffold 가 생성한 실제 파일을 참고하거나 별도 `docs/egovframe-architecture.md` 문서를 참조한다.
 
 ---
 
@@ -15,7 +15,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x / Spring Boot 3.x
 
 ### Bootstrap Bean 12종 (필수 — 빠지면 기동 실패)
 
-`EgovAbstractServiceImpl` 또는 `EgovPropertyServiceImpl` 를 쓰는 Boot 프로젝트는 다음 Bean 들을 반드시 `@Configuration` 클래스에 수동 등록한다. v5.0 공식 템플릿은 단일 클래스가 아닌 **9개 책임별 `@Configuration` 으로 분할** 후 `@Import` 로 결합한다.
+`EgovAbstractServiceImpl` 또는 `EgovPropertyServiceImpl` 를 쓰는 Boot 프로젝트는 다음 Bean 들을 반드시 `@Configuration` 클래스에 수동 등록한다. v5.1 공식 템플릿은 단일 클래스가 아닌 **9개 책임별 `@Configuration` 으로 분할** 후 `@Import` 로 결합한다.
 
 ```
 egovframework.example.config/
@@ -61,12 +61,12 @@ egovframework.example.config/
 | `EgovMap` | `org.egovframe.rte.psl.dataaccess.util.EgovMap` | 동일 |
 | **`@EgovMapper`** | `org.egovframe.rte.psl.dataaccess.mapper.EgovMapper` | ⚠️ **v4.x 는 `Mapper`** — 매퍼 인터페이스 어노테이션은 반드시 `@EgovMapper` |
 | `PaginationInfo` | `org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo` | 동일 |
-| **`AbstractKrdsPaginationRenderer`** | `org.egovframe.rte.ptl.mvc.tags.ui.pagination.AbstractKrdsPaginationRenderer` | ⚠️ **v5.0 신규** |
+| **`AbstractKrdsPaginationRenderer`** | `org.egovframe.rte.ptl.mvc.tags.ui.pagination.AbstractKrdsPaginationRenderer` | ⚠️ **v5.x 신규** |
 | `ExceptionTransfer` | `org.egovframe.rte.fdl.cmmn.aspect.ExceptionTransfer` | 동일 |
 | `ExceptionHandler` | `org.egovframe.rte.fdl.cmmn.exception.handler.ExceptionHandler` | `.handler` 하위 |
 | **`ExceptionHandlerService`** | `org.egovframe.rte.fdl.cmmn.exception.**manager**.ExceptionHandlerService` | ⚠️ **`.handler` 아님 — `.manager` 하위** (자주 헷갈림) |
 | `DefaultExceptionHandleManager` | `org.egovframe.rte.fdl.cmmn.exception.manager.DefaultExceptionHandleManager` | `.manager` 하위 |
-| `EgovNullCheck` | `org.egovframe.rte.ptl.reactive.validation.EgovNullCheck` | ⚠️ **v5.0 신규 — String 필드 전용** (아래 Validation Layer 참고) |
+| `EgovNullCheck` | `org.egovframe.rte.ptl.reactive.validation.EgovNullCheck` | ⚠️ **v5.x 신규 — String 필드 전용** (아래 Validation Layer 참고) |
 | `@Resource` | `jakarta.annotation.Resource` | ⚠️ **v4.x 는 `javax.*`** |
 | `@PostConstruct` | `jakarta.annotation.PostConstruct` | ⚠️ **v4.x 는 `javax.*`** |
 | `@Valid` | `jakarta.validation.Valid` | ⚠️ **v4.x 는 `javax.*`** |
@@ -180,19 +180,19 @@ public class SampleServiceImpl implements SampleService { }
 |------|----------|
 | iBatis (legacy) | `extends EgovAbstractDAO` |
 | MyBatis 클래스 매퍼 | `extends EgovAbstractMapper` |
-| MyBatis 인터페이스 매퍼 | **`@EgovMapper("name")`** (eGovFrame 5.0) + `@MapperScan` |
+| MyBatis 인터페이스 매퍼 | **`@EgovMapper("name")`** (eGovFrame 5.x) + `@MapperScan` |
 | JPA | `extends JpaRepository`, `CrudRepository`, 또는 `PagingAndSortingRepository` |
 | JPA 대안 | `EntityManager` 를 직접/베이스 클래스로 주입 |
 
 **금지:** `SqlSessionDaoSupport` 의 `insert`, `delete`, `update`, `select`, `list` 직접 호출.
 
-**v5.0 매퍼 어노테이션 변경:**
+**v5.1 매퍼 어노테이션 변경:**
 - v4.x: `@Mapper("name")` from `org.egovframe.rte.psl.dataaccess.mapper.Mapper`
-- **v5.0: `@EgovMapper("name")` from `org.egovframe.rte.psl.dataaccess.mapper.EgovMapper`**
+- **v5.1: `@EgovMapper("name")` from `org.egovframe.rte.psl.dataaccess.mapper.EgovMapper`**
 - 클래스명·import 경로가 모두 바뀌었다. 단순 import 변경만으로는 동작하지 않는다.
 
 ```java
-// ✅ MyBatis 인터페이스 매퍼 (v5.0)
+// ✅ MyBatis 인터페이스 매퍼 (v5.1)
 import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
 
 @EgovMapper("sampleMapper")
@@ -214,9 +214,9 @@ public interface SampleRepository extends JpaRepository<Sample, Long> {
     List<Sample> findByStatus(String status);
 }
 
-// ❌ v4.x @Mapper 사용 — v5.0 에서 EgovMapper 로 교체
+// ❌ v4.x @Mapper 사용 — v5.1 에서 EgovMapper 로 교체
 import org.egovframe.rte.psl.dataaccess.mapper.Mapper;
-@Mapper("sampleMapper") // ❌ v5.0 은 @EgovMapper
+@Mapper("sampleMapper") // ❌ v5.1 은 @EgovMapper
 
 // ❌ SqlSessionDaoSupport 직접 호출 — 금지
 @Repository
@@ -231,9 +231,9 @@ public class SampleDAO extends SqlSessionDaoSupport {
 
 ## Configuration Layer
 
-**Target:** `@Configuration` Java Config (XML 설정은 v5.0 권장 외).
+**Target:** `@Configuration` Java Config (XML 설정은 v5.1 권장 외).
 
-**v5.0 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
+**v5.1 표준 패턴:** 설정을 **단일 모놀리식 클래스가 아닌 책임별 9개 파일로 분할**한다 (`@Import` 로 결합). 각 파일은 단일 책임만 가진다.
 
 | Config 클래스 | 책임 |
 |--------------|------|
@@ -253,7 +253,7 @@ public class SampleDAO extends SqlSessionDaoSupport {
 - 커넥션 풀: HikariCP(권장), DBCP2, 또는 `EmbeddedDatabaseBuilder` (개발/테스트)
 
 ```java
-// ✅ v5.0 표준 — 메인 Web Config 가 다른 설정들을 Import
+// ✅ v5.1 표준 — 메인 Web Config 가 다른 설정들을 Import
 @Configuration
 @Import({
     EgovConfigAspect.class,
@@ -270,7 +270,7 @@ public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware 
 ```
 
 ```java
-// ❌ 모든 Bean 을 단일 @Configuration 클래스에 몰아넣기 — v5.0 권장 패턴 위반
+// ❌ 모든 Bean 을 단일 @Configuration 클래스에 몰아넣기 — v5.1 권장 패턴 위반
 @Configuration
 public class EgovConfigWeb {
     @Bean public LeaveaTrace leaveaTrace() { ... }
@@ -336,10 +336,10 @@ public class SampleVO extends SampleDefaultVO {
 
 ## Library and Extension Rules
 
-**eGovFrame Boot Parent 설정** — Spring Boot 기반 프로젝트는 반드시 v5.0 Boot Parent 를 사용:
+**eGovFrame Boot Parent 설정** — Spring Boot 기반 프로젝트는 반드시 v5.1 Boot Parent 를 사용:
 
 ```xml
-<!-- ✅ pom.xml 최상단 parent 설정 (v5.0) -->
+<!-- ✅ pom.xml 최상단 parent 설정 (v5.1) -->
 <parent>
     <groupId>org.egovframe.boot</groupId>
     <artifactId>egovframe-boot-starter-parent</artifactId>
@@ -347,13 +347,13 @@ public class SampleVO extends SampleDefaultVO {
 </parent>
 ```
 
-> **artifactId 변경 주의 (v4.3 → v5.0):**
+> **artifactId 변경 주의 (v4.3 → v5.1):**
 > - v4.3: `org.egovframe.boot.starter.parent`
-> - v5.0: `egovframe-boot-starter-parent`
+> - v5.1: `egovframe-boot-starter-parent`
 >
 > 점 → 하이픈, `org.` 접두 제거. parent 만 바꾸고 자식 의존성 artifactId 를 그대로 두면 **dependency resolution 실패**.
 
-**필수 의존성 (pom.xml)** — v5.0 Boot Parent 가 RTE 모듈의 버전을 관리하므로 `<version>` 태그를 명시하지 않는다:
+**필수 의존성 (pom.xml)** — v5.1 Boot Parent 가 RTE 모듈의 버전을 관리하므로 `<version>` 태그를 명시하지 않는다:
 
 ```xml
 <repositories>
@@ -366,7 +366,7 @@ public class SampleVO extends SampleDefaultVO {
 </repositories>
 
 <dependencies>
-    <!-- 표준프레임워크 실행환경 (v5.0 artifactId — egovframe-rte-* 형식) -->
+    <!-- 표준프레임워크 실행환경 (v5.1 artifactId — egovframe-rte-* 형식) -->
     <dependency>
         <groupId>org.egovframe.rte</groupId>
         <artifactId>egovframe-rte-ptl-mvc</artifactId>
@@ -383,7 +383,7 @@ public class SampleVO extends SampleDefaultVO {
         <groupId>org.egovframe.rte</groupId>
         <artifactId>egovframe-rte-fdl-property</artifactId>
     </dependency>
-    <!-- v5.0 신규 — @EgovNullCheck 등 Reactive Validation 어노테이션 사용 시 필수 -->
+    <!-- v5.x 신규 — @EgovNullCheck 등 Reactive Validation 어노테이션 사용 시 필수 -->
     <dependency>
         <groupId>org.egovframe.rte</groupId>
         <artifactId>egovframe-rte-ptl-reactive</artifactId>
@@ -391,9 +391,9 @@ public class SampleVO extends SampleDefaultVO {
 </dependencies>
 ```
 
-> **artifactId 변경 표 (v4.3 → v5.0):**
+> **artifactId 변경 표 (v4.3 → v5.1):**
 >
-> | v4.3 | v5.0 |
+> | v4.3 | v5.1 |
 > |------|------|
 > | `org.egovframe.rte.ptl.mvc` | `egovframe-rte-ptl-mvc` |
 > | `org.egovframe.rte.psl.dataaccess` | `egovframe-rte-psl-dataaccess` |
@@ -423,7 +423,7 @@ eGovFrame Boot Parent **5.1.0** 은 다음 환경을 고정한다 (Parent 가 �
 
 | 항목 | 버전 | 비고 |
 |------|------|------|
-| Java | **17** (표준프레임워크 5.0 공식 기준) | Boot 3.x 요구 (Java 21 도 동작은 하나 v5.0 표준은 17) |
+| Java | **17** (표준프레임워크 5.1 공식 기준) | Boot 3.x 요구 (Java 21 도 동작은 하나 v5.1 표준은 17) |
 | Spring Boot | **3.x** | jakarta.* 패키지 |
 | Spring Framework | **6.x** | |
 | Thymeleaf | **3.1.x** + spring6 dialect | `org.thymeleaf.spring6` |
@@ -431,22 +431,22 @@ eGovFrame Boot Parent **5.1.0** 은 다음 환경을 고정한다 (Parent 가 �
 | MyBatis Spring Boot Starter | **Parent 가 관리하지 않음 → `<version>3.0.3</version>` 명시 필요** | Spring Boot 3.x 호환은 mybatis-spring-boot-starter **3.0.x** |
 | commons-lang3 | Parent 가 관리 (3.14+) | 자식 pom 의 `commons-lang3.version` 오버라이드 **불필요** (v4.3 공식 부모 `org.egovframe.boot.starter.parent` 4.3.2 도 3.20.0 으로 재정의하므로 어느 버전이든 자식이 덮어쓰지 않는다) |
 
-> **v4.3 → v5.0 이행 시 제거할 설정:**
-> - `log4j-slf4j-impl` 의존성 ← v4.3 은 부모가 slf4j-api 1.7 을 유지해 자식 pom 이 SLF4J 1.7 바인딩을 직접 선언했지만, v5.0 은 SLF4J 2 바인딩(`log4j-slf4j2-impl`)을 Parent 가 관리
-> - `<commons-lang3.version>3.20.0</commons-lang3.version>`, `<log4j2.version>2.25.5</log4j2.version>`, `<org.egovframe.rte.version>4.3.x</org.egovframe.rte.version>`, RTE 의존성의 `<version>${org.egovframe.rte.version}</version>` ← 공식 부모로 전환하기 전 v4.3 scaffold(`spring-boot-starter-parent` 직접 상속)가 넣던 선언. v4.3 공식 부모와 v5.0 Parent 는 모두 실행환경 BOM 과 Boot 관리 버전 재정의를 부모에서 처리하므로 자식 pom 에 두지 않는다
+> **v4.3 → v5.1 이행 시 제거할 설정:**
+> - `log4j-slf4j-impl` 의존성 ← v4.3 은 부모가 slf4j-api 1.7 을 유지해 자식 pom 이 SLF4J 1.7 바인딩을 직접 선언했지만, v5.1 은 SLF4J 2 바인딩(`log4j-slf4j2-impl`)을 Parent 가 관리
+> - `<commons-lang3.version>3.20.0</commons-lang3.version>`, `<log4j2.version>2.25.5</log4j2.version>`, `<org.egovframe.rte.version>4.3.x</org.egovframe.rte.version>`, RTE 의존성의 `<version>${org.egovframe.rte.version}</version>` ← 공식 부모로 전환하기 전 v4.3 scaffold(`spring-boot-starter-parent` 직접 상속)가 넣던 선언. v4.3 공식 부모와 v5.1 Parent 는 모두 실행환경 BOM 과 Boot 관리 버전 재정의를 부모에서 처리하므로 자식 pom 에 두지 않는다
 
-> **반대로, v5.0 에서도 명시해야 하는 설정:**
+> **반대로, v5.1 에서도 명시해야 하는 설정:**
 > - `mybatis-spring-boot-starter` 의 `<version>3.0.3</version>` 은 **Boot Parent 5.1.0 이 관리하지 않으므로 반드시 명시**해야 함. 누락 시 `'dependencies.dependency.version' for org.mybatis.spring.boot:mybatis-spring-boot-starter:jar is missing` 오류로 빌드 실패.
 
 ```xml
-<!-- ✅ v5.0 — mybatis-spring-boot-starter 는 명시적 버전 지정 -->
+<!-- ✅ v5.1 — mybatis-spring-boot-starter 는 명시적 버전 지정 -->
 <dependency>
     <groupId>org.mybatis.spring.boot</groupId>
     <artifactId>mybatis-spring-boot-starter</artifactId>
     <version>3.0.3</version>  <!-- Spring Boot 3.x 호환 -->
 </dependency>
 
-<!-- ❌ v5.0 에서 version 생략 — Parent 가 관리하지 않아 빌드 실패 -->
+<!-- ❌ v5.1 에서 version 생략 — Parent 가 관리하지 않아 빌드 실패 -->
 <dependency>
     <groupId>org.mybatis.spring.boot</groupId>
     <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -473,7 +473,7 @@ import javax.validation.Valid;
 import javax.servlet.http.HttpServletRequest;
 import javax.persistence.Entity;
 
-// ✅ v5.0 (Spring Boot 3.x) — jakarta.*
+// ✅ v5.1 (Spring Boot 3.x) — jakarta.*
 import jakarta.annotation.Resource;
 import jakarta.annotation.PostConstruct;
 import jakarta.validation.Valid;
@@ -492,13 +492,13 @@ import org.thymeleaf.spring5.SpringTemplateEngine;
 import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
-// ✅ v5.0 — spring6
+// ✅ v5.1 — spring6
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
 import org.thymeleaf.spring6.view.ThymeleafViewResolver;
 ```
 
-#### Logging 스택 — Log4j2 필수 (v5.0 동일)
+#### Logging 스택 — Log4j2 필수 (v5.1 동일)
 
 Spring Boot 기본 스타터는 **Logback**, eGovFrame 은 **Log4j2** 를 전제로 함.
 동시 존재 시 `SLF4J: Class path contains multiple SLF4J bindings` 경고/충돌 발생.
@@ -527,7 +527,7 @@ Spring Boot 기본 스타터는 **Logback**, eGovFrame 은 **Log4j2** 를 전제
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-log4j2</artifactId>
 </dependency>
-<!-- v5.0 권장 — Bean Validation 표준 지원 -->
+<!-- v5.1 권장 — Bean Validation 표준 지원 -->
 <dependency>
     <groupId>org.springframework.boot</groupId>
     <artifactId>spring-boot-starter-validation</artifactId>
@@ -545,7 +545,7 @@ Spring Boot 기본 스타터는 **Logback**, eGovFrame 은 **Log4j2** 를 전제
 **라이브러리 규칙:**
 - `org.egovframe.rte.*` JAR 는 **수정 금지** — MD5/SHA1 이 원본 배포본과 일치해야 한다.
 - Spring Framework / Spring Boot 버전을 transitive deps 로 임의 변경 금지(정당한 패치 업그레이드는 예외).
-- v5.0 Boot Parent 가 관리하는 의존성 버전은 **`<properties>` 또는 `<version>` 으로 덮어쓰지 말 것** (조합 검증된 버전이 깨짐).
+- v5.1 Boot Parent 가 관리하는 의존성 버전은 **`<properties>` 또는 `<version>` 으로 덮어쓰지 말 것** (조합 검증된 버전이 깨짐).
 - `commons-logging` 충돌이 발생할 경우에 한해 RTE 의존성에 exclusion 처리.
 
 **확장 규칙** — eGovFrame RTE 클래스를 확장할 때:
@@ -573,7 +573,7 @@ public class CommonDAO extends EgovAbstractDAO { }
 **패키지 레이아웃** — 둘 중 하나를 선택하고 **프로젝트 전체에 일관 적용**:
 
 ```
-// ✅ 도메인 우선 (v5.0 공식 템플릿이 채택한 방식)
+// ✅ 도메인 우선 (v5.1 공식 템플릿이 채택한 방식)
 egovframework.example.sample.web.EgovSampleController
 egovframework.example.sample.service.EgovSampleService
 egovframework.example.sample.service.SampleVO

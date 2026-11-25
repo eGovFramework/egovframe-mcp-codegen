@@ -47,7 +47,7 @@ async function scaffoldBoardApp() {
     ddl: BOARD_DDL,
     description: "",
     projectType: "boot",
-    stackVersion: "5.0",
+    stackVersion: "5.1",
   });
   return path.join(tmpRoot, "board-app");
 }

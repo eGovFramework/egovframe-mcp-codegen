@@ -172,7 +172,7 @@ describe("egov_add_entity — 쓰기 중간 실패 롤백 (통합)", () => {
       ddl: BOARD_DDL,
       description: "",
       projectType: "boot",
-      stackVersion: "5.0",
+      stackVersion: "5.1",
     });
     projectDir = path.join(tmpRoot, "board-app");
     thymeleafDir = path.join(projectDir, "src/main/resources/templates/thymeleaf");

@@ -3,7 +3,7 @@ name: egovframe-troubleshooting
 description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트(Spring Boot 3.x / Java 17 / Jakarta EE)에서 컴파일 오류·기동 실패·Bean 초기화 예외가 발생했을 때 적용. NoClassDefFoundError, NoSuchBeanDefinitionException, ClassCastException, NoSuchMethodError, "Failed to parse mapping resource", "cannot find symbol", "package javax.* does not exist", "release version 21 not supported" 등 오류 메시지 진단 시 트리거. 신규 프로젝트 생성 직후 첫 `mvn spring-boot:run` 전 사전 점검용으로도 사용.
 ---
 
-# eGovFrame Troubleshooting (v5.0 + Spring Boot 3.x)
+# eGovFrame Troubleshooting (v5.1 + Spring Boot 3.x)
 
 > **언제 적용:** eGovFrame 5.x Boot 프로젝트에서 **컴파일 오류·기동 실패·Bean 초기화 예외**가 발생했을 때. `egov_scaffold_project` 로 새 프로젝트를 생성한 직후 **첫 `mvn spring-boot:run` 전 사전 점검**용으로도 사용.
 > **관계:** `egovframe-conventions` Skill 은 "코딩 invariants" (위반 시 본 카탈로그의 증상이 발생), 본 Skill 은 **그 증상의 실제 증상 → 원인 → fix** 대응표. 패턴·예제 코드는 별도 레퍼런스 문서 `docs/egovframe-architecture.md` 를 참고.
@@ -20,7 +20,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   [ERROR] EgovSampleServiceImpl.java:[8,20] package javax.annotation does not exist
   [ERROR] EgovSampleController.java:[12,20] package javax.validation does not exist
   ```
-- **Cause**: Spring Boot 3.x (= eGovFrame 5.0) 는 **Jakarta EE 9+** 로 이전.
+- **Cause**: Spring Boot 3.x (= eGovFrame 5.1) 는 **Jakarta EE 9+** 로 이전.
   `javax.*` 엔터프라이즈 API 가 모두 `jakarta.*` 로 이동.
 - **Fix**: import 를 `jakarta.*` 로 일괄 교체.
   ```java
@@ -30,7 +30,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   import javax.validation.Valid;
   import javax.servlet.http.HttpServletRequest;
 
-  // ✅ After (v5.0)
+  // ✅ After (v5.1)
   import jakarta.annotation.Resource;
   import jakarta.annotation.PostConstruct;
   import jakarta.validation.Valid;
@@ -52,9 +52,9 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     location: package org.egovframe.rte.psl.dataaccess.mapper
   ```
   또는 `@Mapper` 가 정상 import 되었는데 **런타임에 Bean 등록이 안 됨**.
-- **Cause**: v5.0 부터 **매퍼 어노테이션 클래스명이 변경**됨.
+- **Cause**: v5.1 부터 **매퍼 어노테이션 클래스명이 변경**됨.
   - v4.x: `org.egovframe.rte.psl.dataaccess.mapper.Mapper` (`@Mapper`)
-  - v5.0: `org.egovframe.rte.psl.dataaccess.mapper.EgovMapper` (`@EgovMapper`)
+  - v5.1: `org.egovframe.rte.psl.dataaccess.mapper.EgovMapper` (`@EgovMapper`)
 - **Fix**:
   ```java
   // ❌ Before (v4.x)
@@ -62,7 +62,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   @Mapper("sampleMapper")
   public interface SampleMapper { ... }
 
-  // ✅ After (v5.0)
+  // ✅ After (v5.1)
   import org.egovframe.rte.psl.dataaccess.mapper.EgovMapper;
   @EgovMapper("sampleMapper")
   public interface SampleMapper { ... }
@@ -79,7 +79,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     symbol:   class EgovTableIdGnrService
     location: package org.egovframe.rte.fdl.idgnr.impl
   ```
-- **Cause**: v5.0 에서 클래스명이 **`EgovTableIdGnrService` → `EgovTableIdGnrServiceImpl`** 로 변경 (Impl 접미사 추가).
+- **Cause**: v5.1 에서 클래스명이 **`EgovTableIdGnrService` → `EgovTableIdGnrServiceImpl`** 로 변경 (Impl 접미사 추가).
 - **Fix**:
   ```java
   // ❌ Before (v4.x)
@@ -87,7 +87,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   EgovTableIdGnrService bean = new EgovTableIdGnrService();
   bean.afterPropertiesSet(); // v4.x 에서 수동 호출 필요했음
 
-  // ✅ After (v5.0)
+  // ✅ After (v5.1)
   import org.egovframe.rte.fdl.idgnr.impl.EgovTableIdGnrServiceImpl;
   EgovTableIdGnrServiceImpl bean = new EgovTableIdGnrServiceImpl();
   // afterPropertiesSet() 불필요 — Spring 라이프사이클이 처리
@@ -104,7 +104,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     symbol:   class EgovIdGnrStrategyImpl
     location: package org.egovframe.rte.fdl.idgnr.impl
   ```
-- **Cause**: `EgovIdGnrStrategyImpl` 은 **`.impl` 이 아닌 `.impl.strategy` 하위 패키지**에 위치 (v4.x, v5.0 동일).
+- **Cause**: `EgovIdGnrStrategyImpl` 은 **`.impl` 이 아닌 `.impl.strategy` 하위 패키지**에 위치 (v4.x, v5.1 동일).
 - **Fix**:
   ```java
   // ❌ Before
@@ -130,7 +130,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   import org.thymeleaf.spring5.templateresolver.SpringResourceTemplateResolver;
   import org.thymeleaf.spring5.view.ThymeleafViewResolver;
 
-  // ✅ v5.0
+  // ✅ v5.1
   import org.thymeleaf.spring6.SpringTemplateEngine;
   import org.thymeleaf.spring6.templateresolver.SpringResourceTemplateResolver;
   import org.thymeleaf.spring6.view.ThymeleafViewResolver;
@@ -147,10 +147,10 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     org.springframework.core.io.Resource[] cannot be converted to java.util.Set<?>
   ```
 - **Cause**: `EgovPropertyServiceImpl#setExtFileName` 시그니처는 `Set<String>` (배열 아님).
-  v5.0 공식 템플릿은 `setProperties(Map<String,String>)` 인라인 방식을 권장.
+  v5.1 공식 템플릿은 `setProperties(Map<String,String>)` 인라인 방식을 권장.
 - **Fix**: Map 인라인 방식 (권장) 또는 Set<String> classpath 문자열.
   ```java
-  // ✅ v5.0 권장 — Map 인라인
+  // ✅ v5.1 권장 — Map 인라인
   Map<String, String> properties = new HashMap<>();
   properties.put("pageUnit", "10");
   properties.put("pageSize", "10");
@@ -206,10 +206,10 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   ```
 - **Cause**: eGovFrame Boot Parent 5.1.0 은 `mybatis-spring-boot-starter` 의 버전을 **dependencyManagement 에서 관리하지 않는다**.
   Spring Boot 자체 BOM 도 mybatis-spring 만 관리할 뿐 starter 버전은 관리하지 않음.
-  v4.3 의 "Parent 가 관리하므로 version 명시 제거" 가이드를 v5.0 에 그대로 적용하면 빌드 실패.
+  v4.3 의 "Parent 가 관리하므로 version 명시 제거" 가이드를 v5.1 에 그대로 적용하면 빌드 실패.
 - **Fix**: Spring Boot 3.x 호환 버전인 **mybatis-spring-boot-starter 3.0.x** 를 명시.
   ```xml
-  <!-- ✅ v5.0 — 반드시 명시적 버전 -->
+  <!-- ✅ v5.1 — 반드시 명시적 버전 -->
   <dependency>
       <groupId>org.mybatis.spring.boot</groupId>
       <artifactId>mybatis-spring-boot-starter</artifactId>
@@ -233,17 +233,17 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   ```
   (혹은 `error: invalid target release: 21` / IDE 에서 "Java compiler: release 21 not supported")
 - **Cause**: pom.xml `<java.version>21</java.version>` 또는 `<release>21</release>` 로 설정했지만,
-  실행 환경의 JDK 가 Java 17 이라 컴파일 실패. **eGovFrame 5.0 의 공식 표준은 Java 17** (Boot 3.x 의 최소 요구 버전과 일치).
-  Spring Boot 3.x 자체는 Java 21 도 지원하지만, 표준프레임워크 v5.0 은 Java 17 을 표준으로 삼는다.
+  실행 환경의 JDK 가 Java 17 이라 컴파일 실패. **eGovFrame 5.1 의 공식 표준은 Java 17** (Boot 3.x 의 최소 요구 버전과 일치).
+  Spring Boot 3.x 자체는 Java 21 도 지원하지만, 표준프레임워크 v5.1 은 Java 17 을 표준으로 삼는다.
 - **Fix**: `pom.xml` 의 Java 버전을 17 로 통일.
   ```xml
-  <!-- ✅ v5.0 표준 — Java 17 -->
+  <!-- ✅ v5.1 표준 — Java 17 -->
   <properties>
       <java.version>17</java.version>
       <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
   </properties>
 
-  <!-- ❌ Java 21 — 환경 따라 빌드 실패. v5.0 표준 아님 -->
+  <!-- ❌ Java 21 — 환경 따라 빌드 실패. v5.1 표준 아님 -->
   <properties>
       <java.version>21</java.version>
   </properties>
@@ -327,7 +327,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     'file [.../egovframework/sqlmap/example/mappers/EgovSample_Sample_SQL.xml]'
   ```
   (매퍼 XML 에서 `resultType="egovMap"` 또는 `parameterType="searchVO"` 사용 중)
-- **Cause**: typeAlias 미등록. v5.0 은 `mybatis.type-aliases-package` (properties) 가 아닌 **`sql-mapper-config.xml`** 에서 정의.
+- **Cause**: typeAlias 미등록. v5.1 은 `mybatis.type-aliases-package` (properties) 가 아닌 **`sql-mapper-config.xml`** 에서 정의.
 - **Fix**: `sql-mapper-config.xml` 에 별칭을 명시하고, `EgovConfigMapper` 의 `setConfigLocation()` 으로 로딩.
   ```xml
   <!-- classpath:/egovframework/sqlmap/example/sql-mapper-config.xml -->
@@ -357,7 +357,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   ```
 - **Cause**: `EgovAbstractServiceImpl` 내부에 `@Resource(name="leaveaTrace")` 주입 필드 존재.
   Bean 미등록 시 해당 클래스를 상속한 모든 Service 가 기동 실패.
-- **Fix**: `EgovConfigCommon` 에 `LeaveaTrace` + `DefaultTraceHandler` + `DefaultTraceHandleManager` 3종 세트로 Bean 등록 (v5.0 권장 — 각각 별도 Bean).
+- **Fix**: `EgovConfigCommon` 에 `LeaveaTrace` + `DefaultTraceHandler` + `DefaultTraceHandleManager` 3종 세트로 Bean 등록 (v5.1 권장 — 각각 별도 Bean).
   ```java
   @Configuration
   public class EgovConfigCommon {
@@ -393,7 +393,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     No message found under code 'idgnr.message_table_not_found' for locale 'ko_KR'.
   ```
   (egovIdGnrService 또는 propertiesService 동작 중)
-- **Cause**: v5.0 의 `EgovTableIdGnrServiceImpl` / `EgovPropertyServiceImpl` 는 RTE JAR 내부의
+- **Cause**: v5.1 의 `EgovTableIdGnrServiceImpl` / `EgovPropertyServiceImpl` 는 RTE JAR 내부의
   `org/egovframe/rte/fdl/idgnr/messages/idgnr*.properties`,
   `org/egovframe/rte/fdl/property/messages/properties*.properties`
   를 `MessageSource` basename 으로 요구. **다중 basename 등록**이 누락되면 발생.
@@ -433,7 +433,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   files.add("classpath:egovframework/egovProps/globals.properties");
   bean.setExtFileName(files);
 
-  // ✅ v5.0 공식 템플릿 권장 — Map 인라인
+  // ✅ v5.1 공식 템플릿 권장 — Map 인라인
   Map<String, String> properties = new HashMap<>();
   properties.put("pageUnit", "10");
   bean.setProperties(properties);
@@ -449,9 +449,9 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   Could not resolve dependencies for project ...:
     Could not find artifact org.egovframe.rte:org.egovframe.rte.ptl.mvc:jar:5.1.0
   ```
-- **Cause**: v4.x 의 artifactId (`org.egovframe.rte.ptl.mvc` 등) 를 v5.0 에서 그대로 사용.
-  v5.0 부터 artifactId 가 **점 → 하이픈** 형식으로 변경 (`egovframe-rte-ptl-mvc`).
-- **Fix**: `pom.xml` 의 모든 RTE artifactId 를 v5.0 형식으로 일괄 교체.
+- **Cause**: v4.x 의 artifactId (`org.egovframe.rte.ptl.mvc` 등) 를 v5.1 에서 그대로 사용.
+  v5.1 부터 artifactId 가 **점 → 하이픈** 형식으로 변경 (`egovframe-rte-ptl-mvc`).
+- **Fix**: `pom.xml` 의 모든 RTE artifactId 를 v5.1 형식으로 일괄 교체.
   ```xml
   <!-- ❌ v4.x -->
   <artifactId>org.egovframe.rte.ptl.mvc</artifactId>
@@ -459,7 +459,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   <artifactId>org.egovframe.rte.fdl.idgnr</artifactId>
   <artifactId>org.egovframe.rte.fdl.property</artifactId>
 
-  <!-- ✅ v5.0 -->
+  <!-- ✅ v5.1 -->
   <artifactId>egovframe-rte-ptl-mvc</artifactId>
   <artifactId>egovframe-rte-psl-dataaccess</artifactId>
   <artifactId>egovframe-rte-fdl-idgnr</artifactId>
@@ -485,14 +485,14 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   org.thymeleaf.exceptions.TemplateProcessingException:
     Cannot find expression object 'egovPaginationFormat'
   ```
-- **Cause**: v5.0 에서 페이징 표현식 객체명이 **`egovPaginationFormat` → `egovKrdsPaginationRenderer`** 로 변경.
+- **Cause**: v5.1 에서 페이징 표현식 객체명이 **`egovPaginationFormat` → `egovKrdsPaginationRenderer`** 로 변경.
   메서드도 `paginationFormat()` → `renderPagination()`.
 - **Fix**:
   ```html
   <!-- ❌ v4.x -->
   <span th:utext="${#egovPaginationFormat.paginationFormat(paginationInfo, 'samplePagination')}"></span>
 
-  <!-- ✅ v5.0 -->
+  <!-- ✅ v5.1 -->
   <span th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, 'samplePagination')}"></span>
   ```
   Dialect 도 새 표현식 객체명을 노출하도록 등록:
@@ -644,7 +644,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   "잘못된 접근입니다. (CSRF 토큰이 유효하지 않습니다)" 화면(`/egovCSRFAccessDenied.do`)으로
   넘어간다.
 
-- **Cause**: 5.0 Boot 산출물은 CSRF 보호가 **기본 활성**(`egov.security.csrf=true`)이다.
+- **Cause**: 5.1 Boot 산출물은 CSRF 보호가 **기본 활성**(`egov.security.csrf=true`)이다.
   생성 화면은 `th:action` 없이 스크립트로 action 을 지정해 submit 하므로 Thymeleaf 의
   자동 hidden 필드 주입이 동작하지 않는다 — 생성된 화면에는 명시적 `_csrf` hidden
   필드와 meta 태그가 이미 들어 있지만, **사후에 추가한 커스텀 POST 폼/fetch 에 토큰을
@@ -670,12 +670,12 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 
 ### pom.xml
 - [ ] `<parent>` = `egovframe-boot-starter-parent` **5.1.0** (NOT `org.egovframe.boot.starter.parent`)
-- [ ] `<java.version>` = **17** (v5.0 표준프레임워크 기준 — 21 아님)
+- [ ] `<java.version>` = **17** (v5.1 표준프레임워크 기준 — 21 아님)
 - [ ] `maven-compiler-plugin` `release` = `17` (또는 properties 의 `java.version` 으로만 제어)
 - [ ] RTE 의존성 artifactId 가 **`egovframe-rte-*` 형식** (NOT `org.egovframe.rte.*`)
 - [ ] RTE 의존성에 `<version>` 미명시 (Parent 가 관리)
-- [ ] `<commons-lang3.version>` / `<log4j2.version>` / `<org.egovframe.rte.version>` 오버라이드 **제거** (공식 부모 전환 전 v4.3 scaffold 가 `spring-boot-starter-parent` 를 직접 상속하며 넣던 잔재 — v4.3 공식 부모 `org.egovframe.boot.starter.parent` 와 v5.0 Parent 는 모두 부모에서 재정의)
-- [ ] `log4j-slf4j-impl` 의존성 **제거** (v4.3 은 SLF4J 1.7 바인딩을 자식이 직접 선언해야 했지만, v5.0 Parent 는 SLF4J 2 바인딩 `log4j-slf4j2-impl` 을 관리)
+- [ ] `<commons-lang3.version>` / `<log4j2.version>` / `<org.egovframe.rte.version>` 오버라이드 **제거** (공식 부모 전환 전 v4.3 scaffold 가 `spring-boot-starter-parent` 를 직접 상속하며 넣던 잔재 — v4.3 공식 부모 `org.egovframe.boot.starter.parent` 와 v5.1 Parent 는 모두 부모에서 재정의)
+- [ ] `log4j-slf4j-impl` 의존성 **제거** (v4.3 은 SLF4J 1.7 바인딩을 자식이 직접 선언해야 했지만, v5.1 Parent 는 SLF4J 2 바인딩 `log4j-slf4j2-impl` 을 관리)
 - [ ] `mybatis-spring-boot-starter` `<version>3.0.3</version>` **명시** (Parent 가 관리하지 않음 — v4.3 의 2.3.1 은 Boot 3.x 와 호환 안 되므로 3.0.x 사용)
 - [ ] `spring-boot-starter-web` / `-thymeleaf` 에서 `starter-logging` exclusion
 - [ ] `spring-boot-starter-log4j2` 추가
@@ -691,7 +691,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 - [ ] `org.thymeleaf.spring5.*` → `org.thymeleaf.spring6.*` 일괄 교체
 - [ ] `javax.sql.DataSource` 는 그대로 유지 (Java SE)
 
-### Java 소스 — eGovFrame 5.0 클래스/어노테이션 변경
+### Java 소스 — eGovFrame 5.1 클래스/어노테이션 변경
 - [ ] `@Mapper` → `@EgovMapper` (`org.egovframe.rte.psl.dataaccess.mapper.EgovMapper`)
 - [ ] `EgovTableIdGnrService` → `EgovTableIdGnrServiceImpl`
 - [ ] `afterPropertiesSet()` 수동 호출 제거
