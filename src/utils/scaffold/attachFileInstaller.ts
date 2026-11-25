@@ -337,10 +337,13 @@ export async function planAttachFileInfra(options: AttachFileInstallOptions): Pr
   const manifestPath = manifestForStack(detected.stackVersion, detected.projectType);
 
   // 5) Handlebars 컨텍스트
-  const fileStorePath =
+  // .properties 에서 `\` 는 이스케이프 문자라 Windows 경로를 그대로 쓰면 구분자가 사라진다
+  // (C:\Users\… → C:Users…). Java 는 Windows 에서도 `/` 를 경로 구분자로 받으므로 슬래시로 정규화한다.
+  const fileStorePath = (
     params.fileStorePath && params.fileStorePath.length > 0
       ? params.fileStorePath
-      : path.join(os.tmpdir(), "egov-upload");
+      : path.join(os.tmpdir(), "egov-upload")
+  ).replace(/\\/g, "/");
 
   registerScaffoldHelpers();
   // 확장자 배열을 대문자 CSV 로 정규화 (Java 의 parseExtensionCsv 와 동일 표기 보장).
