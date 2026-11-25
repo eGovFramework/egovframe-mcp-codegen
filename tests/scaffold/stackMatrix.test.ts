@@ -49,6 +49,11 @@ describe("stackMatrix — 기본 매트릭스 로드", () => {
     expect(s.frameworkLabel).toBe("Spring 5.3.39-egov.2");
     expect(s.spring).toBe("5.3.39-egov.2");
     expect(s.jakarta).toBe(false);
+    // 공식 eGovFrame 웹(Spring Boot 미사용) 부모 (실행환경 루트 BOM 을 import)
+    expect(s.starterParentGroupId).toBe("org.egovframe.web");
+    expect(s.starterParentArtifactId).toBe("org.egovframe.web.config.parent");
+    expect(s.starterParentVersion).toBe("4.3.2");
+    expect(s.rteVersion).toBe("4.3.2");
   });
 });
 

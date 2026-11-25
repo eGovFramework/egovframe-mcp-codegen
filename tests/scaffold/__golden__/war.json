@@ -69,7 +69,7 @@
     },
     {
       "path": "pom.xml",
-      "sha256": "c7afa0af134a1eaa93869e58b267fed229e444ded91ae1d096f68dbf20e9c125"
+      "sha256": "639d8029aef1c68e1c21447d71381698b3d39d7f35e96926f648f104aa03cf4a"
     },
     {
       "path": "src/main/java/egovframework/example/board/service/BoardDefaultVO.java",

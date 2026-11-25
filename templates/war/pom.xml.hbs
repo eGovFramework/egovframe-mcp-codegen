@@ -17,10 +17,14 @@
 		</license>
 	</licenses>
 
-	<properties>
-		<spring.maven.artifact.version>{{stack.spring}}</spring.maven.artifact.version>
-		<org.egovframe.rte.version>{{stack.rteVersion}}</org.egovframe.rte.version>
-	</properties>
+	<!-- 공식 eGovFrame 웹(Spring Boot 미사용) 부모: 실행환경 루트 BOM 을 import 하고, 루트 BOM 이 관리하지 않는
+	     Servlet/JSP API·JSON-B·JUnit 등과 compiler/war/surefire 플러그인 버전을 관리한다 (java.version=1.8).
+	     실행환경 모듈과 아래 의존성의 버전은 모두 부모가 관리하므로 이 pom 에서 다시 선언하지 않는다. -->
+	<parent>
+		<groupId>{{stack.starterParentGroupId}}</groupId>
+		<artifactId>{{stack.starterParentArtifactId}}</artifactId>
+		<version>{{stack.starterParentVersion}}</version>
+	</parent>
 
 	<repositories>
 		<repository>
@@ -38,52 +42,48 @@
 	</repositories>
 
 	<dependencies>
-		<!-- eGovFrame -->
+		<!-- eGovFrame Runtime (버전은 부모가 import 한 실행환경 루트 BOM 이 관리) -->
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.ptl.mvc</artifactId>
-			<version>${org.egovframe.rte.version}</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>commons-logging</artifactId>
-					<groupId>commons-logging</groupId>
-				</exclusion>
-			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.psl.dataaccess</artifactId>
-			<version>${org.egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.fdl.idgnr</artifactId>
-			<version>${org.egovframe.rte.version}</version>
 		</dependency>
 		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.fdl.property</artifactId>
-			<version>${org.egovframe.rte.version}</version>
 		</dependency>
 
-		<!-- Servlet -->
+		<!-- Servlet 3.1 / JSTL 1.2 (컨테이너 제공) -->
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>javax.servlet-api</artifactId>
-			<version>4.0.1</version>
 			<scope>provided</scope>
 		</dependency>
-
-		<!-- JSTL -->
 		<dependency>
 			<groupId>javax.servlet.jsp.jstl</groupId>
 			<artifactId>jstl-api</artifactId>
-			<version>1.2</version>
+			<exclusions>
+				<!-- jstl-api 가 전이하는 구버전 Servlet/JSP API 제외 (컨테이너가 제공) -->
+				<exclusion>
+					<groupId>javax.servlet</groupId>
+					<artifactId>servlet-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>javax.servlet.jsp</groupId>
+					<artifactId>jsp-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.taglibs</groupId>
 			<artifactId>taglibs-standard-impl</artifactId>
-			<version>1.2.5</version>
 			<scope>runtime</scope>
 		</dependency>
 
@@ -91,27 +91,32 @@
 		<dependency>
 			<groupId>org.antlr</groupId>
 			<artifactId>antlr</artifactId>
-			<version>3.5</version>
 		</dependency>
 
 		<!-- ==== DataSource (HSQL 기본, 외부 DB 전환 시 아래 가이드 참고) ==== -->
-		<!-- HSQLDB 2.7.3 jdk8 classifier for Java 8 compatibility -->
+		<!-- 내장 HSQLDB: 실행환경 BOM 이 2.7.x 를 jdk8 classifier 와 함께 관리한다 (기본 JAR 은 Java 11 용). classifier 만 적는다 -->
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
-			<version>2.7.3</version>
 			<classifier>jdk8</classifier>
 		</dependency>
-		<!-- 외부 DB(BasicDataSource) 사용 시 필요 -->
+		<!-- 외부 DB(BasicDataSource) 사용 시 필요 — 기본 활성. 버전은 부모가 관리 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.9.0</version>
+			<exclusions>
+				<!-- Jakarta EE 8 아티팩트 제외 (javax.transaction 은 실행환경이 전이하는 javaee-api 로 제공) -->
+				<exclusion>
+					<groupId>jakarta.transaction</groupId>
+					<artifactId>jakarta.transaction-api</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 
 		<!-- ==== JDBC 드라이버 가이드 ====
 		     사용할 DB 의 의존성 블록을 주석 해제하세요.
-		     spring.profiles.active 와 globals.properties 함께 변경 필요.
+		     globals.properties 와 context-datasource.xml 함께 변경 필요.
+		     MySQL / MariaDB / PostgreSQL 드라이버 버전은 부모가 관리하므로 <version> 을 쓰지 않습니다.
 
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
@@ -120,21 +125,18 @@
 		</dependency>
 
 		<dependency>
-			<groupId>mysql</groupId>
-			<artifactId>mysql-connector-java</artifactId>
-			<version>8.0.33</version>
+			<groupId>com.mysql</groupId>
+			<artifactId>mysql-connector-j</artifactId>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>2.7.12</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.3</version>
 		</dependency>
 
 		Tibero / Altibase / Cubrid / Goldilocks 드라이버는 Maven Central 에
@@ -142,23 +144,20 @@
 		사내 Nexus 등 사설 저장소를 통해 추가하시기 바랍니다.
 		==== -->
 
-		<!-- JSON-B (required by Spring MVC with javaee-api on classpath) -->
+		<!-- JSON-B / JSON-P (Spring MVC 가 classpath 의 javaee-api 를 보고 요구) -->
 		<dependency>
 			<groupId>org.eclipse</groupId>
 			<artifactId>yasson</artifactId>
-			<version>1.0.2</version>
 		</dependency>
 		<dependency>
 			<groupId>org.glassfish</groupId>
 			<artifactId>javax.json</artifactId>
-			<version>1.1.4</version>
 		</dependency>
 
 		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.34</version>
 			<scope>provided</scope>
 		</dependency>
 
@@ -166,34 +165,14 @@
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-test</artifactId>
-			<version>${spring.maven.artifact.version}</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.junit.jupiter</groupId>
 			<artifactId>junit-jupiter-api</artifactId>
-			<version>5.11.0</version>
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.13.0</version>
-				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
-					<encoding>UTF-8</encoding>
-				</configuration>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-war-plugin</artifactId>
-				<version>3.4.0</version>
-			</plugin>
-		</plugins>
-	</build>
+	<!-- compiler(source/target 1.8, UTF-8) / war 플러그인 버전과 설정은 부모의 pluginManagement 가 관리한다 -->
 </project>
