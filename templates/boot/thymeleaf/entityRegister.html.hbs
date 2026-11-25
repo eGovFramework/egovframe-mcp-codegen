@@ -10,7 +10,7 @@
 	<script th:inline="javascript">
 		document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
 		var contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
-		function {{entityNameLower}}List() { $(location).attr('href', contextPath + '/'); }
+		function {{entityNameLower}}List() { $(location).attr('href', contextPath + '/egov{{entityName}}List.do'); }
 		function {{entityNameLower}}Add() { if (confirm([[#{add.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/add').submit(); } }
 		function {{entityNameLower}}Update() { if (confirm([[#{modify.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/update').submit(); } }
 		function {{entityNameLower}}Delete() { if (confirm([[#{delete.confirm}]])) { $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/delete').submit(); } }

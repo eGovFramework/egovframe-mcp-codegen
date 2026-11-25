@@ -93,7 +93,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/board/web/EgovBoardController.java",
-      "sha256": "3eafbe2462f01d913897be124b3df6b3316fc5508c6bca5d941164ddf1ccec09"
+      "sha256": "11300140776475352e9bc562828010c6d0a2d7d102c9837d778d271898b8c28e"
     },
     {
       "path": "src/main/java/egovframework/example/cmm/vo/FkComboVO.java",
@@ -241,7 +241,7 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",
-      "sha256": "0fbc3fb68cde96d80f3ddb1df1c282b91a18362d21372f47931cb300d22371f8"
+      "sha256": "db419fab7df0bc1d6a5630fe9ba2536d4d97c784737407ea06809c849a4b86f7"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovSampleError.html",

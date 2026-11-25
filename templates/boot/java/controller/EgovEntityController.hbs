@@ -161,7 +161,7 @@ public class Egov{{entityName}}Controller {
 		{{entityNameLower}}VO.set{{attachmentFieldNamePascal}}({{attachmentFieldName}});
 {{/if}}
 		this.{{entityNameLower}}Service.insert{{entityName}}({{entityNameLower}}VO);
-		return "redirect:/";
+		return "redirect:/egov{{entityName}}List.do";
 	}
 
 	@PostMapping("/{{entityNameLower}}/update")
@@ -197,7 +197,7 @@ public class Egov{{entityName}}Controller {
 		{{entityNameLower}}VO.set{{attachmentFieldNamePascal}}({{attachmentFieldName}});
 {{/if}}
 		this.{{entityNameLower}}Service.update{{entityName}}({{entityNameLower}}VO);
-		return "redirect:/";
+		return "redirect:/egov{{entityName}}List.do";
 	}
 {{#if hasFk}}
 
@@ -212,7 +212,7 @@ public class Egov{{entityName}}Controller {
 	@PostMapping("/{{entityNameLower}}/delete")
 	public String delete(@ModelAttribute {{entityName}}VO {{entityNameLower}}VO) throws Exception {
 		this.{{entityNameLower}}Service.delete{{entityName}}({{entityNameLower}}VO);
-		return "redirect:/";
+		return "redirect:/egov{{entityName}}List.do";
 	}
 {{#if withAttachment}}
 
