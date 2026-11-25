@@ -110,12 +110,10 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
 		</dependency>
-		<!-- 부모(Boot 2.7.18)가 관리하는 hsqldb 는 2.5.2 이므로 JDK 8 용 2.7.x 를 직접 핀한다 -->
+		<!-- 내장 HSQLDB (부모가 상속하는 Boot 2.7.18 관리값 2.5.2, JRE 8 호환). 실행환경 BOM 의 2.7.3 은 상속 관리값에 밀려 적용되지 않는다 -->
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
-			<version>2.7.3</version>
-			<classifier>jdk8</classifier>
 		</dependency>
 
 		<!-- ==== JDBC 드라이버 가이드 ====
@@ -158,7 +156,6 @@
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-entitymanager</artifactId>
-			<version>5.6.15.Final</version>
 		</dependency>
 
 		<!-- Logging (버전은 부모의 log4j2.version / Boot 관리값) -->

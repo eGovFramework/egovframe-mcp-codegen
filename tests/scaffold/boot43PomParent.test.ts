@@ -116,12 +116,22 @@ describe("boot43 pom.xml — 공식 eGovFrame Boot 4.3.2 부모 상속", () => {
     }
   });
 
-  it("부모가 관리하지 않는 hsqldb(JDK 8 용 2.7.x) 는 버전과 classifier 를 유지한다", async () => {
+  it("hsqldb / hibernate-entitymanager 도 버전 없이 선언한다 (Boot 2.7.18 관리값 2.5.2 / 5.6.15.Final)", async () => {
     const pom = stripComments(await generatePom("4.3"));
-    const dep = pom.match(/<dependency>(?:(?!<\/dependency>)[\s\S])*<artifactId>hsqldb<\/artifactId>[\s\S]*?<\/dependency>/)?.[0];
-    expect(dep).toBeDefined();
-    expect(dep).toContain("<version>2.7.3</version>");
-    expect(dep).toContain("<classifier>jdk8</classifier>");
+    const hsqldb = depBlock(pom, "hsqldb");
+    expect(hsqldb).toBeDefined();
+    // 부모가 상속하는 Boot 관리값(2.5.2, JRE 8 호환)을 쓴다. 이전의 2.7.3 jdk8 직접 핀은 제거했다.
+    expect(hsqldb).not.toMatch(/<version>/);
+    expect(hsqldb).not.toMatch(/<classifier>/);
+    const hibernate = depBlock(pom, "hibernate-entitymanager");
+    expect(hibernate).toBeDefined();
+    expect(hibernate).not.toMatch(/<version>/);
+  });
+
+  it("실행환경·Boot 가 관리하는 활성 의존성에는 <version> 이 하나도 없다 (가이드 주석의 ojdbc11 제외)", async () => {
+    const pom = stripComments(await generatePom("4.3"));
+    const deps = pom.match(/<dependencies>([\s\S]*?)<\/dependencies>/)?.[1] ?? "";
+    expect(deps).not.toMatch(/<version>/);
   });
 
   it("SLF4J 1.7 바인딩(log4j-slf4j-impl)을 포함한 로깅 의존성을 버전 없이 명시한다 (부모가 추가해 주지 않음)", async () => {
