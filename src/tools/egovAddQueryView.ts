@@ -31,7 +31,7 @@ import {
   getScaffoldTemplatePath,
   registerScaffoldHelpers,
 } from "../utils/scaffold/scaffoldGenerator.js";
-import { detectProjectStack, usesApacheMapperScan } from "../utils/scaffold/projectDetector.js";
+import { detectBasePackage, detectProjectStack, usesApacheMapperScan } from "../utils/scaffold/projectDetector.js";
 import { assertInsideProject } from "../utils/scaffold/pathGuard.js";
 import { FileWriteJournal, withWriteRollback } from "../utils/scaffold/writeRollback.js";
 import { resolveStack, type StackEntry } from "../utils/scaffold/stackMatrix.js";
@@ -249,9 +249,21 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
   // 2) Context 빌드 — 일반 ScaffoldContext 와 별개로, query view 전용 데이터 구성
   const parts = params.packageName.split(".");
   const entityModule = parts[parts.length - 1];
-  const basePackage = parts.slice(0, -1).join(".");
-  const basePackagePath = basePackage.replace(/\./g, "/");
+  let basePackage = parts.slice(0, -1).join(".");
   const packagePath = params.packageName.replace(/\./g, "/");
+
+  // basePackage 자동 보정 — egov_add_entity 와 같은 규칙.
+  //   WAR 의 뷰 리졸버 prefix 는 첫 스캐폴드의 basePackage 로 고정되어 있는데(/WEB-INF/jsp/<base>/),
+  //   깊은 packageName(예: <base>.w43.report)으로 호출하면 여기서 추출한 basePackage 가 어긋나
+  //   JSP 는 <base>/w43/report/ 에 생기고 컨트롤러는 "report/…" 를 돌려줘 404 가 났다.
+  //   기존 프로젝트의 공유 클래스(FkComboVO) 위치를 단일 진실원본으로 삼아 맞춘다.
+  const detectedBasePackage = detectBasePackage(projectDir);
+  let basePackageRebased: { from: string; to: string } | undefined;
+  if (detectedBasePackage && detectedBasePackage !== basePackage) {
+    basePackageRebased = { from: basePackage, to: detectedBasePackage };
+    basePackage = detectedBasePackage;
+  }
+  const basePackagePath = basePackage.replace(/\./g, "/");
 
   const viewName = params.viewName;
   const viewNameLower = viewName.charAt(0).toLowerCase() + viewName.slice(1);
@@ -486,6 +498,12 @@ export async function egovAddQueryView(rawParams: unknown): Promise<string> {
     ``,
     `📁 프로젝트: ${projectDir}`,
     `📦 패키지: ${params.packageName}`,
+    ...(basePackageRebased
+      ? [
+          `🔧 공유 basePackage 자동 보정: ${basePackageRebased.from}  →  ${basePackageRebased.to}`,
+          `   (컨트롤러·화면 파일을 기존 프로젝트의 basePackage 아래에 두어 뷰 리졸버 경로와 맞춥니다.)`,
+        ]
+      : []),
     `🔎 컬럼 ${columns.length}개: ${columns.map((c) => c.alias).join(", ")}`,
     searchable.length > 0
       ? `🔍 검색 가능 컬럼: ${searchable.map((s) => s.alias).join(", ")}`
