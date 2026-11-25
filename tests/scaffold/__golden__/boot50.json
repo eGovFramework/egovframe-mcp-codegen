@@ -253,7 +253,7 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/board/egovBoardRegister.html",
-      "sha256": "cacb21447713e1c97023915301a51b43e6b3ddb002baf7aa5b06cfb84f037ae7"
+      "sha256": "4877b089469d4f28274e61cbda1b19d12ecf03c80011ba866dccff856bc531e6"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/board/egovSampleError.html",

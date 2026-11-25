@@ -117,6 +117,8 @@ describe("I6 — NULL 허용 문자열 컬럼은 필수가 아니다", () => {
     );
     const labelOf = (f: string) => html.split("\n").find((l) => l.includes(`<label for="${f}"`)) ?? "";
     expect(labelOf("title")).toContain('class="required"');
+    // th:text 가 라벨 내용을 통째로 바꾸므로 제목 텍스트는 내부 span 에 두어야 * 표시가 렌더링에 남는다.
+    expect(labelOf("title")).toMatch(/<label for="title"><span th:text="#\{title\.board\.title\}"><\/span> <span class="required">\*<\/span><\/label>/);
     expect(labelOf("writer")).not.toContain('class="required"');
     expect(labelOf("content")).not.toContain('class="required"');
     expect(html).toMatch(/\btitle: \{[\s\S]*?required: true/);

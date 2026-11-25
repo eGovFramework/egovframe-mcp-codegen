@@ -174,7 +174,7 @@
                 <!-- idGeneration='manual' — 사용자가 직접 입력. 수정 진입 시(PK 값 존재) 는 readonly. -->
                 <div class="form-group">
                     <div class="form-tit">
-                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"> <span class="required">*</span></label>
+                        <label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span> <span class="required">*</span></label>
                     </div>
                     <div class="form-conts">
                         <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" maxlength="{{#if maxLength}}{{maxLength}}{{else}}50{{/if}}" th:value="{{{thExpr ../voName "." ccName}}}" th:readonly="${not #strings.isEmpty({{../voName}}.{{ccName}})} ? 'readonly' : null" th:placeholder="{{concat "#{confirm.required." ../entityNameLower "." ccName "}"}}">
@@ -235,7 +235,7 @@
 {{#if isLongText}}
                 <div class="form-group">
                     <div class="form-tit">
-                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}">{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
+                        <label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span>{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
                     </div>
                     <div class="form-conts">
                         <textarea id="{{ccName}}" name="{{ccName}}" class="krds-input" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} th:text="{{{thExpr ../voName "." ccName}}}" th:placeholder="{{concat "#{confirm.required." ../entityNameLower "." ccName "}"}}"></textarea>
@@ -244,7 +244,7 @@
 {{else}}
                 <div class="form-group">
                     <div class="form-tit">
-                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}">{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
+                        <label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span>{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
                     </div>
                     <div class="form-conts">
                         <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" maxlength="{{#if maxLength}}{{maxLength}}{{else}}100{{/if}}" th:value="{{{thExpr ../voName "." ccName}}}" th:placeholder="{{concat "#{confirm.required." ../entityNameLower "." ccName "}"}}">
