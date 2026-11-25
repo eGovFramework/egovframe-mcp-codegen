@@ -86,6 +86,10 @@ function fn_egov_save() {
 {{#if isLongText}}
 				<form:textarea path="{{ccName}}" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} cssClass="txt" />
 				&nbsp;<form:errors path="{{ccName}}" />
+{{else if isDate}}
+				<%-- 날짜/일시: EgovBindingInitializer 가 'yyyy-MM-dd'(Timestamp 는 'yyyy-MM-dd HH:mm:ss' 도) 를 바인딩하고 빈 값은 null 로 둔다 --%>
+				<form:input path="{{ccName}}" placeholder="yyyy-MM-dd" cssClass="txt" />
+				&nbsp;<form:errors path="{{ccName}}" />
 {{else}}
 				<form:input path="{{ccName}}" maxlength="{{maxLength}}" cssClass="txt" />
 				&nbsp;<form:errors path="{{ccName}}" />

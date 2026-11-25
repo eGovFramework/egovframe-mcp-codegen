@@ -109,7 +109,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/cmmn/web/EgovBindingInitializer.java",
-      "sha256": "b5d28757d4e807fa5ccfd57901f06561f480d02d0a325cea240d68ddfbe636b9"
+      "sha256": "f49d5444c0fd3e4374fa2a2527c00958e35c2189baae5ca74d019ada0449eb75"
     },
     {
       "path": "src/main/java/egovframework/example/cmmn/web/EgovImgPaginationRenderer.java",
@@ -285,7 +285,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardRegister.jsp",
-      "sha256": "d729e373ee14de2f5b607861b94d916ba33b82610c0024456452108824064c9c"
+      "sha256": "bcdd9ddbee70a7f001524dfd718f81d43689100b9cbad7b918e6bedfd81eb079"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/cmmn/dataAccessFailure.jsp",
