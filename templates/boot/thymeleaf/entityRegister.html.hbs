@@ -96,7 +96,9 @@
 {{else}}
 				<tr>
 					<td class="tbtd_caption"><label for="{{ccName}}"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></label></td>
-					<td class="tbtd_content"><input type="text" id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" th:value="{{{thExpr ../voName "." ccName}}}" class="txt"/></td>
+					<td class="tbtd_content">
+						<input type="text" id="{{ccName}}" name="{{ccName}}" th:field="{{concat "*{" ccName "}"}}" th:value="{{{thExpr ../voName "." ccName}}}"{{#if isDate}} placeholder="yyyy-MM-dd"{{/if}} class="txt"/>
+						<span th:if="${#fields.hasErrors('{{ccName}}')}" th:errors="{{concat "*{" ccName "}"}}">{{pcName}} Error</span></td>
 				</tr>
 {{/if}}
 {{/if}}

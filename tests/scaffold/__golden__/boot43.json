@@ -241,7 +241,7 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",
-      "sha256": "db419fab7df0bc1d6a5630fe9ba2536d4d97c784737407ea06809c849a4b86f7"
+      "sha256": "e50913cdaa91a6e5dac8ca5b92d595acbd8574b861e5acc643a0c461cc361054"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovSampleError.html",
