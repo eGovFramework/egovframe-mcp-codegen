@@ -25,7 +25,9 @@ public class {{entityName}}VO extends {{entityName}}DefaultVO {
 	private {{simpleJavaType javaType}} {{ccName}};
 {{else}}
 {{#if (eq javaType "java.lang.String")}}
+{{#if isNotNull}}
 	@EgovNullCheck(message="{{concat "{confirm.required." ../entityNameLower "." ccName "}"}}")
+{{/if}}
 	private {{simpleJavaType javaType}} {{ccName}};
 {{else}}
 	private {{simpleJavaType javaType}} {{ccName}};

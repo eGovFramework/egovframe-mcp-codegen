@@ -273,7 +273,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/config/egovframework/validator/validator.xml",
-      "sha256": "fae54495d709b652c3fdb88b69fe888a1a90050575ec816637a2e4585cf7753e"
+      "sha256": "8dd50fcf3f4ee1b7948f5f15825a7120af1bd06584118076a0eb1e080f69e278"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp",

@@ -50,10 +50,17 @@
 {{/if}}
 {{#each nonPkAttributes}}
 {{#if (eq javaType "java.lang.String")}}
+{{#if isNotNull}}
                 {{ccName}}: {
                     label: {{concat "[[#{title." ../entityNameLower "." ccName "}]]"}},
                     rules: { required: true{{#if maxLength}}, maxlength: {{maxLength}}{{/if}} }
                 },
+{{else if maxLength}}
+                {{ccName}}: {
+                    label: {{concat "[[#{title." ../entityNameLower "." ccName "}]]"}},
+                    rules: { maxlength: {{maxLength}} }
+                },
+{{/if}}
 {{/if}}
 {{/each}}
             };
@@ -228,7 +235,7 @@
 {{#if isLongText}}
                 <div class="form-group">
                     <div class="form-tit">
-                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"> <span class="required">*</span></label>
+                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}">{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
                     </div>
                     <div class="form-conts">
                         <textarea id="{{ccName}}" name="{{ccName}}" class="krds-input" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} th:text="{{{thExpr ../voName "." ccName}}}" th:placeholder="{{concat "#{confirm.required." ../entityNameLower "." ccName "}"}}"></textarea>
@@ -237,7 +244,7 @@
 {{else}}
                 <div class="form-group">
                     <div class="form-tit">
-                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"> <span class="required">*</span></label>
+                        <label for="{{ccName}}" th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}">{{#if isNotNull}} <span class="required">*</span>{{/if}}</label>
                     </div>
                     <div class="form-conts">
                         <input type="text" id="{{ccName}}" name="{{ccName}}" class="krds-input" maxlength="{{#if maxLength}}{{maxLength}}{{else}}100{{/if}}" th:value="{{{thExpr ../voName "." ccName}}}" th:placeholder="{{concat "#{confirm.required." ../entityNameLower "." ccName "}"}}">

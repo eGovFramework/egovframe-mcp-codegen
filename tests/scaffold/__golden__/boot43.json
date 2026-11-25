@@ -77,7 +77,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/board/service/BoardVO.java",
-      "sha256": "82bfbb902c785529c13ed2a8c3b9cad1dfd294cefaf97c19b9ebe4a1a6d21a9a"
+      "sha256": "dbac5b26d641e4c238ba34e6d41d8ec21f39e7c2dec175210d00d61ce3567cd5"
     },
     {
       "path": "src/main/java/egovframework/example/board/service/EgovBoardService.java",
