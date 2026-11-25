@@ -470,7 +470,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   ```xml
   <parent>
       <groupId>org.egovframe.boot</groupId>
-      <artifactId>egovframe-boot-starter-parent</artifactId>  <!-- v4.3: org.egovframe.boot.starter.parent -->
+      <artifactId>egovframe-boot-starter-parent</artifactId>  <!-- v4.3 공식 부모: org.egovframe.boot.starter.parent 4.3.2 (구 scaffold 는 spring-boot-starter-parent 2.7.18 직접 상속) -->
       <version>5.1.0</version>
   </parent>
   ```
@@ -674,7 +674,8 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 - [ ] `maven-compiler-plugin` `release` = `17` (또는 properties 의 `java.version` 으로만 제어)
 - [ ] RTE 의존성 artifactId 가 **`egovframe-rte-*` 형식** (NOT `org.egovframe.rte.*`)
 - [ ] RTE 의존성에 `<version>` 미명시 (Parent 가 관리)
-- [ ] `<commons-lang3.version>` / `<log4j2.version>` 오버라이드와 `log4j-slf4j-impl` 의존성 **제거** (v4.3 잔재 — 실행환경 4.3.2 와 Boot 2.7.18 핀을 맞추던 것)
+- [ ] `<commons-lang3.version>` / `<log4j2.version>` / `<org.egovframe.rte.version>` 오버라이드 **제거** (공식 부모 전환 전 v4.3 scaffold 가 `spring-boot-starter-parent` 를 직접 상속하며 넣던 잔재 — v4.3 공식 부모 `org.egovframe.boot.starter.parent` 와 v5.0 Parent 는 모두 부모에서 재정의)
+- [ ] `log4j-slf4j-impl` 의존성 **제거** (v4.3 은 SLF4J 1.7 바인딩을 자식이 직접 선언해야 했지만, v5.0 Parent 는 SLF4J 2 바인딩 `log4j-slf4j2-impl` 을 관리)
 - [ ] `mybatis-spring-boot-starter` `<version>3.0.3</version>` **명시** (Parent 가 관리하지 않음 — v4.3 의 2.3.1 은 Boot 3.x 와 호환 안 되므로 3.0.x 사용)
 - [ ] `spring-boot-starter-web` / `-thymeleaf` 에서 `starter-logging` exclusion
 - [ ] `spring-boot-starter-log4j2` 추가

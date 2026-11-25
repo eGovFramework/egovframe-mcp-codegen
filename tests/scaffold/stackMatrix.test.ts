@@ -35,8 +35,12 @@ describe("stackMatrix — 기본 매트릭스 로드", () => {
 
   it("boot/4.3 → boot43 항목을 돌려준다", () => {
     const s = resolveStack("boot", "4.3");
-    expect(s.frameworkLabel).toBe("Spring Boot 2.7.18");
-    expect(s.starterParentArtifactId).toBe("spring-boot-starter-parent");
+    expect(s.frameworkLabel).toBe("eGovFrame Boot 4.3.2");
+    expect(s.springBoot).toBe("2.7.18");
+    // 공식 eGovFrame Boot 부모 (spring-boot-starter-parent 2.7.18 을 상속하고 실행환경 루트 BOM 을 import)
+    expect(s.starterParentGroupId).toBe("org.egovframe.boot");
+    expect(s.starterParentArtifactId).toBe("org.egovframe.boot.starter.parent");
+    expect(s.starterParentVersion).toBe("4.3.2");
     expect(s.rteVersion).toBe("4.3.2");
   });
 

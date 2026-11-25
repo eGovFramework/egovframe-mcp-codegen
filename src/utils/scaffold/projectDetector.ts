@@ -13,11 +13,15 @@
  *
  * 감지 마커
  * ---------
- * | 결과   | 마커                                                                  |
- * |--------|-----------------------------------------------------------------------|
- * | war43  | `<packaging>war</packaging>` 존재                                       |
- * | boot50 | parent `<artifactId>egovframe-boot-starter-parent</artifactId>`         |
- * | boot43 | parent `<artifactId>spring-boot-starter-parent</artifactId>` + RTE 의존성|
+ * | 결과   | 마커                                                                        |
+ * |--------|-----------------------------------------------------------------------------|
+ * | war43  | `<packaging>war</packaging>` 존재                                             |
+ * | boot50 | parent `<artifactId>egovframe-boot-starter-parent</artifactId>`               |
+ * | boot43 | parent `<artifactId>org.egovframe.boot.starter.parent</artifactId>` (공식 부모) |
+ * | boot43 | parent `<artifactId>spring-boot-starter-parent</artifactId>` + RTE 의존성      |
+ *
+ * boot43 의 두 번째 규칙은 공식 부모로 전환하기 전의 scaffold 가 생성한 프로젝트
+ * (spring-boot-starter-parent 직접 상속 + RTE 버전 직접 선언) 를 계속 지원하기 위한 것이다.
  *
  * XML 파서 의존성을 새로 들이지 않기 위해 정규식 기반으로 검사한다. 위 마커들은
  * eGovFrame scaffold 가 생성하는 pom.xml 의 고정 구조이므로 정규식이 충분히 안정적이다.
@@ -248,7 +252,17 @@ export function detectProjectStack(projectPath: string): DetectedStack {
     };
   }
 
+  if (parentArtifactId === "org.egovframe.boot.starter.parent") {
+    return {
+      projectType: "boot",
+      stackVersion: "4.3",
+      reason:
+        "parent.artifactId=org.egovframe.boot.starter.parent → eGovFrame 4.3 Boot",
+    };
+  }
+
   if (parentArtifactId === "spring-boot-starter-parent") {
+    // 공식 부모 전환 전 scaffold 가 생성한 4.3 Boot 프로젝트 (legacy).
     // 4.3 Boot 인지 확인하려면 RTE 의존성도 존재해야 한다 (일반 Spring Boot 프로젝트와 구분).
     if (/org\.egovframe\.rte/i.test(pom)) {
       return {
@@ -269,7 +283,8 @@ export function detectProjectStack(projectPath: string): DetectedStack {
     "pom.xml 에서 eGovFrame 스택을 감지하지 못했습니다. 감지 가능한 마커:\n" +
       "  - <packaging>war</packaging>                                           → eGovFrame 4.3 WAR\n" +
       "  - parent.artifactId=egovframe-boot-starter-parent                       → eGovFrame 5.0 Boot\n" +
-      "  - parent.artifactId=spring-boot-starter-parent + org.egovframe.rte      → eGovFrame 4.3 Boot\n\n" +
+      "  - parent.artifactId=org.egovframe.boot.starter.parent                   → eGovFrame 4.3 Boot\n" +
+      "  - parent.artifactId=spring-boot-starter-parent + org.egovframe.rte      → eGovFrame 4.3 Boot (공식 부모 전환 전 scaffold)\n\n" +
       "이 프로젝트는 표준 eGovFrame scaffold 구조가 아닌 것으로 보입니다. egov_add_entity 는 " +
       "표준 eGovFrame Maven 프로젝트에서만 동작합니다.",
   );

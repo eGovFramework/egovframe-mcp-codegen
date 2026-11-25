@@ -429,12 +429,11 @@ eGovFrame Boot Parent **5.1.0** 은 다음 환경을 고정한다 (Parent 가 �
 | Thymeleaf | **3.1.x** + spring6 dialect | `org.thymeleaf.spring6` |
 | Jakarta EE | **9+** | `jakarta.*` 사용 |
 | MyBatis Spring Boot Starter | **Parent 가 관리하지 않음 → `<version>3.0.3</version>` 명시 필요** | Spring Boot 3.x 호환은 mybatis-spring-boot-starter **3.0.x** |
-| commons-lang3 | Parent 가 관리 (3.14+) | v4.3 의 `commons-lang3.version` 오버라이드 **불필요** |
+| commons-lang3 | Parent 가 관리 (3.14+) | 자식 pom 의 `commons-lang3.version` 오버라이드 **불필요** (v4.3 공식 부모 `org.egovframe.boot.starter.parent` 4.3.2 도 3.20.0 으로 재정의하므로 어느 버전이든 자식이 덮어쓰지 않는다) |
 
 > **v4.3 → v5.0 이행 시 제거할 설정:**
-> - `<commons-lang3.version>3.20.0</commons-lang3.version>`, `<log4j2.version>2.25.5</log4j2.version>` ← 더 이상 필요 없음 (v4.3 에서 실행환경 4.3.2 와 Boot 2.7.18 관리 버전을 맞추기 위한 재정의)
-> - `log4j-slf4j-impl` 의존성 ← v5.0 은 SLF4J 2 바인딩(`log4j-slf4j2-impl`)을 Parent 가 관리
-> - `<org.egovframe.rte.version>4.3.2</org.egovframe.rte.version>` ← Parent 가 관리
+> - `log4j-slf4j-impl` 의존성 ← v4.3 은 부모가 slf4j-api 1.7 을 유지해 자식 pom 이 SLF4J 1.7 바인딩을 직접 선언했지만, v5.0 은 SLF4J 2 바인딩(`log4j-slf4j2-impl`)을 Parent 가 관리
+> - `<commons-lang3.version>3.20.0</commons-lang3.version>`, `<log4j2.version>2.25.5</log4j2.version>`, `<org.egovframe.rte.version>4.3.x</org.egovframe.rte.version>`, RTE 의존성의 `<version>${org.egovframe.rte.version}</version>` ← 공식 부모로 전환하기 전 v4.3 scaffold(`spring-boot-starter-parent` 직접 상속)가 넣던 선언. v4.3 공식 부모와 v5.0 Parent 는 모두 실행환경 BOM 과 Boot 관리 버전 재정의를 부모에서 처리하므로 자식 pom 에 두지 않는다
 
 > **반대로, v5.0 에서도 명시해야 하는 설정:**
 > - `mybatis-spring-boot-starter` 의 `<version>3.0.3</version>` 은 **Boot Parent 5.1.0 이 관리하지 않으므로 반드시 명시**해야 함. 누락 시 `'dependencies.dependency.version' for org.mybatis.spring.boot:mybatis-spring-boot-starter:jar is missing` 오류로 빌드 실패.

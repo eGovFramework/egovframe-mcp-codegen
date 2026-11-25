@@ -9,6 +9,9 @@
 	<name>{{artifactId}}</name>
 	<description>{{description}}</description>
 
+	<!-- 공식 eGovFrame Boot 부모: spring-boot-starter-parent 2.7.18 을 상속하고 실행환경 루트 BOM 을 import 하며,
+	     Boot 관리 버전(commons-lang3, log4j2, commons-dbcp2, lombok, tomcat, DB 드라이버 등)을 실행환경 기준으로 재정의한다.
+	     실행환경 모듈 버전과 위 재정의는 모두 부모가 관리하므로 이 pom 에서 다시 선언하지 않는다. -->
 	<parent>
 		<groupId>{{stack.starterParentGroupId}}</groupId>
 		<artifactId>{{stack.starterParentArtifactId}}</artifactId>
@@ -17,11 +20,6 @@
 
 	<properties>
 		<java.version>{{stack.java}}</java.version>
-		<org.egovframe.rte.version>{{stack.rteVersion}}</org.egovframe.rte.version>
-		<!-- Spring Boot 2.7.18 관리 버전 재정의: 실행환경 4.3.x 루트 POM 기준으로 맞춤 (공식 org.egovframe.boot.starter.parent 4.3.2 와 동일).
-		     commons-lang3 를 올리지 않으면 fdl.cmmn 이 참조하는 org.apache.commons.lang3.Strings 가 없어 요청 시 NoClassDefFoundError 가 난다. -->
-		<commons-lang3.version>3.20.0</commons-lang3.version>
-		<log4j2.version>2.25.5</log4j2.version>
 	</properties>
 
 	<repositories>
@@ -40,9 +38,11 @@
 	</repositories>
 
 	<dependencies>
+		<!-- spring boot dependency start -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-web</artifactId>
+			<artifactId>spring-boot-starter</artifactId>
+			<!-- Log4j2 사용: 공유 spring-boot-starter 에서 logback 을 전역 1회 차단 -->
 			<exclusions>
 				<exclusion>
 					<groupId>org.springframework.boot</groupId>
@@ -50,11 +50,9 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<!-- SLF4J 1.7 바인딩: 실행환경 4.3.2 의 fdl.logging 은 SLF4J 2 용 log4j-slf4j2-impl 만 가져오는데, Boot 2.7.18 은 slf4j-api 를 1.7.36 으로 고정하므로
-		     1.7 바인딩이 없으면 로깅이 NOP 로 떨어진다. 공식 Boot 4.3.2 부모도 slf4j 2.x 재정의를 금지한다. 버전은 Boot(log4j2.version) 가 관리. -->
 		<dependency>
-			<groupId>org.apache.logging.log4j</groupId>
-			<artifactId>log4j-slf4j-impl</artifactId>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-web</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -66,45 +64,53 @@
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-devtools</artifactId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-devtools</artifactId>
 			<optional>true</optional>
 		</dependency>
+		<!-- spring boot dependency end -->
 
-		<!-- eGovFrame Runtime -->
-        <dependency>
-		    <groupId>org.egovframe.rte</groupId>
-		    <artifactId>org.egovframe.rte.ptl.mvc</artifactId>
-		    <version>${org.egovframe.rte.version}</version>
-		    <exclusions>
-		    	<exclusion>
-		    		<artifactId>commons-logging</artifactId>
-		    		<groupId>commons-logging</groupId>
-		    	</exclusion>
-		    </exclusions>
-        </dependency>
-        <dependency>
-		    <groupId>org.egovframe.rte</groupId>
-		    <artifactId>org.egovframe.rte.psl.dataaccess</artifactId>
-		    <version>${org.egovframe.rte.version}</version>
-        </dependency>
-        <dependency>
+		<!-- eGovFrame Runtime (버전은 부모가 import 한 실행환경 루트 BOM 이 관리) -->
+		<dependency>
+			<groupId>org.egovframe.rte</groupId>
+			<artifactId>org.egovframe.rte.ptl.mvc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.egovframe.rte</groupId>
+			<artifactId>org.egovframe.rte.psl.dataaccess</artifactId>
+			<exclusions>
+				<!-- 실행환경 fdl.logging 이 전이하는 slf4j 2.x 바인딩 제외 : Boot 2.7 은 slf4j 1.7.x 이므로 log4j-slf4j-impl 사용 -->
+				<exclusion>
+					<groupId>org.apache.logging.log4j</groupId>
+					<artifactId>log4j-slf4j2-impl</artifactId>
+				</exclusion>
+				<!-- 실행환경 psl.dataaccess 가 compile 스코프로 전이하는 javaee-api 제외 : 내장 Tomcat 9 의 javax.servlet/javax.el 클래스를 가려 EL 초기화 실패(HV000183) -->
+				<exclusion>
+					<groupId>javax</groupId>
+					<artifactId>javaee-api</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.fdl.idgnr</artifactId>
-			<version>${org.egovframe.rte.version}</version>
 		</dependency>
-       	<dependency>
+		<dependency>
 			<groupId>org.egovframe.rte</groupId>
 			<artifactId>org.egovframe.rte.fdl.property</artifactId>
-			<version>${org.egovframe.rte.version}</version>
 		</dependency>
 
 		<!-- ==== DataSource (HSQL 기본, 외부 DB 전환 시 아래 가이드 참고) ==== -->
-		<!-- 외부 DB(BasicDataSource) 사용 시 필요 — 기본 활성 -->
+		<!-- 외부 DB(BasicDataSource) 사용 시 필요 — 기본 활성. 버전은 부모가 관리 -->
 		<dependency>
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-dbcp2</artifactId>
-			<version>2.12.0</version>
 		</dependency>
+		<!-- 부모(Boot 2.7.18)가 관리하는 hsqldb 는 2.5.2 이므로 JDK 8 용 2.7.x 를 직접 핀한다 -->
 		<dependency>
 			<groupId>org.hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
@@ -115,6 +121,7 @@
 		<!-- ==== JDBC 드라이버 가이드 ====
 		     사용할 DB 의 의존성 블록을 주석 해제하세요.
 		     spring.profiles.active 와 globals.properties 함께 변경 필요.
+		     MySQL / MariaDB / PostgreSQL 드라이버 버전은 부모가 관리하므로 <version> 을 쓰지 않습니다.
 
 		<dependency>
 			<groupId>com.oracle.database.jdbc</groupId>
@@ -125,19 +132,16 @@
 		<dependency>
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
-			<version>8.4.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.mariadb.jdbc</groupId>
 			<artifactId>mariadb-java-client</artifactId>
-			<version>3.4.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
-			<version>42.7.3</version>
 		</dependency>
 
 		Tibero / Altibase / Cubrid / Goldilocks 드라이버는 Maven Central 에
@@ -145,10 +149,10 @@
 		사내 Nexus 등 사설 저장소를 통해 추가하시기 바랍니다.
 		==== -->
 
+		<!-- 버전은 부모가 관리 -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.34</version>
 			<optional>true</optional>
 		</dependency>
 		<dependency>
@@ -156,12 +160,48 @@
 			<artifactId>hibernate-entitymanager</artifactId>
 			<version>5.6.15.Final</version>
 		</dependency>
+
+		<!-- Logging (버전은 부모의 log4j2.version / Boot 관리값) -->
+		<!-- CVE-2025-68161: 취약점 보완용 업데이트 -->
 		<dependency>
-			<groupId>org.springframework.boot</groupId>
-			<artifactId>spring-boot-starter-test</artifactId>
-			<scope>test</scope>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-core</artifactId>
+		</dependency>
+		<!-- SLF4J 1.7 바인딩: 실행환경 4.3.x 의 fdl.logging 은 SLF4J 2 용 log4j-slf4j2-impl 만 가져오는데(위에서 제외), 부모(Boot 2.7.18)는 slf4j-api 를
+		     1.7.36 으로 고정하고 slf4j 2.x 재정의도 금지하므로 1.7 바인딩이 없으면 로깅이 NOP 로 떨어진다. 부모는 이 의존성을 추가해 주지
+		     않으므로 여기서 선언한다. -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>log4j-over-slf4j</artifactId>
+		</dependency>
+
+		<!-- CVE-2025-48924: 보안취약점 보완용 직접 주입 (부모가 3.20.0 으로 재정의 — 실행환경 fdl.cmmn 이 참조하는 org.apache.commons.lang3.Strings 가 여기 있다) -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-lang3</artifactId>
 		</dependency>
 	</dependencies>
+
+	<profiles>
+		<!-- JDK 9+ 로 빌드할 때 Java 8 API 만 허용하도록 설정 -->
+		<profile>
+			<id>java8-api-check</id>
+			<activation>
+				<jdk>[9,)</jdk>
+			</activation>
+			<properties>
+				<maven.compiler.release>8</maven.compiler.release>
+			</properties>
+		</profile>
+	</profiles>
 
 	<build>
 		<plugins>
