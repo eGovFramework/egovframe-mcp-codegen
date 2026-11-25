@@ -160,6 +160,15 @@ describe("boot43 pom.xml — 공식 eGovFrame Boot 4.3.2 부모 상속", () => {
     expect(profile).toContain("<maven.compiler.release>8</maven.compiler.release>");
   });
 
+  it("devtools 는 Boot BOM 이 관리하는 이름 spring-boot-devtools 로 선언한다 (spring-boot-starter-devtools 는 존재하지 않음)", async () => {
+    const pom = stripComments(await generatePom("4.3"));
+    const dep = depBlock(pom, "spring-boot-devtools");
+    expect(dep).toBeDefined();
+    expect(dep).toContain("<optional>true</optional>");
+    expect(dep).not.toMatch(/<version>/);
+    expect(pom).not.toContain("spring-boot-starter-devtools");
+  });
+
   it("boot50 pom.xml 은 영향받지 않는다 (egovframe-boot-starter-parent, 재정의 없음)", async () => {
     const pom = stripComments(await generatePom("5.0"));
     expect(pom).toContain("<artifactId>egovframe-boot-starter-parent</artifactId>");
