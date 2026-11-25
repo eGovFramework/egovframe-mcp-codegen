@@ -9,11 +9,11 @@
     },
     {
       "path": ".claude/skills/egovframe-conventions/SKILL.md",
-      "sha256": "9b89119bce6356e8dce7eb29d40459d5f8b8c7ada5d0f7454b6ee136861752cd"
+      "sha256": "829cf0f4afe7eb55bf688b30bc22db47bfdd71b06f293692144963bba7456d53"
     },
     {
       "path": ".claude/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
+      "sha256": "241c20bffe7ae172046d9055c858019ece1073e1a71e6afbfb41f518b8f8da8e"
     },
     {
       "path": ".cline/skills/egovframe-attach-file-pattern/SKILL.md",
@@ -21,11 +21,11 @@
     },
     {
       "path": ".cline/skills/egovframe-conventions/SKILL.md",
-      "sha256": "9b89119bce6356e8dce7eb29d40459d5f8b8c7ada5d0f7454b6ee136861752cd"
+      "sha256": "829cf0f4afe7eb55bf688b30bc22db47bfdd71b06f293692144963bba7456d53"
     },
     {
       "path": ".cline/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
+      "sha256": "241c20bffe7ae172046d9055c858019ece1073e1a71e6afbfb41f518b8f8da8e"
     },
     {
       "path": ".continue/rules/egovframe-attach-file-pattern.md",
@@ -33,11 +33,11 @@
     },
     {
       "path": ".continue/rules/egovframe-conventions.md",
-      "sha256": "a7923ee255b6c48e2f57cb8cc141a56dc84efe237297bdee035635b6126cde33"
+      "sha256": "f6780bfe359198a1cfca3e65347d3d2d9cb2fc24288318860cd2b4ea4e198ce4"
     },
     {
       "path": ".continue/rules/egovframe-troubleshooting.md",
-      "sha256": "63f127dbe2362157958d3a0b18ae999d39147703e8196423d8557f011a9fab36"
+      "sha256": "ece9cd847c5e6b7138c10b3a4012efd90fd5810e02480806e5d723eccd227519"
     },
     {
       "path": ".cursor/skills/egovframe-attach-file-pattern/SKILL.md",
@@ -45,11 +45,11 @@
     },
     {
       "path": ".cursor/skills/egovframe-conventions/SKILL.md",
-      "sha256": "9b89119bce6356e8dce7eb29d40459d5f8b8c7ada5d0f7454b6ee136861752cd"
+      "sha256": "829cf0f4afe7eb55bf688b30bc22db47bfdd71b06f293692144963bba7456d53"
     },
     {
       "path": ".cursor/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
+      "sha256": "241c20bffe7ae172046d9055c858019ece1073e1a71e6afbfb41f518b8f8da8e"
     },
     {
       "path": ".opencode/skills/egovframe-attach-file-pattern/SKILL.md",
@@ -57,11 +57,11 @@
     },
     {
       "path": ".opencode/skills/egovframe-conventions/SKILL.md",
-      "sha256": "9b89119bce6356e8dce7eb29d40459d5f8b8c7ada5d0f7454b6ee136861752cd"
+      "sha256": "829cf0f4afe7eb55bf688b30bc22db47bfdd71b06f293692144963bba7456d53"
     },
     {
       "path": ".opencode/skills/egovframe-troubleshooting/SKILL.md",
-      "sha256": "08f705765817f4dd2139619f6424bf2ffd4c9f91985af2620b59c18e73854daa"
+      "sha256": "241c20bffe7ae172046d9055c858019ece1073e1a71e6afbfb41f518b8f8da8e"
     },
     {
       "path": "docs/egovframe-architecture.md",
@@ -69,7 +69,7 @@
     },
     {
       "path": "pom.xml",
-      "sha256": "b8ce9366a4722d9254668e5f81a56bef34831420e11bb3c9b9712dc55688aac1"
+      "sha256": "c7afa0af134a1eaa93869e58b267fed229e444ded91ae1d096f68dbf20e9c125"
     },
     {
       "path": "src/main/java/egovframework/example/board/service/BoardDefaultVO.java",

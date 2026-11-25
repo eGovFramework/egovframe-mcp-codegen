@@ -22,14 +22,14 @@ describe("stackMatrix — 기본 매트릭스 로드", () => {
     const matrix = loadStackMatrix();
     expect(matrix.version).toBeGreaterThanOrEqual(1);
     expect(matrix.stacks.boot50).toBeDefined();
-    expect(matrix.stacks.boot50.egovframe).toBe("5.0.0");
+    expect(matrix.stacks.boot50.egovframe).toBe("5.1.0");
     expect(matrix.stacks.boot50.jakarta).toBe(true);
   });
 
   it("boot/5.0 → boot50 항목을 돌려준다", () => {
     const s = resolveStack("boot", "5.0");
-    expect(s.frameworkLabel).toBe("eGovFrame Boot 5.0.0");
-    expect(s.springBoot).toBe("3.2.5");
+    expect(s.frameworkLabel).toBe("eGovFrame Boot 5.1.0");
+    expect(s.springBoot).toBe("3.5.16");
     expect(s.staticAssets).toBe("static50");
   });
 
@@ -37,13 +37,13 @@ describe("stackMatrix — 기본 매트릭스 로드", () => {
     const s = resolveStack("boot", "4.3");
     expect(s.frameworkLabel).toBe("Spring Boot 2.7.18");
     expect(s.starterParentArtifactId).toBe("spring-boot-starter-parent");
-    expect(s.rteVersion).toBe("4.3.0");
+    expect(s.rteVersion).toBe("4.3.2");
   });
 
   it("war/4.3 → war43 항목을 돌려준다", () => {
     const s = resolveStack("war", "4.3");
-    expect(s.frameworkLabel).toBe("Spring 5.3.37");
-    expect(s.spring).toBe("5.3.37");
+    expect(s.frameworkLabel).toBe("Spring 5.3.39-egov.2");
+    expect(s.spring).toBe("5.3.39-egov.2");
     expect(s.jakarta).toBe(false);
   });
 });

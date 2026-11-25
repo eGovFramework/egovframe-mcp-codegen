@@ -343,7 +343,7 @@ public class SampleVO extends SampleDefaultVO {
 <parent>
     <groupId>org.egovframe.boot</groupId>
     <artifactId>egovframe-boot-starter-parent</artifactId>
-    <version>5.0.0</version>
+    <version>5.1.0</version>
 </parent>
 ```
 
@@ -409,7 +409,7 @@ public class SampleVO extends SampleDefaultVO {
 <dependency>
     <groupId>org.egovframe.rte</groupId>
     <artifactId>egovframe-rte-ptl-mvc</artifactId>
-    <version>5.0.0</version>  <!-- ❌ Parent 가 관리 -->
+    <version>5.1.0</version>  <!-- ❌ Parent 가 관리 -->
 </dependency>
 
 <!-- ❌ commons-logging exclusion 누락 — SLF4J 충돌 (RTE 의존성 추가 시 필요한 경우 적용) -->
@@ -417,9 +417,9 @@ public class SampleVO extends SampleDefaultVO {
 
 ---
 
-### Spring Boot 호환성 매트릭스 (eGovFrame Boot Parent 5.0.0)
+### Spring Boot 호환성 매트릭스 (eGovFrame Boot Parent 5.1.0)
 
-eGovFrame Boot Parent **5.0.0** 은 다음 환경을 고정한다 (Parent 가 자동 관리):
+eGovFrame Boot Parent **5.1.0** 은 다음 환경을 고정한다 (Parent 가 자동 관리):
 
 | 항목 | 버전 | 비고 |
 |------|------|------|
@@ -432,11 +432,12 @@ eGovFrame Boot Parent **5.0.0** 은 다음 환경을 고정한다 (Parent 가 �
 | commons-lang3 | Parent 가 관리 (3.14+) | v4.3 의 `commons-lang3.version` 오버라이드 **불필요** |
 
 > **v4.3 → v5.0 이행 시 제거할 설정:**
-> - `<commons-lang3.version>3.14.0</commons-lang3.version>` ← 더 이상 필요 없음
-> - `<org.egovframe.rte.version>4.3.0</org.egovframe.rte.version>` ← Parent 가 관리
+> - `<commons-lang3.version>3.20.0</commons-lang3.version>`, `<log4j2.version>2.25.5</log4j2.version>` ← 더 이상 필요 없음 (v4.3 에서 실행환경 4.3.2 와 Boot 2.7.18 관리 버전을 맞추기 위한 재정의)
+> - `log4j-slf4j-impl` 의존성 ← v5.0 은 SLF4J 2 바인딩(`log4j-slf4j2-impl`)을 Parent 가 관리
+> - `<org.egovframe.rte.version>4.3.2</org.egovframe.rte.version>` ← Parent 가 관리
 
 > **반대로, v5.0 에서도 명시해야 하는 설정:**
-> - `mybatis-spring-boot-starter` 의 `<version>3.0.3</version>` 은 **Boot Parent 5.0.0 이 관리하지 않으므로 반드시 명시**해야 함. 누락 시 `'dependencies.dependency.version' for org.mybatis.spring.boot:mybatis-spring-boot-starter:jar is missing` 오류로 빌드 실패.
+> - `mybatis-spring-boot-starter` 의 `<version>3.0.3</version>` 은 **Boot Parent 5.1.0 이 관리하지 않으므로 반드시 명시**해야 함. 누락 시 `'dependencies.dependency.version' for org.mybatis.spring.boot:mybatis-spring-boot-starter:jar is missing` 오류로 빌드 실패.
 
 ```xml
 <!-- ✅ v5.0 — mybatis-spring-boot-starter 는 명시적 버전 지정 -->

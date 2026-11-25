@@ -204,7 +204,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
     org.mybatis.spring.boot:mybatis-spring-boot-starter:jar is missing.
     @ line 91, column 21
   ```
-- **Cause**: eGovFrame Boot Parent 5.0.0 은 `mybatis-spring-boot-starter` 의 버전을 **dependencyManagement 에서 관리하지 않는다**.
+- **Cause**: eGovFrame Boot Parent 5.1.0 은 `mybatis-spring-boot-starter` 의 버전을 **dependencyManagement 에서 관리하지 않는다**.
   Spring Boot 자체 BOM 도 mybatis-spring 만 관리할 뿐 starter 버전은 관리하지 않음.
   v4.3 의 "Parent 가 관리하므로 version 명시 제거" 가이드를 v5.0 에 그대로 적용하면 빌드 실패.
 - **Fix**: Spring Boot 3.x 호환 버전인 **mybatis-spring-boot-starter 3.0.x** 를 명시.
@@ -447,7 +447,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 - **Symptom**
   ```
   Could not resolve dependencies for project ...:
-    Could not find artifact org.egovframe.rte:org.egovframe.rte.ptl.mvc:jar:5.0.0
+    Could not find artifact org.egovframe.rte:org.egovframe.rte.ptl.mvc:jar:5.1.0
   ```
 - **Cause**: v4.x 의 artifactId (`org.egovframe.rte.ptl.mvc` 등) 를 v5.0 에서 그대로 사용.
   v5.0 부터 artifactId 가 **점 → 하이픈** 형식으로 변경 (`egovframe-rte-ptl-mvc`).
@@ -471,7 +471,7 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
   <parent>
       <groupId>org.egovframe.boot</groupId>
       <artifactId>egovframe-boot-starter-parent</artifactId>  <!-- v4.3: org.egovframe.boot.starter.parent -->
-      <version>5.0.0</version>
+      <version>5.1.0</version>
   </parent>
   ```
 - **연관**: `egovframe-conventions` Skill → Library and Extension Rules
@@ -669,12 +669,12 @@ description: 전자정부 표준프레임워크(eGovFrame) 5.x Boot 프로젝트
 새 프로젝트를 만든 뒤 **첫 `mvn spring-boot:run` 직전**에 다음을 순차 확인:
 
 ### pom.xml
-- [ ] `<parent>` = `egovframe-boot-starter-parent` **5.0.0** (NOT `org.egovframe.boot.starter.parent`)
+- [ ] `<parent>` = `egovframe-boot-starter-parent` **5.1.0** (NOT `org.egovframe.boot.starter.parent`)
 - [ ] `<java.version>` = **17** (v5.0 표준프레임워크 기준 — 21 아님)
 - [ ] `maven-compiler-plugin` `release` = `17` (또는 properties 의 `java.version` 으로만 제어)
 - [ ] RTE 의존성 artifactId 가 **`egovframe-rte-*` 형식** (NOT `org.egovframe.rte.*`)
 - [ ] RTE 의존성에 `<version>` 미명시 (Parent 가 관리)
-- [ ] `<commons-lang3.version>` 오버라이드 **제거** (v4.3 잔재)
+- [ ] `<commons-lang3.version>` / `<log4j2.version>` 오버라이드와 `log4j-slf4j-impl` 의존성 **제거** (v4.3 잔재 — 실행환경 4.3.2 와 Boot 2.7.18 핀을 맞추던 것)
 - [ ] `mybatis-spring-boot-starter` `<version>3.0.3</version>` **명시** (Parent 가 관리하지 않음 — v4.3 의 2.3.1 은 Boot 3.x 와 호환 안 되므로 3.0.x 사용)
 - [ ] `spring-boot-starter-web` / `-thymeleaf` 에서 `starter-logging` exclusion
 - [ ] `spring-boot-starter-log4j2` 추가

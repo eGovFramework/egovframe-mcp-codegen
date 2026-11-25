@@ -18,6 +18,10 @@
 	<properties>
 		<java.version>{{stack.java}}</java.version>
 		<org.egovframe.rte.version>{{stack.rteVersion}}</org.egovframe.rte.version>
+		<!-- Spring Boot 2.7.18 관리 버전 재정의: 실행환경 4.3.x 루트 POM 기준으로 맞춤 (공식 org.egovframe.boot.starter.parent 4.3.2 와 동일).
+		     commons-lang3 를 올리지 않으면 fdl.cmmn 이 참조하는 org.apache.commons.lang3.Strings 가 없어 요청 시 NoClassDefFoundError 가 난다. -->
+		<commons-lang3.version>3.20.0</commons-lang3.version>
+		<log4j2.version>2.25.5</log4j2.version>
 	</properties>
 
 	<repositories>
@@ -45,6 +49,12 @@
 					<artifactId>spring-boot-starter-logging</artifactId>
 				</exclusion>
 			</exclusions>
+		</dependency>
+		<!-- SLF4J 1.7 바인딩: 실행환경 4.3.2 의 fdl.logging 은 SLF4J 2 용 log4j-slf4j2-impl 만 가져오는데, Boot 2.7.18 은 slf4j-api 를 1.7.36 으로 고정하므로
+		     1.7 바인딩이 없으면 로깅이 NOP 로 떨어진다. 공식 Boot 4.3.2 부모도 slf4j 2.x 재정의를 금지한다. 버전은 Boot(log4j2.version) 가 관리. -->
+		<dependency>
+			<groupId>org.apache.logging.log4j</groupId>
+			<artifactId>log4j-slf4j-impl</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
