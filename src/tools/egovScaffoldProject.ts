@@ -117,6 +117,14 @@ export function defaultStackVersion(projectType: "boot" | "war"): "4.3" | "5.1" 
 
 export type ScaffoldInput = z.infer<typeof ScaffoldInputSchema>;
 
+/**
+ * 생성된 프로젝트 디렉터리의 마지막 폴더명. Windows 경로는 `\` 로 구분되므로 두 구분자를 모두 다룬다
+ * (`path.basename` 은 실행 OS 의 구분자만 인식한다).
+ */
+export function projectFolderName(projectDir: string): string {
+  return projectDir.split(/[\\/]/).filter(Boolean).pop() ?? projectDir;
+}
+
 function formatZodError(err: z.ZodError): string {
   const lines = err.issues.map((i) => {
     const path = i.path.length ? `${i.path.join(".")}: ` : "";
@@ -214,9 +222,9 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
 
     if (isWar) {
       lines.push(
-        `  3. target/${result.projectDir.split("/").pop()}.war 를 Tomcat webapps/ 로 복사`,
+        `  3. target/${projectFolderName(result.projectDir)}.war 를 Tomcat webapps/ 로 복사`,
         `  4. Tomcat 시작`,
-        `  5. http://localhost:8080/${result.projectDir.split("/").pop()}/ 접속`,
+        `  5. http://localhost:8080/${projectFolderName(result.projectDir)}/ 접속`,
       );
     } else {
       lines.push(`  3. mvn spring-boot:run`, `  4. http://localhost:8080/ 접속`);
