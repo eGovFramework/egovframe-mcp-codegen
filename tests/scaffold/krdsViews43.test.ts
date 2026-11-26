@@ -404,3 +404,34 @@ describe("5.1 KRDS 페이지네이션 0건 보정", () => {
     expect(src).toMatch(/previousPageDisabledLabel \+ "<div class=\\"page-links\\">" \+ MessageFormat\.format\(currentPageLabel, "1"\) \+ "<\/div>" \+ nextPageDisabledLabel/);
   });
 });
+
+describe("WAR FK 엔티티 추가", () => {
+  it("FK 부모가 있는 엔티티의 Service·Mapper·ServiceImpl 이 FkComboVO 를 기본 패키지로 참조한다", async () => {
+    // 부모 엔티티는 테이블명으로 찾으므로 첫 엔티티를 Member 로 만든다 (공통 헬퍼는 엔티티명이 Board 로 고정).
+    await generateScaffoldProject({
+      projectName: "member-app",
+      packageName: "egovframework.example.member",
+      outputPath: tmpRoot,
+      entityName: "Member",
+      ddl: "CREATE TABLE MEMBER (MBR_NO VARCHAR(20) NOT NULL PRIMARY KEY, MBR_NM VARCHAR(100) NOT NULL)",
+      description: "",
+      projectType: "war",
+      stackVersion: "4.3",
+    });
+    const dir = path.join(tmpRoot, "member-app");
+    await egovAddEntity({
+      projectPath: dir,
+      packageName: "egovframework.example.orders",
+      entityName: "Order",
+      ddl: "CREATE TABLE ORDERS (ORDR_NO VARCHAR(50) NOT NULL PRIMARY KEY, MBR_NO VARCHAR(20), ORDR_AMT NUMERIC(15), CONSTRAINT FK_ORDERS_MEMBER FOREIGN KEY (MBR_NO) REFERENCES MEMBER (MBR_NO))",
+      withAttachment: false,
+    });
+    const base = "src/main/java/egovframework/example/orders/service";
+    for (const f of [`${base}/EgovOrderService.java`, `${base}/impl/OrderMapper.java`, `${base}/impl/EgovOrderServiceImpl.java`]) {
+      const src = await read(dir, f);
+      expect(src, f).toContain("java.util.List<egovframework.example.cmm.vo.FkComboVO> selectMemberComboList()");
+      expect(src, f).not.toContain("List<.cmm");
+    }
+    expect(await fs.pathExists(path.join(dir, "src/main/java/egovframework/example/cmm/vo/FkComboVO.java"))).toBe(true);
+  });
+});

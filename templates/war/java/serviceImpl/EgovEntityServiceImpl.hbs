@@ -48,6 +48,6 @@ public class Egov{{entityName}}ServiceImpl extends EgovAbstractServiceImpl imple
 	@Override public List<?> select{{entityName}}List({{entityName}}DefaultVO searchVO) throws Exception { return {{entityNameLower}}DAO.select{{entityName}}List(searchVO); }
 	@Override public int select{{entityName}}ListTotCnt({{entityName}}DefaultVO searchVO) { return {{entityNameLower}}DAO.select{{entityName}}ListTotCnt(searchVO); }
 {{#each uniqueFkParents}}
-	@Override public java.util.List<{{basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList() { return {{../entityNameLower}}DAO.select{{fkParent.entityName}}ComboList(); }
+	@Override public java.util.List<{{../basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList() { return {{../entityNameLower}}DAO.select{{fkParent.entityName}}ComboList(); }
 {{/each}}
 }

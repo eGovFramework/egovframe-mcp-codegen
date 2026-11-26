@@ -10,6 +10,6 @@ public interface Egov{{entityName}}Service {
 	List<?> select{{entityName}}List({{entityName}}DefaultVO searchVO) throws Exception;
 	int select{{entityName}}ListTotCnt({{entityName}}DefaultVO searchVO);
 {{#each uniqueFkParents}}
-	java.util.List<{{basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList();
+	java.util.List<{{../basePackage}}.cmm.vo.FkComboVO> select{{fkParent.entityName}}ComboList();
 {{/each}}
 }
