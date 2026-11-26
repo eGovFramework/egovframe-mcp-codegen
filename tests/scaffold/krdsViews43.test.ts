@@ -140,3 +140,31 @@ describe("Task3 boot43 KRDS 페이지네이션", () => {
     expect(list).not.toContain("egovPaginationFormat");
   });
 });
+
+describe("Task4 war43 KRDS 페이지네이션·날짜 표시", () => {
+  it("렌더러와 디스패처 설정이 krds 타입으로 생성된다", async () => {
+    const dir = await scaffold("war43");
+    const r = await read(dir, "src/main/java/egovframework/example/cmmn/web/EgovKrdsPaginationRenderer.java");
+    expect(r).toContain("implements PaginationRenderer, MessageSourceAware");
+    expect(r).toContain('<div class=\\"page-links\\">');
+    for (const bad of ["jakarta.", "AbstractKrdsPaginationRenderer", "ServletContextAware"]) {
+      expect(r, bad).not.toContain(bad);
+    }
+    const x = await read(dir, "src/main/webapp/WEB-INF/config/egovframework/springmvc/dispatcher-servlet.xml");
+    expect(x).toContain('<bean id="krdsRenderer" class="egovframework.example.cmmn.web.EgovKrdsPaginationRenderer" />');
+    expect(x).toContain('<entry key="krds" value-ref="krdsRenderer" />');
+    expect(x).not.toContain("imageRenderer");
+    expect(await fs.pathExists(path.join(dir, "src/main/java/egovframework/example/cmmn/web/EgovImgPaginationRenderer.java"))).toBe(false);
+    const list = await read(dir, VIEW.war43.list);
+    expect(list).toMatch(
+      /<div id="paging" class="krds-pagination w-page">\s*<ui:pagination paginationInfo="\$\{paginationInfo\}" type="krds" jsFunction="fn_egov_link_page" \/>/,
+    );
+  });
+
+  it("바인딩 초기화기가 날짜를 yyyy-MM-dd 로 표시한다", async () => {
+    const src = await read(await scaffold("war43"), "src/main/java/egovframework/example/cmmn/web/EgovBindingInitializer.java");
+    expect(src.match(/public String getAsText\(\)/g)).toHaveLength(2);
+    expect(src).toContain('getValue() == null ? "" :');
+    expect(src.match(/new SimpleDateFormat\("yyyy-MM-dd"\)/g)!.length).toBeGreaterThanOrEqual(2);
+  });
+});

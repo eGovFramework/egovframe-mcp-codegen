@@ -108,10 +108,10 @@ function fn_egov_link_page(pageNo) {
 		</table>
 	</div>
 	<!-- /List -->
-	<div id="paging">
-		<ui:pagination paginationInfo="${paginationInfo}" type="image" jsFunction="fn_egov_link_page" />
-		<form:hidden path="pageIndex" />
+	<div id="paging" class="krds-pagination w-page">
+		<ui:pagination paginationInfo="${paginationInfo}" type="krds" jsFunction="fn_egov_link_page" />
 	</div>
+	<form:hidden path="pageIndex" />
 </div>
 </form:form>
 </body>

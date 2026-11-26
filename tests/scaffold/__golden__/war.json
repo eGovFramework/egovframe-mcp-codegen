@@ -45,11 +45,11 @@
     },
     {
       "path": "src/main/java/egovframework/example/cmmn/web/EgovBindingInitializer.java",
-      "sha256": "f49d5444c0fd3e4374fa2a2527c00958e35c2189baae5ca74d019ada0449eb75"
+      "sha256": "f52cd0b15740fc4a68329a8807257fe3abafabceb70072212d580c87f3ad0368"
     },
     {
-      "path": "src/main/java/egovframework/example/cmmn/web/EgovImgPaginationRenderer.java",
-      "sha256": "9f55c80b9b96676fe700fd813a1852ab2c48f9dcdd3195c5d500e239ba6b83de"
+      "path": "src/main/java/egovframework/example/cmmn/web/EgovKrdsPaginationRenderer.java",
+      "sha256": "f01194580061eef86be3770a2b1f5a6e586a628f9a148fcb2ff852915c0a103c"
     },
     {
       "path": "src/main/resources/db/boarddb.sql",
@@ -153,7 +153,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/config/egovframework/springmvc/dispatcher-servlet.xml",
-      "sha256": "da6326b7f84dbd2a7284e4854f8f1d392b99533af4ee3438b095044d2c60ff0a"
+      "sha256": "591470da541f61fba2f4ceed7e05bf40697c13b815905a8dff815b3be5bc8df0"
     },
     {
       "path": "src/main/webapp/WEB-INF/config/egovframework/validator/validator-rules.xml",
@@ -169,7 +169,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardList.jsp",
-      "sha256": "917ff3a82224b84861f39b181392df6c115c2423475b8bd7c2478700e98419f5"
+      "sha256": "722c182eb2c323d7deba5a2578f2704d7d5ffb6992713e7a37cf43a479fbd304"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardRegister.jsp",

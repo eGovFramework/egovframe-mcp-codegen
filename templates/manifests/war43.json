@@ -14,7 +14,7 @@
     { "template": "war/java/cmmn/EgovExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/Egov{{entityName}}ExcepHndlr.java" },
     { "template": "war/java/cmmn/EgovOthersExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/Egov{{entityName}}OthersExcepHndlr.java" },
     { "template": "war/java/cmmn/web/EgovBindingInitializer.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/web/EgovBindingInitializer.java" },
-    { "template": "war/java/cmmn/web/EgovImgPaginationRenderer.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/web/EgovImgPaginationRenderer.java" },
+    { "template": "war/java/cmmn/web/EgovKrdsPaginationRenderer.hbs", "output": "src/main/java/{{basePackagePath}}/cmmn/web/EgovKrdsPaginationRenderer.java" },
     { "template": "war/java/cmm/FkComboVO.hbs", "output": "src/main/java/{{basePackagePath}}/cmm/vo/FkComboVO.java" },
 
     { "template": "war/resources/spring/context-aspect.xml.hbs", "output": "src/main/resources/egovframework/spring/context-aspect.xml" },

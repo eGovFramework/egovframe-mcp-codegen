@@ -51,10 +51,11 @@
 		<property name="order" value="1" />
 	</bean>
 
-	<bean id="imageRenderer" class="{{basePackage}}.cmmn.web.EgovImgPaginationRenderer" />
+	<!-- KRDS 페이지네이션 렌더러 — JSP 의 <ui:pagination type="krds"/> 가 사용한다. -->
+	<bean id="krdsRenderer" class="{{basePackage}}.cmmn.web.EgovKrdsPaginationRenderer" />
 	<bean id="paginationManager" class="org.egovframe.rte.ptl.mvc.tags.ui.pagination.DefaultPaginationManager">
 		<property name="rendererType">
-			<map><entry key="image" value-ref="imageRenderer" /></map>
+			<map><entry key="krds" value-ref="krdsRenderer" /></map>
 		</property>
 	</bean>
 

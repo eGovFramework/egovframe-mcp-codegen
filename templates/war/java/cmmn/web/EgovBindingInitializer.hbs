@@ -19,6 +19,7 @@ import org.springframework.web.bind.support.WebBindingInitializer;
  * 빈 날짜 입력란도 allowEmpty=false 에 걸려 거부된다.
  * - Date: 'yyyy-MM-dd' 만 허용. 빈 문자열은 null.
  * - Timestamp: 'yyyy-MM-dd' 만 들어오면 ' 00:00:00' 보강 후 Timestamp.valueOf().
+ * - 표시(getAsText)는 두 타입 모두 'yyyy-MM-dd' — 등록 화면의 flatpickr 달력과 5.1 Boot 화면과 같은 형식.
  */
 public class EgovBindingInitializer implements WebBindingInitializer {
 	@Override
@@ -32,6 +33,10 @@ public class EgovBindingInitializer implements WebBindingInitializer {
 				if (text == null || text.trim().isEmpty()) { setValue(null); return; }
 				setValue(java.sql.Date.valueOf(text.trim()));
 			}
+			@Override
+			public String getAsText() {
+				return getValue() == null ? "" : new SimpleDateFormat("yyyy-MM-dd").format((Date) getValue());
+			}
 		});
 		binder.registerCustomEditor(Timestamp.class, new PropertyEditorSupport() {
 			@Override
@@ -40,6 +45,10 @@ public class EgovBindingInitializer implements WebBindingInitializer {
 				String s = text.trim();
 				if (s.length() == 10 && s.charAt(4) == '-' && s.charAt(7) == '-') s = s + " 00:00:00";
 				setValue(Timestamp.valueOf(s));
+			}
+			@Override
+			public String getAsText() {
+				return getValue() == null ? "" : new SimpleDateFormat("yyyy-MM-dd").format((Date) getValue());
 			}
 		});
 		binder.registerCustomEditor(String.class, new StringTrimmerEditor(false));
