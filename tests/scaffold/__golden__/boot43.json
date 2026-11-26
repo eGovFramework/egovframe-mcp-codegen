@@ -169,19 +169,19 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/_fragments/nav.html",
-      "sha256": "1b742b26d0b2f1b8bfee9e81bb02d47873554a9bf7b4b2c4d28610cd291e6ac9"
+      "sha256": "b736f863edeb2133860cfdad2bf33c22eaf029ad84e2a740f4b35ed6dc44ee7f"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardList.html",
-      "sha256": "dd126bf28f98aa20c7252c994a6a75c2f57128110d8c774bf2c40cac8ba7a045"
+      "sha256": "a71162b09c53fd95560c0d89bbefe5bfd507fe67966290a4a9445d0c4118fb32"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",
-      "sha256": "e50913cdaa91a6e5dac8ca5b92d595acbd8574b861e5acc643a0c461cc361054"
+      "sha256": "8caccf3e68a779064f1d87813bf9b2057cc6983932a4131621ff7a4841ce9cc6"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovSampleError.html",
-      "sha256": "5b3966f1c6b9c06adf9ff88939c24333efc6df3866fd24f7a95118b2feec8df6"
+      "sha256": "1eac008eda94b6fe8031b4433abf9628912176ceb2675545a6d69f186d2c24f8"
     }
   ]
 }

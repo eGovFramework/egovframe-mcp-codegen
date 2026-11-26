@@ -1,86 +1,144 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="ko" xmlns:th="http://www.thymeleaf.org">
 <head>
-    <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <title th:text="#{title.{{entityNameLower}}.sample}"></title>
-    <link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
-    <link rel="stylesheet" type="text/css" th:href="@{/css/egovframework/sample.css}">
-    <script type="text/javascript" th:src="@{/js/egovframework/jquery-3.6.1.min.js}"></script>
-    <script th:inline="javascript">
-        document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
-        var contextPath = $('#contextPathHolder').attr('data-contextPath') ? $('#contextPathHolder').attr('data-contextPath') : '';
-        function notNullCheck(value) { return !(value === '' || value == null || (typeof value == 'object' && !Object.keys(value).length)); }
-        function {{entityNameLower}}Search() {
-            if (notNullCheck($('#searchKeyword').val())) {
-                $.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post',
-                    data: { searchCondition: $('#searchCondition option:selected').val(), searchKeyword: $('#searchKeyword').val() }
-                }).done(function(fragment) { $('#content_pop').replaceWith(fragment); });
-            } else { const errorMessage = [[#{search.error}]]; alert(errorMessage); }
-        }
-        function {{entityNameLower}}Pagination(pageIndex) {
-            $.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post', data: { pageIndex: pageIndex }
-            }).done(function(fragment) { $('#content_pop').replaceWith(fragment); });
-        }
-        function {{entityNameLower}}Create() { $(location).attr('href', contextPath + '/{{entityNameLower}}/add'); }
-        function {{entityNameLower}}Detail({{pkAttributes.0.ccName}}) {
-            $('#{{pkAttributes.0.ccName}}').val({{pkAttributes.0.ccName}});
-            $('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/detail').submit();
-        }
-    </script>
-</head>
-<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
-    <div id="content_pop">
-        <div id="title"><ul><li><img th:src="@{/images/egovframework/example/title_dot.gif}"/><span th:text="{{concat "#{list." entityNameLower "}"}}"></span></li></ul></div>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+	<title th:text="#{title.{{entityNameLower}}.sample}"></title>
 
-        <!-- @egov:nav-include — egov_add_entity 가 fragment 갱신 시 자동 인식하는 마커. 사용자가 옮기지 마세요. -->
-        <div th:replace="~{_fragments/nav :: links}"></div>
-        <form id="detailForm" th:object="{{{thExpr voName}}}">
-            <input type="hidden" id="{{pkAttributes.0.ccName}}" name="{{pkAttributes.0.ccName}}"/>
-        </form>
-        <div id="search">
-            <ul>
-                <li>
-                    <label for="searchCondition" style="visibility:hidden;" th:text="#{search.choose}"></label>
-                    <select id="searchCondition" name="searchCondition" class="use">
+	<link rel="stylesheet" type="text/css" th:href="@{/css/component/output.css}"/>
+	<link rel="stylesheet" type="text/css" th:href="@{/css/egovframe.css}"/>
+	<!-- common.js 가 이 홀더에서 contextPath 를 읽는다 (4.3 Boot 는 server.servlet.context-path 가 있을 수 있다). -->
+	<link id="contextPathHolder" th:data-contextPath="${#httpServletRequest.getContextPath()}"/>
+	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
+	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
+	<script th:inline="javascript">
+		// 검색 입력란에서 Enter 가 폼을 제출하지 않도록 막는다 (4.3 Boot 의 목록/상세 이동은 모두 스크립트가 수행).
+		document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
+
+		// 검색·페이지 이동은 서버가 돌려준 전체 페이지에서 #content_pop 만 뽑아 교체한다.
+		// 응답 HTML 전체를 replaceWith 하면 jQuery 가 head 의 <script src> 를 다시 평가해
+		// common.js 의 const 선언이 충돌하고 <link> 가 중복 삽입된다.
+		function {{entityNameLower}}Replace(html) {
+			var next = $('<div>').html(html).find('#content_pop');
+			if (!next.length) { alert([[#{fail.common.msg}]]); return; }
+			$('#content_pop').replaceWith(next);
+		}
+		function {{entityNameLower}}Search() {
+			if (notNullCheck($('#searchKeyword').val())) {
+				$.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post',
+					data: { searchCondition: $('#searchCondition option:selected').val(), searchKeyword: $('#searchKeyword').val() }
+				}).done({{entityNameLower}}Replace);
+			} else { alert([[#{search.error}]]); }
+		}
+		function {{entityNameLower}}Pagination(pageIndex) {
+			$.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post', data: { pageIndex: pageIndex }
+			}).done({{entityNameLower}}Replace);
+		}
+		function {{entityNameLower}}Create() { $(location).attr('href', contextPath + '/{{entityNameLower}}/add'); }
+		function {{entityNameLower}}Detail({{pkAttributes.0.ccName}}) {
+			$('#{{pkAttributes.0.ccName}}').val({{pkAttributes.0.ccName}});
+			$('#detailForm').attr('method', 'post').attr('action', contextPath + '/{{entityNameLower}}/detail').submit();
+		}
+	</script>
+</head>
+
+<body>
+<div id="container" class="inner">
+
+	<h2 class="heading-large" th:text="{{concat "#{list." entityNameLower "}"}}"></h2>
+
+	<!-- @egov:nav-include — egov_add_entity 가 fragment 갱신 시 자동 인식하는 마커. 사용자가 옮기지 마세요. -->
+	<div th:replace="~{_fragments/nav :: links}"></div>
+
+	<div id="content_pop">
+		<form id="detailForm" th:object="{{{thExpr voName}}}">
+			<input type="hidden" id="{{pkAttributes.0.ccName}}" name="{{pkAttributes.0.ccName}}"/>
+		</form>
+
+		<div class="form-group">
+			<div class="search-wrap">
+				<div class="search-body">
+					<div class="form-conts searchOption">
+						<select id="searchCondition" name="searchCondition" class="krds-form-select medium" th:title="#{search.choose}">
 {{#each searchableAttributes}}
-                        <option th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}" th:value="{{@index}}" th:selected="{{{thExpr ../voName ".searchCondition"}}} == {{@index}}"></option>
+							<option th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}" th:value="{{@index}}" th:selected="{{{thExpr ../voName ".searchCondition"}}} == {{@index}}"></option>
 {{/each}}
-                    </select>
-                </li>
-                <li>
-                    <label for="searchKeyword" style="visibility:hidden;display:none;" th:text="#{search.keyword}"></label>
-                    <input type="text" id="searchKeyword" name="searchKeyword" th:value="{{{thExpr voName ".searchKeyword"}}}" class="txt"/>
-                </li>
-                <li><span class="btn_blue_l"><span th:text="#{button.search}" th:onclick="{{entityNameLower}}Search()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.search}"/></span></li>
-                <li><span th:class="btn_blue_l"><span th:text="#{button.create}" th:onclick="{{entityNameLower}}Create()"></span><img th:src="@{/images/egovframework/example/btn_bg_r.gif}" style="margin-left:6px;" th:alt="#{button.create}"/></span></li>
-            </ul>
-        </div>
-        <div id="table">
-            <table th:width="680px">
-            <caption style="visibility:hidden">{{entityName}} List</caption>
-                <tr>
-                    <th th:width="40px">No</th>
+						</select>
+					</div>
+					<div class="form-conts btn-ico-wrap searchKeyword">
+						<input type="text" id="searchKeyword" name="searchKeyword" th:value="{{{thExpr voName ".searchKeyword"}}}" class="krds-input medium" th:placeholder="#{search.keyword}">
+						<button type="button" class="krds-btn medium icon" th:onclick="{{entityNameLower}}Search()">
+							<span class="sr-only" th:text="#{button.search}"></span>
+							<i class="svg-icon ico-sch"></i>
+						</button>
+					</div>
+				</div>
+				<div class="page-btn-wrap">
+					<button type="button" class="krds-btn medium" th:text="#{button.create}" th:onclick="{{entityNameLower}}Create()"></button>
+				</div>
+			</div>
+		</div>
+
+		<div class="krds-table-wrap">
+			<table class="tbl col data">
+				<colgroup>
+					<col style="width: 10%;">
 {{#each attributes}}
-                    <th><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></th>
+					<col>
 {{/each}}
-                </tr>
-                <tr data-th-each="item, status : ${resultList}">
-                    <td th:class="listtd" th:align="center">[[${(paginationInfo.getTotalRecordCount()+1)-(({{entityNameLower}}VO.getPageIndex()-1)*paginationInfo.getPageSize()+status.count)}]]</td>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">No</th>
+{{#each attributes}}
+						<th scope="col" class="text-center"><span th:text="{{concat "#{title." ../entityNameLower "." ccName "}"}}"></span></th>
+{{/each}}
+					</tr>
+				</thead>
+				<tbody>
+					<tr th:each="item, status : ${resultList}">
+						<td class="text-center" th:text="${(paginationInfo.getTotalRecordCount()+1)-(({{entityNameLower}}VO.getPageIndex()-1)*paginationInfo.getPageSize()+status.count)}"></td>
 {{#each attributes}}
 {{#if isPrimaryKey}}
-                    <td th:class="listtd" th:align="center"><a th:onclick="{{../entityNameLower}}Detail([[{{concat "${item." ccName "}"}}]])">[[{{concat "${item." ccName "}"}}]]</a></td>
+						<td class="text-center">
+							<a href="#" th:onclick="{{../entityNameLower}}Detail([[{{concat "${item." ccName "}"}}]])" th:text="{{concat "${item." ccName "}"}}"></a>
+						</td>
 {{else}}
 {{#if fkParent}}
-                    <td th:class="listtd">[[{{concat "${item." ccName "DisplayName}"}}]]</td>
+						<td class="text-center" th:text="{{concat "${item." ccName "DisplayName}"}}"></td>
 {{else}}
-                    <td th:class="listtd">[[{{concat "${item." ccName "}"}}]]</td>
+						<td class="text-center" th:text="{{concat "${item." ccName "}"}}"></td>
 {{/if}}
 {{/if}}
 {{/each}}
-                </tr>
-            </table>
-        </div>
-        <div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, '{{entityNameLower}}Pagination')}"></div>
-    </div>
+					</tr>
+					<tr th:if="${resultList == null or resultList.isEmpty()}">
+						<td class="text-center" colspan="{{add attributes.length 1}}" th:text="#{info.nodata.msg}"></td>
+					</tr>
+				</tbody>
+			</table>
+		</div>
+
+		<!--
+			th:utext 사용 근거 (XSS safe — verified, not assumed):
+
+			1) org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo 는 int 9개만 필드로 가짐
+			   (currentPageNo/recordCountPerPage/pageSize/totalRecordCount/totalPageCount/
+			    firstPageNoOnPageList/lastPageNoOnPageList/firstRecordIndex/lastRecordIndex).
+			   String 필드 0개, setSearchKeyword 없음. 사용자 입력이 들어갈 수 있는 구조 자체가 아니다.
+			2) EgovKrdsPaginationRenderer.renderPagination(...) 는 paginationInfo 에서 int getter
+			   만 호출하고 Integer.toString(int) 로 변환. 임의 문자열이 흘러나올 경로 없음.
+			3) jsFunction 인자는 생성 시점에 ^[A-Z][a-zA-Z0-9]*$ 로 검증된 식별자 리터럴.
+			4) label 템플릿(이전/다음 등)은 EgovKrdsPaginationRenderer 의 하드코드 + 우리 message
+			   bundle 만 사용 — 둘 다 개발자 통제.
+
+			셀(<td>) 값은 모두 th:text 로 escape 되어 있어 사용자/DB 데이터는 utext 경로를 통과하지 않는다.
+		-->
+		<div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, '{{entityNameLower}}Pagination')}"></div>
+
+	</div>
+
+</div>
+
 </body>
 </html>

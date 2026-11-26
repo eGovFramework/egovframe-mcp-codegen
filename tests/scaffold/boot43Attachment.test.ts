@@ -97,7 +97,8 @@ describe("4.3 Boot 첨부파일 연결", () => {
     expect(r).toContain("/cmm/fms/FileDown.do");
     expect(r).toContain("/board/deleteAttachFile");
     expect(r).not.toMatch(/name="atchFileId"/);
-    expect(r).not.toContain("krds-");
+    // 첨부 삭제 버튼은 5.1 과 같은 KRDS 버튼 클래스
+    expect(r).toContain('class="krds-btn small danger"');
   });
 
   it("메시지 키가 모든 번들에 있다", async () => {

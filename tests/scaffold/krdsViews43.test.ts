@@ -168,3 +168,99 @@ describe("Task4 war43 KRDS 페이지네이션·날짜 표시", () => {
     expect(src.match(/new SimpleDateFormat\("yyyy-MM-dd"\)/g)!.length).toBeGreaterThanOrEqual(2);
   });
 });
+
+describe("Task5 boot43 KRDS 뷰", () => {
+  it("목록 화면: KRDS 자산·마크업, 페이지별 최소 스크립트, 4.3 URL 유지", async () => {
+    const list = await read(await scaffold("boot43"), VIEW.boot43.list);
+    for (const s of [
+      'th:href="@{/css/component/output.css}"',
+      'th:href="@{/css/egovframe.css}"',
+      'th:src="@{/js/jquery.min.js}"',
+      'th:src="@{/js/egovframework/common.js}"',
+      'id="contextPathHolder"',
+      '<div id="container" class="inner">',
+      'class="heading-large"',
+      '<div id="content_pop">',
+      'class="krds-form-select medium"',
+      'class="krds-input medium"',
+      'class="krds-btn medium icon"',
+      'class="svg-icon ico-sch"',
+      'class="krds-table-wrap"',
+      'class="tbl col data"',
+      "#{info.nodata.msg}",
+      "@egov:nav-include",
+      "~{_fragments/nav :: links}",
+      "contextPath + '/board/list'",
+      "contextPath + '/board/detail'",
+      "contextPath + '/board/add'",
+    ]) {
+      expect(list, s).toContain(s);
+    }
+    for (const s of ["ui-script.js", "sample.css", "jquery-3.6.1", "var contextPath", "function notNullCheck", "btn_blue_l", "title_dot.gif", "tbtd_"]) {
+      expect(list, s).not.toContain(s);
+    }
+  });
+
+  it("AJAX 핸들러가 #content_pop 만 교체하고 없으면 알림한다", async () => {
+    const list = await read(await scaffold("boot43"), VIEW.boot43.list);
+    expect(list).toContain("find('#content_pop')");
+    expect(list).not.toContain("replaceWith(fragment)");
+    expect(list).toMatch(/if \(!\w+\.length\) \{ alert\(\[\[#\{fail\.common\.msg\}\]\]\); return; \}/);
+  });
+
+  it("등록 화면: KRDS 폼 마크업, th:field 유지, 필수 표시, 서버 오류 표시", async () => {
+    const r = await read(await scaffold("boot43"), VIEW.boot43.register);
+    for (const s of [
+      'th:src="@{/js/component/ui-script.js}" defer',
+      'th:src="@{/js/egovframework/common.js}" defer',
+      'id="contextPathHolder"',
+      'class="fieldset input-form"',
+      '<div class="form-group">',
+      '<div class="form-tit">',
+      '<div class="form-conts">',
+      'th:field="*{title}"',
+      'class="krds-input"',
+      '<span class="required">*</span>',
+      'class="form-hint-invalid"',
+      "#fields.hasErrors('title')",
+      'class="krds-btn medium secondary"',
+      'class="krds-btn medium danger"',
+      "contextPath + '/board/add'",
+      "contextPath + '/board/update'",
+      "contextPath + '/board/delete'",
+      "event.keyCode === 13",
+    ]) {
+      expect(r, s).toContain(s);
+    }
+    for (const s of ["EgovValidation", "flatpickr", "var contextPath", "sample.css", "btn_blue_l", "tbtd_caption"]) {
+      expect(r, s).not.toContain(s);
+    }
+  });
+
+  it("날짜 컬럼이 있으면 flatpickr 를 넣고 값을 yyyy-MM-dd 로 표시한다", async () => {
+    const r = await read(await scaffold("boot43", DATE_DDL), VIEW.boot43.register);
+    for (const s of [
+      'href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css"',
+      'src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"',
+      'src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ko.js"',
+      "flatpickr('.flatpickr-date', {",
+      "id=\"pubDt\" name=\"pubDt\" class=\"krds-input flatpickr-date\" placeholder=\"yyyy-MM-dd\" th:value=\"${boardVO.pubDt != null ? #dates.format(boardVO.pubDt, 'yyyy-MM-dd') : ''}\"",
+      'id="regDt" name="regDt" class="krds-input flatpickr-date"',
+    ]) {
+      expect(r, s).toContain(s);
+    }
+    expect(r).not.toContain('th:field="*{pubDt}"');
+    expect(r).not.toContain('th:field="*{regDt}"');
+  });
+
+  it("조회뷰·nav·오류 화면이 5.1 과 같은 골격이다", async () => {
+    const dir = await scaffold("boot43");
+    const nav = await read(dir, "src/main/resources/templates/thymeleaf/_fragments/nav.html");
+    expect(nav).toContain('<nav th:fragment="links" class="egov-entity-nav"');
+    expect(nav).toContain("var(--krds-color-light-primary-50, #256ef4)");
+    expect(nav).toContain("egovRequestUri.startsWith('/egovBoardList')");
+    const err = await read(dir, "src/main/resources/templates/thymeleaf/egovSampleError.html");
+    expect(err).not.toContain("sample.css");
+    expect(err).toContain("#{fail.common.msg}");
+  });
+});

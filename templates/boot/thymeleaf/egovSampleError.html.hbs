@@ -1,13 +1,15 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-    <title>Error</title>
-    <link type="text/css" rel="stylesheet" th:href="@{/css/egovframework/sample.css}"/>
+    <title th:text="Error"></title>
 </head>
-<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
-<div id="content_pop">
-    <div id="title"><ul><li><span th:text="#{fail.common.msg}"></span></li></ul></div>
-</div>
+
+<body>
+
+<span th:text="#{fail.common.msg}">에러가 발생했습니다!</span>
+
 </body>
+
 </html>
