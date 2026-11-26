@@ -467,7 +467,7 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
   }
 
   // Static assets copy — 디렉터리명은 호환성 매트릭스의 stack.staticAssets 에서 가져온다.
-  // (Boot 5.1 = static50, 그 외 = static)
+  // (세 스택 모두 KRDS 자산 static50 을 쓴다. 화면 템플릿이 이 자산 경로를 참조한다.)
   const staticDirName = ctx.stack.staticAssets;
   const staticSrcDir = path.join(templateBasePath, staticDirName);
   if (await fs.pathExists(staticSrcDir)) {

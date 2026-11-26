@@ -69,8 +69,9 @@ public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware 
 	@Override
 	public void addResourceHandlers(ResourceHandlerRegistry registry) {
 		registry.addResourceHandler("/css/**").addResourceLocations("classpath:/static/css/");
-		registry.addResourceHandler("/images/**").addResourceLocations("classpath:/static/images/");
+		registry.addResourceHandler("/img/**").addResourceLocations("classpath:/static/img/");
 		registry.addResourceHandler("/js/**").addResourceLocations("classpath:/static/js/");
+		registry.addResourceHandler("/fonts/**").addResourceLocations("classpath:/static/fonts/");
 	}
 
 	@Bean public SessionLocaleResolver localeResolver() { return new SessionLocaleResolver(); }

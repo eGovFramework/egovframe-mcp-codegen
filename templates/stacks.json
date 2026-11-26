@@ -1,5 +1,5 @@
 {
-  "$comment": "eGovFrame scaffold 스택 호환성 매트릭스. egov_scaffold_project 가 (projectType, stackVersion) 을 키로 이 매트릭스를 조회해 컨텍스트와 템플릿에 주입한다. 새 스택 추가 시 stacks 키와 selection 매핑을 함께 갱신할 것.",
+  "$comment": "eGovFrame scaffold 스택 호환성 매트릭스. egov_scaffold_project 가 (projectType, stackVersion) 을 키로 이 매트릭스를 조회해 컨텍스트와 템플릿에 주입한다. 새 스택 추가 시 stacks 키와 selection 매핑을 함께 갱신할 것. 정적 자산(staticAssets)은 세 스택 공용 KRDS 자산 static50 이다.",
   "version": 1,
   "stacks": {
     "boot50": {
@@ -50,7 +50,7 @@
       "starterParentArtifactId": "org.egovframe.boot.starter.parent",
       "starterParentVersion": "4.3.2",
       "frameworkLabel": "eGovFrame Boot 4.3.2",
-      "staticAssets": "static",
+      "staticAssets": "static50",
       "manifest": "manifests/boot43.json",
       "addEntityMigration": "boot/resources/add-entity-tables.sql.hbs",
       "addEntityMessages": {
@@ -85,7 +85,7 @@
       "starterParentArtifactId": "org.egovframe.web.config.parent",
       "starterParentVersion": "4.3.2",
       "frameworkLabel": "Spring 5.3.39-egov.2",
-      "staticAssets": "static",
+      "staticAssets": "static50",
       "manifest": "manifests/war43.json",
       "addEntityMigration": "war/resources/add-entity-tables.sql.hbs",
       "addEntityMessages": {

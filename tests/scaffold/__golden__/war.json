@@ -1,7 +1,7 @@
 {
   "scenario": "war",
-  "fileCount": 61,
-  "staticFileCount": 0,
+  "fileCount": 49,
+  "staticFileCount": 588,
   "files": [
     {
       "path": "pom.xml",
@@ -144,56 +144,8 @@
       "sha256": "187355ebb50f930f894a9605fa59635cb8f37a999be44e0b4d85d0a268d48c21"
     },
     {
-      "path": "src/main/webapp/css/egovframework/sample.css",
-      "sha256": "d2b37d5afbebf930c2caa56287557830420744405a989e74fef40aa9570827a6"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/cmmn/btn_page_next1.gif",
-      "sha256": "f15558c6e64bd88b43912c863b1c7493f46ae379a4aaf78b8eb262eda7d0bca6"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/cmmn/btn_page_next10.gif",
-      "sha256": "6cf48d2d19503bd58ea516be558c9686fa8d07f7b2022a6db69206f902391bd1"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/cmmn/btn_page_pre1.gif",
-      "sha256": "dfca62a151f825665ec991da235e7113cf7512534cde9f07dffb894585cd149e"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/cmmn/btn_page_pre10.gif",
-      "sha256": "ea516c7a7696be604deadd2a0f772f49e6afaaab746e70033c53047fd8a61c88"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/btn_bg_l.gif",
-      "sha256": "d49f451810f2cfcd6bd28f1ffcb1adb8b3c5d426354209f4204534e306e4a996"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/btn_bg_r.gif",
-      "sha256": "6b8202e8d3bccaab0db3cab44ff175efa97504c89bf2c8033be437334033237f"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/civilappeal_topmn_bg.jpg",
-      "sha256": "6e371290ee7ca4352e8746c2c353baf0a0151529d6f65c081605a1e9f4dc1fb1"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/paging_line.gif",
-      "sha256": "9a9558c9af47b31f3314b2012f36b9ea0550d878b05739e576d35a72b5fd37de"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/th_bg.gif",
-      "sha256": "959301514f2de21c37cd4eaaa78002e88bfdfd460db7146ae9f4d83e146ef376"
-    },
-    {
-      "path": "src/main/webapp/images/egovframework/example/title_dot.gif",
-      "sha256": "e8f741c2c6e2d03b5ccabf83818e87b3be3a55324587475338f9525032c42e9a"
-    },
-    {
       "path": "src/main/webapp/index.jsp",
       "sha256": "82ab0dca770ce320713b125dcc85de030a577741cee3bce075b1224495a89a27"
-    },
-    {
-      "path": "src/main/webapp/js/egovframework/jquery-3.6.1.min.js",
-      "sha256": "a3cf00c109d907e543bc4f6dbc85eb31068f94515251347e9e57509b52ee3d74"
     },
     {
       "path": "src/main/webapp/META-INF/MANIFEST.MF",

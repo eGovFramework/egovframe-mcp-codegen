@@ -26,7 +26,16 @@ const UPDATE = process.env.UPDATE_GOLDEN === "1";
 
 // 정적 리소스(static/static50)는 템플릿 그대로 복사되므로 변동이 없을 거라 매니페스트가 매우 큽니다.
 // 시그널 대 노이즈를 높이기 위해 정적 리소스는 매니페스트에서 제외하고 "개수만" 기록합니다.
-const STATIC_PREFIXES = ["src/main/resources/static", "src/main/webapp/static-files"];
+const STATIC_PREFIXES = [
+  "src/main/resources/static",
+  "src/main/webapp/static-files",
+  // WAR 는 KRDS 자산(static50)이 webapp 루트 바로 아래로 복사된다.
+  "src/main/webapp/css",
+  "src/main/webapp/js",
+  "src/main/webapp/img",
+  "src/main/webapp/fonts",
+  "src/main/webapp/error",
+];
 
 interface ManifestEntry {
   path: string;

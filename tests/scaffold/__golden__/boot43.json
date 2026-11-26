@@ -1,7 +1,7 @@
 {
   "scenario": "boot43",
   "fileCount": 45,
-  "staticFileCount": 12,
+  "staticFileCount": 588,
   "files": [
     {
       "path": "pom.xml",
@@ -69,7 +69,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigWeb.java",
-      "sha256": "1c4fc3951fffcca57a1f34f4fbd9c29fadb071fc3d22a6bd8f7361d0cced0935"
+      "sha256": "5299219ebca7752f8b306204458d4449ed704e6ae1bbce5c39a5d23d58f63489"
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovNavModelAdvice.java",
