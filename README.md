@@ -23,9 +23,9 @@
 DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니다.
 
 - `stackVersion: "5.1"` → eGovFrame 5.1 Boot (JDK 17 기준, Jakarta + Thymeleaf Spring6 + KRDS)
-- `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5)
+- `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5 + KRDS)
 - `stackVersion` 을 생략하면 서버가 Elicitation 으로 사용자에게 버전을 직접 묻습니다 (기본값 없음). `projectType` 까지 생략하면 선택지에 5.1 Boot / 4.3 Boot / 4.3 WAR 가 모두 보이고, WAR 를 고르면 첨부파일 질문 없이 끝납니다. `projectType='boot'` 를 명시하고 `withAttachment` 도 생략했으면 질문 하나로 두 항목을 같이 묻습니다. 구 명칭 `"5.0"` 은 더 이상 받지 않습니다
-- `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.1 조합은 거부)
+- `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.1 조합은 거부). 화면은 Boot 와 같은 KRDS 형식
 - CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
 - 5.1 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
   (`EgovConfigWebSecurity`)을 기본 포함 — 보안 응답 헤더, CSRF 보호(기본 활성,
@@ -351,8 +351,7 @@ egovframe-mcp-codegen/
 │   ├── boot/                                   # eGovFrame 4.3 Boot
 │   ├── boot50/                                 # eGovFrame 5.1 Boot
 │   ├── war/                                    # eGovFrame 4.3 WAR
-│   ├── static/                                 # 4.3 정적 리소스
-│   ├── static50/                               # 5.1 정적 리소스
+│   ├── static50/                               # KRDS 정적 리소스 (세 스택 공용)
 │   ├── attach-file/                            # 첨부파일 인프라 템플릿
 │   │   ├── manifests/   # boot.json (5.1/4.3 공용)
 │   │   └── boot/        # 5.1/4.3 공용 (stack 차이는 렌더 컨텍스트로 분기)
