@@ -19,6 +19,8 @@ public class EgovNavModelAdvice {
 
 	@ModelAttribute("egovRequestUri")
 	public String egovRequestUri(HttpServletRequest request) {
-		return request.getRequestURI();
+		// context-path(server.servlet.context-path=/app 등) 아래에 배포되면 getRequestURI() 는 /app/egov...List.do 가 되어
+		// nav 의 startsWith('/egov{Entity}List') 판별이 어긋난다. context-path 를 뗀 경로를 돌려준다.
+		return request.getRequestURI().substring(request.getContextPath().length());
 	}
 }

@@ -330,3 +330,22 @@ describe("Task6 war43 KRDS 뷰", () => {
     expect(nav).toContain("pageContext.request.contextPath += '/egovBoardList'");
   });
 });
+
+describe("Task8 context-path 배포", () => {
+  it.each(["4.3", "5.1"] as const)("Boot %s 의 EgovNavModelAdvice 가 요청 URI 에서 context-path 를 뗀다", async (stackVersion) => {
+    await generateScaffoldProject({
+      projectName: `nav-${stackVersion}`,
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: PLAIN_DDL,
+      description: "",
+      projectType: "boot",
+      stackVersion,
+    });
+    const src = await read(path.join(tmpRoot, `nav-${stackVersion}`), "src/main/java/egovframework/example/config/EgovNavModelAdvice.java");
+    // server.servlet.context-path=/app 이면 getRequestURI() 는 /app/egovBoardList.do 라 nav 의 startsWith('/egovBoardList') 가 실패한다.
+    expect(src).toContain("request.getRequestURI().substring(request.getContextPath().length())");
+    expect(src).not.toMatch(/return request\.getRequestURI\(\);/);
+  });
+});

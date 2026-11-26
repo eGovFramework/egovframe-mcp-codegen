@@ -73,7 +73,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovNavModelAdvice.java",
-      "sha256": "8503c95631d34463a66fc7651c2238462a3e7bf3fd2631440d03b37c5c199fe6"
+      "sha256": "3ca400a7a7db8427358b956ec811213395138dc5bcdfd25737cdd64c9cb36180"
     },
     {
       "path": "src/main/java/egovframework/example/EgovBootApplication.java",
