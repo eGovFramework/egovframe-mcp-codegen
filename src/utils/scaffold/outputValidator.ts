@@ -51,7 +51,7 @@ const HANDLEBARS_RESIDUE_RE = new RegExp(
  * 찾아 "파일:라인 — 잔존 토큰" 형식의 목록으로 반환한다. 잔존이 없으면 빈 배열.
  *
  * 주의: 이 검사는 Handlebars 로 렌더된 파일에만 적용한다. `fs.copy` 로 템플릿에서
- * 그대로 복사되는 정적 리소스(static/static50, skills, docs 등)에는 적용하지 않는다 —
+ * 그대로 복사되는 정적 리소스(static/static50 등)에는 적용하지 않는다 —
  * 그 파일들은 애초에 Handlebars 컴파일을 거치지 않으므로 `{{` 가 있어도 잔존이 아니다.
  */
 export function checkPlaceholderResidue(files: ValidatableFile[]): string[] {

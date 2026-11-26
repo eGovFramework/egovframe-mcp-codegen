@@ -343,7 +343,6 @@ egovframe-mcp-codegen/
 │           ├── manifestLoader.ts               # templates/manifests/*.json 로더
 │           ├── projectDetector.ts              # pom.xml 기반 stack 자동 감지
 │           ├── scaffoldGenerator.ts            # 메인 렌더링 엔진
-│           ├── skillsEmitter.ts                # Claude Skill 출력
 │           └── stackMatrix.ts                  # stack × projectType 호환 매트릭스
 │
 ├── templates/                                  # Handlebars 템플릿
@@ -366,8 +365,6 @@ egovframe-mcp-codegen/
 │   │   ├── boot43.json
 │   │   ├── boot50.json
 │   │   └── war43.json
-│   ├── docs/                                   # 산출물 동봉 문서
-│   ├── skills/                                 # 산출물 동봉 Claude Skill
 │   └── stacks.json                             # 스택 정의
 │
 ├── tests/                                      # Vitest 단위/통합 테스트

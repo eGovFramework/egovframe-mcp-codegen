@@ -235,7 +235,7 @@ export async function egovScaffoldProject(rawParams: unknown): Promise<string> {
         ``,
         `🔐 CSRF 보호가 기본 활성입니다 — 이후 추가하는 POST 폼/fetch 는 CSRF 토큰` +
           `(hidden 필드 또는 meta 기반 헤더)을 포함해야 합니다. 토글: egov.security.csrf.` +
-          ` 상세: 생성된 docs/egovframe-architecture.md 의 EgovConfigWebSecurity 섹션.`,
+          ` 상세: 생성된 EgovConfigWebSecurity 클래스 참고.`,
       );
     }
 

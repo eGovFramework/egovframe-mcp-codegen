@@ -23,7 +23,6 @@
 				LIKE 검색 portability — CONCAT 3-arg 는 HSQL/MySQL/MariaDB/PostgreSQL/CUBRID/GOLDILOCKS 에서 동작.
 				Oracle/Tibero/Altibase 에서는 CONCAT 가 2-arg only 라 ORA-00909 발생.
 				해당 vendor 로 전환 시: CONCAT('%', #{searchKeyword}, '%')  →  '%' || #{searchKeyword} || '%'
-				(자세한 가이드: docs/dialect-portability.md)
 			-->
 			<if test="searchKeyword != null and searchKeyword != ''">
 				<choose>
@@ -38,7 +37,7 @@
 			ORDER BY {{{defaultOrderBy}}}
 			<!--
 				페이징 portability — 기본은 HSQL/MySQL/MariaDB/PostgreSQL/CUBRID/GOLDILOCKS 호환 LIMIT/OFFSET.
-				운영 DB 변경 시 아래 라인을 교체하세요 (자세한 가이드: docs/dialect-portability.md).
+				운영 DB 변경 시 아래 라인을 교체하세요.
 
 				Oracle 12c+ / Tibero 7+ / Altibase 7+:
 				    OFFSET #{firstIndex} ROWS FETCH NEXT #{recordCountPerPage} ROWS ONLY

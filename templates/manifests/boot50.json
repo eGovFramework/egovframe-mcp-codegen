@@ -33,7 +33,6 @@
     { "template": "boot50/resources/application-hsql.properties.hbs", "output": "src/main/resources/application-hsql.properties" },
     { "template": "boot50/resources/globals.properties.hbs", "output": "src/main/resources/egovframework/egovProps/globals.properties" },
     { "template": "boot50/resources/log4j2.xml.hbs", "output": "src/main/resources/log4j2.xml" },
-    { "template": "boot50/docs/dialect-portability.md.hbs", "output": "docs/dialect-portability.md" },
     { "template": "boot50/resources/mapper-sql.xml.hbs", "output": "src/main/resources/egovframework/sqlmap/{{entityModule}}/mappers/Egov{{entityName}}_{{entityName}}_SQL.xml", "scope": "entity" },
     { "template": "boot50/resources/sampledb.sql.hbs", "output": "src/main/resources/db/{{entityNameLower}}db.sql" },
     { "template": "boot50/resources/sampledb-migrations.sql.hbs", "output": "src/main/resources/db/migrations/{{dialect}}/{{entityNameLower}}db.sql", "scope": "entity", "expandDialects": true },

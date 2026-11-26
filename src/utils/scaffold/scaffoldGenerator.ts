@@ -8,7 +8,6 @@ import { deriveLabelFromComment, escapePropertiesValue } from "./messageLabel.js
 import { resolveStack, type StackEntry } from "./stackMatrix.js";
 import { resolveManifest, type ResolvedFileMapping } from "./manifestLoader.js";
 import { dialectFullType, type Dialect } from "./dialectTypes.js";
-import { emitSkillFiles, emitDocFiles } from "./skillsEmitter.js";
 import { assertInsideProject } from "./pathGuard.js";
 import { osJunkCopyFilter } from "../fsCopyFilter.js";
 import { validateRenderedFiles } from "./outputValidator.js";
@@ -505,19 +504,6 @@ export async function generateScaffoldProject(params: ScaffoldParams): Promise<s
       }
     }
   }
-
-  // AI 코딩 에이전트 스킬 emit (Claude Code / Cursor / OpenCode / Cline / Continue).
-  // 원본 `templates/skills/original/*.md` 를 도구별 포맷으로 변환·복사한다.
-  // 원본 폴더가 비어있거나 없으면 emitter 가 silently 0개를 반환하므로 호환에 안전하다.
-  const skillsSourceDir = path.join(templateBasePath, "skills", "original");
-  const skillFiles = await emitSkillFiles(skillsSourceDir, projectDir);
-  for (const rel of skillFiles) generatedFiles.push(rel);
-
-  // 사람-친화 레퍼런스 문서를 프로젝트의 docs/ 로 그대로 복사 (frontmatter 없는 마크다운).
-  // 개발자 온보딩용 — AI 스킬과 별개. 원본 폴더가 없으면 silently skip.
-  const docsSourceDir = path.join(templateBasePath, "docs");
-  const docFiles = await emitDocFiles(docsSourceDir, projectDir);
-  for (const rel of docFiles) generatedFiles.push(rel);
 
   // 프레임워크 라벨도 매트릭스에서 가져온다. 버전 업그레이드 시 stacks.json 만 갱신하면 된다.
   const frameworkVersion = ctx.stack.frameworkLabel;
