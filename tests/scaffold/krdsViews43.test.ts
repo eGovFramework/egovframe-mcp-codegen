@@ -384,3 +384,23 @@ describe("최종 리뷰 수정", () => {
     expect(js).toContain("['BUTTON', 'A', 'INPUT'].indexOf(targetElement.tagName) === -1");
   });
 });
+
+describe("5.1 KRDS 페이지네이션 0건 보정", () => {
+  it("Boot 5.1 렌더러가 총 페이지 수 0 을 1페이지로 보정한다", async () => {
+    await generateScaffoldProject({
+      projectName: "boot50-paging",
+      packageName: "egovframework.example.board",
+      outputPath: tmpRoot,
+      entityName: "Board",
+      ddl: PLAIN_DDL,
+      description: "",
+      projectType: "boot",
+      stackVersion: "5.1",
+    });
+    const src = await read(path.join(tmpRoot, "boot50-paging"), "src/main/java/egovframework/example/pagination/EgovKrdsPaginationRenderer.java");
+    // rte 5.x 의 PaginationInfo.getTotalPageCount() 는 0건이면 0 을 돌려주고, 추상 렌더러는 그 경우
+    // 페이지 번호 없이 '다음' 링크를 활성으로 내보낸다. 0건은 '1' 하나 + 양쪽 비활성으로 그린다.
+    expect(src).toContain("paginationInfo.getTotalPageCount() <= 0");
+    expect(src).toMatch(/previousPageDisabledLabel \+ "<div class=\\"page-links\\">" \+ MessageFormat\.format\(currentPageLabel, "1"\) \+ "<\/div>" \+ nextPageDisabledLabel/);
+  });
+});
