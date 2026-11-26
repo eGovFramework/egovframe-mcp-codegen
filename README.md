@@ -24,7 +24,7 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 
 - `stackVersion: "5.1"` → eGovFrame 5.1 Boot (JDK 17 기준, Jakarta + Thymeleaf Spring6 + KRDS)
 - `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5)
-- Boot 에서 `stackVersion` 을 생략하면 서버가 Elicitation 으로 사용자에게 버전을 직접 묻습니다 (기본값 없음). `withAttachment` 도 함께 생략되면 질문 하나로 두 항목을 같이 묻습니다. 구 명칭 `"5.0"` 은 더 이상 받지 않습니다
+- `stackVersion` 을 생략하면 서버가 Elicitation 으로 사용자에게 버전을 직접 묻습니다 (기본값 없음). `projectType` 까지 생략하면 선택지에 5.1 Boot / 4.3 Boot / 4.3 WAR 가 모두 보이고, WAR 를 고르면 첨부파일 질문 없이 끝납니다. `projectType='boot'` 를 명시하고 `withAttachment` 도 생략했으면 질문 하나로 두 항목을 같이 묻습니다. 구 명칭 `"5.0"` 은 더 이상 받지 않습니다
 - `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.1 조합은 거부)
 - CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
 - 5.1 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
@@ -40,11 +40,11 @@ DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니
 | outputPath    | string | ✓    | 프로젝트 폴더가 생성될 부모 디렉터리                                |
 | entityName    | string | ✓    | PascalCase 엔티티 이름 (예: `Board`)                              |
 | ddl           | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
-| projectType   | string |      | `boot` (기본) / `war`                                             |
-| stackVersion  | string |      | `5.1` / `4.3`. Boot 에서 생략하면 Elicitation 으로 사용자에게 묻고, 미지원 클라이언트에서는 사용자에게 물은 뒤 지정해 재호출하라는 오류 반환. WAR 는 생략 시 `4.3` 으로 확정. `5.0` 은 거부 |
+| projectType   | string |      | `boot` / `war`. 사용자가 밝히지 않았다면 생략 — 생략 시 `stackVersion` 질문의 선택지에 4.3 WAR 가 함께 보임 (`withAttachment=true` 면 Boot 로 간주) |
+| stackVersion  | string |      | `5.1` / `4.3`. 생략하면 Elicitation 으로 사용자에게 묻고 (`projectType` 도 생략됐으면 5.1 Boot / 4.3 Boot / 4.3 WAR 중 선택), 미지원 클라이언트에서는 사용자에게 물은 뒤 지정해 재호출하라는 오류 반환. `projectType='war'` 면 묻지 않고 `4.3` 으로 확정. `5.0` 은 거부 |
 | normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
 | description   | string |      | 프로젝트 한 줄 설명                                                |
-| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고 (`stackVersion` 도 생략됐으면 같은 질문에 함께), 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.1, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
+| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고 (`projectType='boot'` 명시 + `stackVersion` 생략이면 같은 질문에 함께, `projectType` 도 생략이면 스택 질문에서 Boot 를 고른 뒤에 이어서), 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.1, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
 
 ### 2. `egov_add_entity`
 
@@ -240,7 +240,9 @@ LLM 이 자동 구성하는 도구 입력 예:
 ```
 
 사용자가 버전을 말하지 않았다면 LLM 은 `stackVersion` 을 생략하고, 서버가 Elicitation 으로
-"표준프레임워크 5.1 (Spring Boot 3, Java 17)" / "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" 중 하나를 고르게 합니다.
+"표준프레임워크 5.1 (Spring Boot 3, Java 17)" / "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" /
+"표준프레임워크 4.3 WAR (Spring 5.3, Java 8, JSP + Tomcat)" 중 하나를 고르게 합니다
+(Boot 인지 WAR 인지도 말하지 않았을 때. `projectType='boot'` 를 명시했으면 WAR 는 보이지 않습니다).
 
 ### 예시 2. 기존 프로젝트에 엔티티 추가
 

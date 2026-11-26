@@ -48,7 +48,7 @@ server.registerTool(
   {
     title: "Scaffold eGovFrame Project",
     description:
-      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. stackVersion='5.1'이면 eGovFrame 5.1 Boot(Jakarta+Thymeleaf Spring6+KRDS), '4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용(4.3 전용). CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. outputPath 아래에 같은 이름의 비어 있지 않은 폴더가 이미 있으면 덮어쓰지 않고 거부합니다 (기존 프로젝트에는 egov_add_* 도구를 사용). 5.1 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. Boot 에서 stackVersion 또는 withAttachment 를 생략하면 서버가 사용자에게 직접 묻습니다(Elicitation, 둘 다 생략하면 질문 하나로 함께 묻음). 지원하지 않는 클라이언트면 사용자에게 물은 뒤 해당 인자를 지정해 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다.",
+      "전자정부 표준프레임워크(eGovFrame) 프로젝트를 DDL문으로부터 자동 생성합니다. stackVersion='5.1'이면 eGovFrame 5.1 Boot(Jakarta+Thymeleaf Spring6+KRDS), '4.3'이면 eGovFrame 4.3 Boot(javax+Thymeleaf Spring5). projectType='war'이면 전통 WAR+JSP+Tomcat 배포용(4.3 전용). CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스를 모두 포함합니다. outputPath 아래에 같은 이름의 비어 있지 않은 폴더가 이미 있으면 덮어쓰지 않고 거부합니다 (기존 프로젝트에는 egov_add_* 도구를 사용). 5.1 Boot 산출물은 Spring Security 보안 설정(보안 응답 헤더, 기본 활성 CSRF — egov.security.csrf=false 로 비활성 가능, 명시적 StrictHttpFirewall, 기본 비활성 CORS)을 포함하며 4.3 Boot/WAR 산출물에는 포함되지 않습니다. stackVersion 또는 withAttachment 를 생략하면 서버가 사용자에게 직접 묻습니다(Elicitation). projectType 까지 생략하면 버전 질문의 선택지에 5.1 Boot / 4.3 Boot / 4.3 WAR 가 모두 보이고, 사용자가 WAR 를 고르면 첨부파일 질문 없이 4.3 WAR 로 생성합니다. 지원하지 않는 클라이언트면 사용자에게 물은 뒤 해당 인자를 지정해 다시 호출하라는 오류를 반환합니다. withAttachment=true 이면 첫 엔티티를 첨부파일 연결 형태로 생성하고 첨부파일 인프라를 함께 설치합니다 (WAR 에서는 true 거부, 생략 시 질문 없이 첨부 없이 생성). 4.3 Boot 의 첨부 다운로드 URL 에는 접근 제어가 없습니다.",
     inputSchema: {
       projectName: z
         .string()
@@ -71,13 +71,13 @@ server.registerTool(
         .enum(["boot", "war"])
         .optional()
         .describe(
-          "Project type. 'boot' (default) = Spring Boot JAR, 'war' = traditional WAR + JSP + Tomcat",
+          "Project type. 'boot' = Spring Boot JAR, 'war' = traditional WAR + JSP + Tomcat (4.3 전용). 사용자가 요청에서 Boot 인지 WAR 인지 밝히지 않았다면 이 인자를 생략하세요 — 임의로 'boot' 를 채우면 안 됩니다. 생략하면 서버가 stackVersion 질문에 4.3 WAR 선택지를 함께 보여 사용자에게 확인합니다 (withAttachment=true 면 Boot 로 간주).",
         ),
       stackVersion: z
         .enum(["4.3", "5.1"])
         .optional()
         .describe(
-          "eGovFrame 스택 버전. '5.1' = Spring Boot 3 / Java 17 / Jakarta, '4.3' = Spring Boot 2.7 / Java 8 / javax. 사용자가 요청에서 버전을 밝히지 않았다면 이 인자를 생략하세요 — 임의로 채우면 안 됩니다. 생략하면 Boot 에서는 서버가 사용자에게 직접 확인하고, WAR 는 4.3 으로 확정합니다. WAR + '5.1' 은 거부됩니다 (WAR 는 '4.3' 만 지원). 구 명칭 '5.0' 은 더 이상 받지 않으므로 '5.1' 을 사용하세요.",
+          "eGovFrame 스택 버전. '5.1' = Spring Boot 3 / Java 17 / Jakarta, '4.3' = Spring Boot 2.7 / Java 8 / javax. 사용자가 요청에서 버전을 밝히지 않았다면 이 인자를 생략하세요 — 임의로 채우면 안 됩니다. 생략하면 서버가 사용자에게 직접 확인하고(projectType 도 생략됐으면 5.1 Boot / 4.3 Boot / 4.3 WAR 중 선택), projectType='war' 면 묻지 않고 4.3 으로 확정합니다. WAR + '5.1' 은 거부됩니다 (WAR 는 '4.3' 만 지원). 구 명칭 '5.0' 은 더 이상 받지 않으므로 '5.1' 을 사용하세요.",
         ),
       normalizeDdl: z
         .boolean()
@@ -100,10 +100,11 @@ server.registerTool(
       if (!valid.success) {
         return { content: [{ type: "text", text: await egovScaffoldProject(args) }] };
       }
-      // 생략된 stackVersion / withAttachment 는 form 하나로 사용자에게 함께 묻는다 (WAR 는 질문 없이 확정).
+      // 생략된 stackVersion / withAttachment 는 사용자에게 직접 묻는다 (WAR 명시 시 질문 없이 확정).
+      // projectType 은 raw 값을 넘긴다 — 생략됐을 때만 스택 질문에 4.3 WAR 선택지가 함께 보인다.
       const decision = await resolveScaffoldDecision({
         server: server.server,
-        projectType: valid.data.projectType,
+        projectType: args.projectType,
         stackVersion: args.stackVersion,
         withAttachment: args.withAttachment,
         signal: extra.signal,
@@ -114,6 +115,7 @@ server.registerTool(
       }
       const result = await egovScaffoldProject({
         ...args,
+        projectType: decision.projectType,
         stackVersion: decision.stackVersion,
         withAttachment: decision.withAttachment,
       });

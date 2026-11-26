@@ -54,7 +54,7 @@ async function connect(reply?: Reply, impl?: (req: unknown) => Promise<Reply>) {
   return { client, handler };
 }
 
-// stackVersion 을 명시해 두어야 첨부파일 질문만 단독으로 검증할 수 있다 (생략하면 버전도 함께 묻는다).
+// stackVersion 을 명시해 두어야 첨부파일 질문만 단독으로 검증할 수 있다 (생략하면 스택부터 묻는다).
 function scaffoldArgs(extra: Record<string, unknown> = {}) {
   return {
     projectName: "board-app",
@@ -67,8 +67,8 @@ function scaffoldArgs(extra: Record<string, unknown> = {}) {
   };
 }
 
-function requestedSchema(handler: ReturnType<typeof vi.fn>): { properties: Record<string, unknown>; required: string[] } {
-  const req = handler.mock.calls[0][0] as { params: { requestedSchema: { properties: Record<string, unknown>; required: string[] } } };
+function requestedSchema(handler: ReturnType<typeof vi.fn>, call = 0): { properties: Record<string, unknown>; required: string[] } {
+  const req = handler.mock.calls[call][0] as { params: { requestedSchema: { properties: Record<string, unknown>; required: string[] } } };
   return req.params.requestedSchema;
 }
 
@@ -205,12 +205,12 @@ describe("egov_scaffold_project — withAttachment 확인", () => {
 });
 
 describe("egov_scaffold_project — stackVersion 확인", () => {
-  const STACK_ONE_OF = [
-    { const: "5.1", title: "표준프레임워크 5.1 (Spring Boot 3, Java 17)" },
-    { const: "4.3", title: "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" },
-  ];
+  const BOOT_51 = { const: "boot-5.1", title: "표준프레임워크 5.1 (Spring Boot 3, Java 17)" };
+  const BOOT_43 = { const: "boot-4.3", title: "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" };
+  const WAR_43 = { const: "war-4.3", title: "표준프레임워크 4.3 WAR (Spring 5.3, Java 8, JSP + Tomcat)" };
+  const STACK_FIELD = (oneOf: unknown[]) => ({ type: "string", title: "표준프레임워크 버전", oneOf });
 
-  it("Elicitation 미지원: 버전을 사용자에게 물은 뒤 재호출하라는 오류, 파일 없음", async () => {
+  it("Elicitation 미지원: 유형·버전을 사용자에게 물은 뒤 재호출하라는 오류, 파일 없음", async () => {
     const { client } = await connect();
     const res = await client.callTool(
       { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: undefined, withAttachment: false }) },
@@ -218,6 +218,8 @@ describe("egov_scaffold_project — stackVersion 확인", () => {
       TIMEOUT,
     );
     expect(res.isError).toBe(true);
+    expect(text(res)).toMatch(/projectType/);
+    expect(text(res)).toMatch(/4\.3 WAR/);
     expect(text(res)).toMatch(/stackVersion/);
     expect(text(res)).toMatch(/'4\.3'/);
     expect(text(res)).toMatch(/'5\.1'/);
@@ -225,11 +227,32 @@ describe("egov_scaffold_project — stackVersion 확인", () => {
     expect(await fs.pathExists(projectDir)).toBe(false);
   });
 
-  it("버전과 첨부 여부를 모두 생략하면 form 하나로 함께 묻고, 답대로 4.3 Boot 를 생성한다", async () => {
-    const { client, handler } = await connect({
-      action: "accept",
-      content: { stackVersion: "4.3", withAttachment: false },
-    });
+  it("projectType 과 버전·첨부를 모두 생략하면 WAR 포함 선택지로 스택을 먼저 묻고, Boot 면 첨부를 이어 묻는다", async () => {
+    const replies: Reply[] = [
+      { action: "accept", content: { stack: "boot-4.3" } },
+      { action: "accept", content: { withAttachment: false } },
+    ];
+    const { client, handler } = await connect(replies[0], async () => replies.shift()!);
+    const res = await client.callTool(
+      { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: undefined }) },
+      undefined,
+      TIMEOUT,
+    );
+    expect(res.isError).toBeFalsy();
+    expect(handler).toHaveBeenCalledTimes(2);
+    const first = requestedSchema(handler, 0);
+    expect(first.required).toEqual(["stack"]);
+    expect(first.properties.stack).toEqual(STACK_FIELD([BOOT_51, BOOT_43, WAR_43]));
+    const second = requestedSchema(handler, 1);
+    expect(second.required).toEqual(["withAttachment"]);
+    expect(second.properties.withAttachment).toEqual({ type: "boolean", title: "첨부파일 포함" });
+    expect(await parentArtifactId(projectDir)).toBe("org.egovframe.boot.starter.parent");
+    expect(detectAttachFileInfra(projectDir).present).toBe(false);
+    expect(text(res)).toMatch(/eGovFrame 4\.3/);
+  });
+
+  it("스택 질문에서 4.3 WAR 를 고르면 첨부를 묻지 않고 4.3 WAR 를 생성한다", async () => {
+    const { client, handler } = await connect({ action: "accept", content: { stack: "war-4.3" } });
     const res = await client.callTool(
       { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: undefined }) },
       undefined,
@@ -237,17 +260,33 @@ describe("egov_scaffold_project — stackVersion 확인", () => {
     );
     expect(res.isError).toBeFalsy();
     expect(handler).toHaveBeenCalledTimes(1);
+    expect(await parentArtifactId(projectDir)).toBe("org.egovframe.web.config.parent");
+    expect(detectAttachFileInfra(projectDir).present).toBe(false);
+    expect(text(res)).toMatch(/WAR/);
+  });
+
+  it("projectType='boot' 를 명시하고 둘 다 생략하면 Boot 두 개만 담은 form 하나로 함께 묻는다", async () => {
+    const { client, handler } = await connect({
+      action: "accept",
+      content: { stack: "boot-4.3", withAttachment: false },
+    });
+    const res = await client.callTool(
+      { name: "egov_scaffold_project", arguments: scaffoldArgs({ projectType: "boot", stackVersion: undefined }) },
+      undefined,
+      TIMEOUT,
+    );
+    expect(res.isError).toBeFalsy();
+    expect(handler).toHaveBeenCalledTimes(1);
     const schema = requestedSchema(handler);
-    expect(schema.required).toEqual(["stackVersion", "withAttachment"]);
-    expect(schema.properties.stackVersion).toEqual({ type: "string", title: "표준프레임워크 버전", oneOf: STACK_ONE_OF });
+    expect(schema.required).toEqual(["stack", "withAttachment"]);
+    expect(schema.properties.stack).toEqual(STACK_FIELD([BOOT_51, BOOT_43]));
     expect(schema.properties.withAttachment).toEqual({ type: "boolean", title: "첨부파일 포함" });
     expect(await parentArtifactId(projectDir)).toBe("org.egovframe.boot.starter.parent");
-    expect(detectAttachFileInfra(projectDir).present).toBe(false);
     expect(text(res)).toMatch(/eGovFrame 4\.3/);
   });
 
-  it("버전만 생략하면 버전만 묻고, 5.1 을 고르면 5.1 Boot 를 생성한다", async () => {
-    const { client, handler } = await connect({ action: "accept", content: { stackVersion: "5.1" } });
+  it("버전만 생략하면 버전만 묻고, 5.1 Boot 를 고르면 5.1 Boot 를 생성한다", async () => {
+    const { client, handler } = await connect({ action: "accept", content: { stack: "boot-5.1" } });
     const res = await client.callTool(
       { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: undefined, withAttachment: false }) },
       undefined,
@@ -255,13 +294,13 @@ describe("egov_scaffold_project — stackVersion 확인", () => {
     );
     expect(res.isError).toBeFalsy();
     expect(handler).toHaveBeenCalledTimes(1);
-    expect(requestedSchema(handler).required).toEqual(["stackVersion"]);
+    expect(requestedSchema(handler).required).toEqual(["stack"]);
     expect(await parentArtifactId(projectDir)).toBe("egovframe-boot-starter-parent");
     expect(text(res)).toMatch(/eGovFrame 5\.1/);
   });
 
-  it("WAR 는 버전을 생략해도 묻지 않고 4.3 WAR 를 생성한다", async () => {
-    const { client, handler } = await connect({ action: "accept", content: { stackVersion: "5.1" } });
+  it("WAR 를 명시하면 버전을 생략해도 묻지 않고 4.3 WAR 를 생성한다", async () => {
+    const { client, handler } = await connect({ action: "accept", content: { stack: "boot-5.1" } });
     const res = await client.callTool(
       { name: "egov_scaffold_project", arguments: scaffoldArgs({ projectType: "war", stackVersion: undefined }) },
       undefined,
@@ -285,7 +324,7 @@ describe("egov_scaffold_project — stackVersion 확인", () => {
   });
 
   it("구 명칭 '5.0' 은 입력 검증에서 거부되고 질문하지 않는다", async () => {
-    const { client, handler } = await connect({ action: "accept", content: { stackVersion: "5.1" } });
+    const { client, handler } = await connect({ action: "accept", content: { stack: "boot-5.1" } });
     const res = await client.callTool(
       { name: "egov_scaffold_project", arguments: scaffoldArgs({ stackVersion: "5.0", withAttachment: false }) },
       undefined,
