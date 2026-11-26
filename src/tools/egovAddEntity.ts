@@ -209,11 +209,16 @@ const WAR_VALIDATOR_REL_PATH = "src/main/webapp/WEB-INF/config/egovframework/val
 
 type ValidatorFormResult =
   | { status: "notApplicable" }
-  | { status: "inserted" | "exists" | "missing"; relPath: string };
+  | { status: "inserted" | "exists" | "missing" | "skipped"; relPath: string };
 
 /**
  * (WAR) 기존 validator.xml 의 `</formset>` 바로 앞에 새 엔티티의 `<form>` 블록을 삽입한다.
  * 같은 이름의 form 이 이미 있으면 그대로 둔다. 스택에 addEntityValidator 가 없으면 아무것도 하지 않는다.
+ *
+ * commons-validator DTD 는 form 에 field 1개 이상, formset 에 form 1개 이상을 요구한다.
+ * - 필수(NOT NULL) 문자열 컬럼이 없는 엔티티는 form 을 넣지 않는다 (skipped). 등록 JSP 는 검증 함수가
+ *   없어도 제출하도록 가드되어 있다.
+ * - 첫 엔티티가 필수 컬럼이 없어 formset 이 없는 파일이면 `</form-validation>` 앞에 formset 을 새로 만든다.
  */
 async function applyValidatorForm(args: {
   projectDir: string;
@@ -226,12 +231,20 @@ async function applyValidatorForm(args: {
   if (!(await fs.pathExists(absPath))) return { status: "missing", relPath: WAR_VALIDATOR_REL_PATH };
   const xml = await fs.readFile(absPath, "utf-8");
   if (xml.includes(`<form name="${args.ctx.voName}">`)) return { status: "exists", relPath: WAR_VALIDATOR_REL_PATH };
-  const closeIdx = xml.lastIndexOf("</formset>");
-  if (closeIdx < 0) return { status: "missing", relPath: WAR_VALIDATOR_REL_PATH };
-  const block = await renderMigrationContent(args.templateBasePath, partial, args.ctx as unknown as Record<string, unknown>);
-  // </formset> 줄의 들여쓰기는 유지하고, 블록은 줄바꿈 하나로 끝나게 맞춘다.
-  const lineStart = xml.lastIndexOf("\n", closeIdx) + 1;
-  const updated = xml.slice(0, lineStart) + block.replace(/\s*$/, "\n") + xml.slice(lineStart);
+  if (!args.ctx.hasRequiredStringAttr) return { status: "skipped", relPath: WAR_VALIDATOR_REL_PATH };
+  const block = (await renderMigrationContent(args.templateBasePath, partial, args.ctx as unknown as Record<string, unknown>)).replace(/\s*$/, "\n");
+  let updated: string;
+  const formsetClose = xml.lastIndexOf("</formset>");
+  if (formsetClose >= 0) {
+    // </formset> 줄의 들여쓰기는 유지하고 그 앞에 form 블록을 넣는다.
+    const lineStart = xml.lastIndexOf("\n", formsetClose) + 1;
+    updated = xml.slice(0, lineStart) + block + xml.slice(lineStart);
+  } else {
+    const rootClose = xml.lastIndexOf("</form-validation>");
+    if (rootClose < 0) return { status: "missing", relPath: WAR_VALIDATOR_REL_PATH };
+    const lineStart = xml.lastIndexOf("\n", rootClose) + 1;
+    updated = xml.slice(0, lineStart) + "\t<formset>\n" + block + "\t</formset>\n" + xml.slice(lineStart);
+  }
   await fs.writeFile(absPath, updated, "utf-8");
   return { status: "inserted", relPath: WAR_VALIDATOR_REL_PATH };
 }
@@ -1109,6 +1122,8 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       lines.push("", `✅ validator.xml 갱신: <form name="${ctx.voName}"> 블록을 삽입했습니다 (${validatorResult.relPath}).`);
     } else if (validatorResult.status === "exists") {
       lines.push("", `ℹ️  validator.xml 에 <form name="${ctx.voName}"> 이 이미 있어 그대로 두었습니다 (${validatorResult.relPath}).`);
+    } else if (validatorResult.status === "skipped") {
+      lines.push("", `ℹ️  validator.xml: 필수(NOT NULL) 문자열 컬럼이 없어 <form name="${ctx.voName}"> 을 넣지 않았습니다 (DTD 상 빈 form 은 허용되지 않음). 등록 화면은 클라이언트 검증 없이 제출됩니다.`);
     } else if (validatorResult.status === "missing") {
       lines.push(
         "",

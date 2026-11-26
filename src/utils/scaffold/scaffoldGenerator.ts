@@ -95,6 +95,9 @@ export interface ScaffoldContext {
   searchableAttributes: Column[];
   hasCompositePk: boolean;
   hasDateAttr: boolean;
+  /** PK 가 아닌 NOT NULL 문자열 컬럼 — WAR validator.xml 의 required 필드 (DTD 상 form 은 field 1개 이상이어야 하므로 비어 있으면 form 을 만들지 않는다). */
+  requiredStringAttributes: Column[];
+  hasRequiredStringAttr: boolean;
   imports: string[];
   /**
    * DDL 의 REFERENCES 절에서 추출된 모든 FK 컬럼 (부모 해석 여부 무관).
@@ -284,6 +287,7 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
   const entityNameUpper = rawTableName;
 
   const nonPkAttributes = parsed.attributes.filter((a) => !a.isPrimaryKey);
+  const requiredStringAttributes = nonPkAttributes.filter((a) => a.javaType === "java.lang.String" && a.isNotNull);
   // 검색 dropdown 노출 컬럼:
   //   PK 제외 + java.lang.String + Y/N flag 제외 (CHAR(1)+_YN). FK 는 포함 유지 —
   //   List Mapper.xml 이 FK 컬럼을 부모 display 컬럼과 LIKE 매칭하도록 처리 중이므로
@@ -340,6 +344,8 @@ export function buildContext(params: ScaffoldParams): ScaffoldContext {
     searchableAttributes,
     hasCompositePk: parsed.pkAttributes.length > 1,
     hasDateAttr: parsed.attributes.some((a) => a.isDate),
+    requiredStringAttributes,
+    hasRequiredStringAttr: requiredStringAttributes.length > 0,
     imports,
     // FK 해석은 egov_add_entity 가 discoverParentEntity 로 후속 채움.
     // egov_scaffold_project (첫 스캐폴드) 에서는 부모가 아직 없으므로 빈 배열로 시작.

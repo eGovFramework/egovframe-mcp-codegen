@@ -472,7 +472,7 @@ describe("WAR 엔티티 추가 시 validator.xml 갱신", () => {
     expect(out).toContain("validator.xml");
   });
 
-  it("필수 문자열 컬럼이 없는 엔티티도 빈 <form> 이 들어가 검증 함수가 생성된다", async () => {
+  it("필수 문자열 컬럼이 없는 엔티티는 <form> 을 넣지 않는다 (DTD: form 은 field 가 1개 이상)", async () => {
     const dir = await memberProject();
     await egovAddEntity({
       projectPath: dir,
@@ -482,9 +482,41 @@ describe("WAR 엔티티 추가 시 validator.xml 갱신", () => {
       withAttachment: false,
     });
     const xml = await read(dir, VALIDATOR);
-    expect(xml).toMatch(/<form name="orderVO">\s*<\/form>/);
+    expect(xml).not.toContain('<form name="orderVO">');
+    expect(xml).toContain('<form name="memberVO">');
     // 등록 JSP 는 검증 함수가 없더라도 제출이 막히지 않도록 가드한다.
     const jsp = await read(dir, "src/main/webapp/WEB-INF/jsp/egovframework/example/orders/egovOrderRegister.jsp");
     expect(jsp).toContain("if (typeof validateOrderVO === 'function' && !validateOrderVO(frm)) {");
+  });
+});
+
+describe("validator.xml 은 commons-validator DTD 를 지킨다", () => {
+  const VALIDATOR = "src/main/webapp/WEB-INF/config/egovframework/validator/validator.xml";
+  const NO_REQUIRED_DDL = "CREATE TABLE STAT (STAT_NO VARCHAR(20) NOT NULL PRIMARY KEY, AMT NUMERIC(10), MEMO VARCHAR(200))";
+
+  it("첫 엔티티에 필수 문자열 컬럼이 없으면 formset 자체를 만들지 않는다 (formset 은 form 이 1개 이상)", async () => {
+    await generateScaffoldProject({
+      projectName: "stat-app", packageName: "egovframework.example.stat", outputPath: tmpRoot,
+      entityName: "Stat", ddl: NO_REQUIRED_DDL, description: "", projectType: "war", stackVersion: "4.3",
+    });
+    const xml = await read(path.join(tmpRoot, "stat-app"), VALIDATOR);
+    expect(xml).toContain("<form-validation>");
+    expect(xml).not.toContain("<formset>");
+    expect(xml).not.toContain("<form ");
+  });
+
+  it("formset 이 없던 프로젝트에 필수 컬럼이 있는 엔티티를 추가하면 formset 과 form 이 생긴다", async () => {
+    await generateScaffoldProject({
+      projectName: "stat-app", packageName: "egovframework.example.stat", outputPath: tmpRoot,
+      entityName: "Stat", ddl: NO_REQUIRED_DDL, description: "", projectType: "war", stackVersion: "4.3",
+    });
+    const dir = path.join(tmpRoot, "stat-app");
+    await egovAddEntity({
+      projectPath: dir, packageName: "egovframework.example.board", entityName: "Board",
+      ddl: "CREATE TABLE BOARD (PST_NO VARCHAR(20) NOT NULL PRIMARY KEY, PST_TTL VARCHAR(256) NOT NULL)", withAttachment: false,
+    });
+    const xml = await read(dir, VALIDATOR);
+    expect(xml).toMatch(/<formset>\s*(<!--[^>]*-->\s*)?<form name="boardVO">\s*<field property="pstTtl" depends="required">[\s\S]*<\/form>\s*<\/formset>\s*<\/form-validation>/);
+    expect(xml.match(/<formset>/g)).toHaveLength(1);
   });
 });
