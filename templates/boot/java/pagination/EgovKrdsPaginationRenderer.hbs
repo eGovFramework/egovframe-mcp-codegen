@@ -1,0 +1,105 @@
+package {{basePackage}}.pagination;
+
+import java.text.MessageFormat;
+
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationInfo;
+import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationRenderer;
+import org.springframework.context.MessageSource;
+import org.springframework.context.i18n.LocaleContextHolder;
+import org.springframework.stereotype.Component;
+
+/**
+ * KRDS(대한민국 정부 디자인 시스템) 페이지네이션 렌더러.
+ *
+ * eGovFrame 5.x 실행환경의 KRDS 추상 렌더러와 같은 마크업을 만든다.
+ * 4.3.2 실행환경에는 그 클래스가 없으므로 PaginationRenderer 를 직접 구현한다.
+ *
+ * 출력 규칙:
+ *  - 이전/다음 링크는 항상 표시하고 첫/마지막 페이지에서는 비활성(span) 으로 둔다.
+ *  - 페이지가 8개 이하면 모두 표시, 초과하면 앞 4/뒤 4/중간 창 형태로 줄임표(...) 를 넣는다.
+ *  - 페이지 번호 링크는 &lt;div class="page-links"&gt; 로 감싼다.
+ *
+ * 이전/다음 라벨은 메시지 번들의 page.prev / page.next 를 현재 로케일로 읽는다.
+ */
+@Component
+public class EgovKrdsPaginationRenderer implements PaginationRenderer {
+
+	private static final String PREV_LABEL = "<a onclick=\"{0}({1})\" class=\"page-navi prev\" href=\"#\">{2}</a>";
+	private static final String PREV_DISABLED_LABEL = "<span class=\"page-navi prev disabled\">{0}</span>";
+	private static final String NEXT_LABEL = "<a onclick=\"{0}({1})\" class=\"page-navi next\" href=\"#\">{2}</a>";
+	private static final String NEXT_DISABLED_LABEL = "<span class=\"page-navi next disabled\">{0}</span>";
+	private static final String FIRST_PAGE_LABEL = "<a onclick=\"{0}({1})\" class=\"page-link\" href=\"#\">{2}</a>";
+	private static final String CURRENT_PAGE_LABEL = "<a class=\"page-link active\" href=\"#\">{0}</a>";
+	private static final String OTHER_PAGE_LABEL = "<a onclick=\"{0}({1})\" class=\"page-link\" href=\"#\">{2}</a>";
+	private static final String LAST_PAGE_LABEL = "<a onclick=\"{0}({1})\" class=\"page-link\" href=\"#\">{2}</a>";
+	private static final String DOT_PAGE_LABEL = "<span class=\"page-link link-dot\">...</span>";
+
+	private final MessageSource messageSource;
+
+	public EgovKrdsPaginationRenderer(MessageSource messageSource) {
+		this.messageSource = messageSource;
+	}
+
+	@Override
+	public String renderPagination(PaginationInfo paginationInfo, String jsFunction) {
+		String prevLabel = messageSource.getMessage("page.prev", null, "\uc774\uc804", LocaleContextHolder.getLocale());
+		String nextLabel = messageSource.getMessage("page.next", null, "\ub2e4\uc74c", LocaleContextHolder.getLocale());
+
+		StringBuilder sb = new StringBuilder();
+
+		int firstPageNo = paginationInfo.getFirstPageNo();
+		int totalPageCount = paginationInfo.getTotalPageCount();
+		int currentPageNo = paginationInfo.getCurrentPageNo();
+
+		// 이전 페이지 링크 (항상 표시, 첫 페이지면 비활성)
+		if (currentPageNo == firstPageNo) {
+			sb.append(MessageFormat.format(PREV_DISABLED_LABEL, prevLabel));
+		} else {
+			sb.append(MessageFormat.format(PREV_LABEL, jsFunction, Integer.toString(currentPageNo - 1), prevLabel));
+		}
+
+		sb.append("<div class=\"page-links\">");
+
+		if (totalPageCount == 1) {
+			sb.append(MessageFormat.format(CURRENT_PAGE_LABEL, Integer.toString(1)));
+		} else if (totalPageCount <= 8) {
+			appendRange(sb, 1, totalPageCount, currentPageNo, jsFunction);
+		} else if (currentPageNo <= 4) {
+			appendRange(sb, 1, 7, currentPageNo, jsFunction);
+			sb.append(DOT_PAGE_LABEL);
+			sb.append(MessageFormat.format(LAST_PAGE_LABEL, jsFunction, Integer.toString(totalPageCount), Integer.toString(totalPageCount)));
+		} else if (currentPageNo >= totalPageCount - 3) {
+			sb.append(MessageFormat.format(FIRST_PAGE_LABEL, jsFunction, Integer.toString(firstPageNo), Integer.toString(firstPageNo)));
+			sb.append(DOT_PAGE_LABEL);
+			appendRange(sb, totalPageCount - 6, totalPageCount, currentPageNo, jsFunction);
+		} else {
+			sb.append(MessageFormat.format(FIRST_PAGE_LABEL, jsFunction, Integer.toString(firstPageNo), Integer.toString(firstPageNo)));
+			sb.append(DOT_PAGE_LABEL);
+			appendRange(sb, currentPageNo - 2, currentPageNo + 2, currentPageNo, jsFunction);
+			sb.append(DOT_PAGE_LABEL);
+			sb.append(MessageFormat.format(LAST_PAGE_LABEL, jsFunction, Integer.toString(totalPageCount), Integer.toString(totalPageCount)));
+		}
+
+		sb.append("</div>");
+
+		// 다음 페이지 링크 (항상 표시, 마지막 페이지면 비활성)
+		if (currentPageNo == totalPageCount) {
+			sb.append(MessageFormat.format(NEXT_DISABLED_LABEL, nextLabel));
+		} else {
+			sb.append(MessageFormat.format(NEXT_LABEL, jsFunction, Integer.toString(currentPageNo + 1), nextLabel));
+		}
+
+		return sb.toString();
+	}
+
+	private void appendRange(StringBuilder sb, int from, int to, int currentPageNo, String jsFunction) {
+		for (int i = from; i <= to; i++) {
+			if (i == currentPageNo) {
+				sb.append(MessageFormat.format(CURRENT_PAGE_LABEL, Integer.toString(i)));
+			} else {
+				sb.append(MessageFormat.format(OTHER_PAGE_LABEL, jsFunction, Integer.toString(i), Integer.toString(i)));
+			}
+		}
+	}
+
+}

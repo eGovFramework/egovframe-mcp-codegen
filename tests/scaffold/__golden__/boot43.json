@@ -69,7 +69,7 @@
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovConfigWeb.java",
-      "sha256": "5299219ebca7752f8b306204458d4449ed704e6ae1bbce5c39a5d23d58f63489"
+      "sha256": "10a7f3fdf9234ef2f7d1236285fead3fe1224338baaeefdafcd09b10a228d759"
     },
     {
       "path": "src/main/java/egovframework/example/config/EgovNavModelAdvice.java",
@@ -92,12 +92,12 @@
       "sha256": "05b2f386c86d929e4fa1fc0bf5a1dde299ac9404af527456af7dd83229229387"
     },
     {
-      "path": "src/main/java/egovframework/example/pagination/EgovPaginationDialect.java",
-      "sha256": "1dcf465cd8dd9ff03535efea9df1b84eac6cfe76c06edfda707a0017d122e4cb"
+      "path": "src/main/java/egovframework/example/pagination/EgovKrdsPaginationRenderer.java",
+      "sha256": "493c0f9df96f9b46b9135731757cf6bc344974b4ad4b919239412a64248d1182"
     },
     {
-      "path": "src/main/java/egovframework/example/pagination/EgovPaginationFormat.java",
-      "sha256": "b1f7293a145ae76a45266eceafaac3a4a77be6be9836a1fe299f0b3d0abf1e37"
+      "path": "src/main/java/egovframework/example/pagination/EgovPaginationDialect.java",
+      "sha256": "85daf4bd1b42161711924dbe7444a74d2f494cbc0504d9a0c96b8b108ec71dff"
     },
     {
       "path": "src/main/java/egovframework/example/validation/EgovNotNull.java",
@@ -173,7 +173,7 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardList.html",
-      "sha256": "d2ab585fe76cfd676f5395410be679c72d011bb702ffe07247b73ceade8546ca"
+      "sha256": "dd126bf28f98aa20c7252c994a6a75c2f57128110d8c774bf2c40cac8ba7a045"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",

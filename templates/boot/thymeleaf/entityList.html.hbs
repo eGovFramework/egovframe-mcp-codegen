@@ -80,7 +80,7 @@
                 </tr>
             </table>
         </div>
-        <div id="paging"><span th:utext="${#egovPaginationFormat.paginationFormat(paginationInfo, '{{entityNameLower}}Pagination')}"></span></div>
+        <div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, '{{entityNameLower}}Pagination')}"></div>
     </div>
 </body>
 </html>

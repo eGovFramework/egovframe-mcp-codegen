@@ -113,3 +113,30 @@ describe("Task2 메시지 번들", () => {
     expect(en).toMatch(/^button\.search=Search$/m);
   });
 });
+
+describe("Task3 boot43 KRDS 페이지네이션", () => {
+  it("렌더러·다이얼렉트·설정이 rte 4.3.2 API 만으로 생성된다", async () => {
+    const dir = await scaffold("boot43");
+    const r = await read(dir, "src/main/java/egovframework/example/pagination/EgovKrdsPaginationRenderer.java");
+    expect(r).toContain("implements PaginationRenderer");
+    expect(r).toContain("import org.egovframe.rte.ptl.mvc.tags.ui.pagination.PaginationRenderer;");
+    expect(r).toContain('class=\\"page-navi prev\\"');
+    expect(r).toContain('<div class=\\"page-links\\">');
+    expect(r).toContain('"page.prev"');
+    for (const bad of ["jakarta.", "AbstractKrdsPaginationRenderer", "MessageSourcePaginationRenderer", "@PostConstruct"]) {
+      expect(r, bad).not.toContain(bad);
+    }
+    const d = await read(dir, "src/main/java/egovframework/example/pagination/EgovPaginationDialect.java");
+    expect(d).toContain('Collections.singleton("egovKrdsPaginationRenderer")');
+    const w = await read(dir, "src/main/java/egovframework/example/config/EgovConfigWeb.java");
+    expect(w).toContain("new EgovPaginationDialect(egovKrdsPaginationRenderer)");
+    expect(w).toContain("import org.thymeleaf.spring5.SpringTemplateEngine;");
+    expect(await fs.pathExists(path.join(dir, "src/main/java/egovframework/example/pagination/EgovPaginationFormat.java"))).toBe(false);
+  });
+
+  it("목록 화면이 KRDS 렌더러 표현식을 쓴다", async () => {
+    const list = await read(await scaffold("boot43"), VIEW.boot43.list);
+    expect(list).toContain("#egovKrdsPaginationRenderer.renderPagination(paginationInfo, 'boardPagination')");
+    expect(list).not.toContain("egovPaginationFormat");
+  });
+});

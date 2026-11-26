@@ -78,10 +78,10 @@
                 </table>
             </div>
             <!--
-                th:utext 사용 근거: egovPaginationFormat 은 PaginationInfo 의 int 값과 우리가 지정한 JS 함수명 리터럴만
+                th:utext 사용 근거: egovKrdsPaginationRenderer 는 PaginationInfo 의 int 값과 우리가 지정한 JS 함수명 리터럴만
                 사용해 HTML 을 만들며, 사용자 입력 문자열이 흘러들어갈 경로가 없다. 셀(<td>) 값은 모두 th:text 로 escape 된다.
             -->
-            <div id="paging"><span th:utext="${#egovPaginationFormat.paginationFormat(paginationInfo, '{{viewNameLower}}Pagination')}"></span></div>
+            <div id="paging" class="krds-pagination w-page" th:utext="${#egovKrdsPaginationRenderer.renderPagination(paginationInfo, '{{viewNameLower}}Pagination')}"></div>
         </form>
     </div>
 </body>

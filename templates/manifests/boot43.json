@@ -19,7 +19,7 @@
     { "template": "boot/java/exception/EgovExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/exception/Egov{{entityName}}ExcepHndlr.java" },
     { "template": "boot/java/exception/EgovOthersExcepHndlr.hbs", "output": "src/main/java/{{basePackagePath}}/exception/Egov{{entityName}}OthersExcepHndlr.java" },
     { "template": "boot/java/pagination/EgovPaginationDialect.hbs", "output": "src/main/java/{{basePackagePath}}/pagination/EgovPaginationDialect.java" },
-    { "template": "boot/java/pagination/EgovPaginationFormat.hbs", "output": "src/main/java/{{basePackagePath}}/pagination/EgovPaginationFormat.java" },
+    { "template": "boot/java/pagination/EgovKrdsPaginationRenderer.hbs", "output": "src/main/java/{{basePackagePath}}/pagination/EgovKrdsPaginationRenderer.java" },
     { "template": "boot/java/validation/EgovNotNull.hbs", "output": "src/main/java/{{basePackagePath}}/validation/EgovNotNull.java" },
     { "template": "boot/java/validation/EgovValidation.hbs", "output": "src/main/java/{{basePackagePath}}/validation/EgovValidation.java" },
     { "template": "boot/java/entity/EntityVO.hbs", "output": "src/main/java/{{packagePath}}/service/{{entityName}}VO.java", "scope": "entity" },

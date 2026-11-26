@@ -1,5 +1,6 @@
 package {{basePackage}}.config;
 
+import {{basePackage}}.pagination.EgovKrdsPaginationRenderer;
 import {{basePackage}}.pagination.EgovPaginationDialect;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
@@ -50,19 +51,19 @@ public class EgovConfigWeb implements WebMvcConfigurer, ApplicationContextAware 
 	}
 
 	@Bean
-	public SpringTemplateEngine templateEngine() {
+	public SpringTemplateEngine templateEngine(EgovKrdsPaginationRenderer egovKrdsPaginationRenderer) {
 		SpringTemplateEngine templateEngine = new SpringTemplateEngine();
 		templateEngine.setTemplateResolver(templateResolver());
 		templateEngine.setEnableSpringELCompiler(true);
-		templateEngine.addDialect(new EgovPaginationDialect());
+		templateEngine.addDialect(new EgovPaginationDialect(egovKrdsPaginationRenderer));
 		return templateEngine;
 	}
 
 	@Bean
-	public ThymeleafViewResolver thymeleafViewResolver() {
+	public ThymeleafViewResolver thymeleafViewResolver(EgovKrdsPaginationRenderer egovKrdsPaginationRenderer) {
 		ThymeleafViewResolver viewResolver = new ThymeleafViewResolver();
 		viewResolver.setCharacterEncoding("UTF-8");
-		viewResolver.setTemplateEngine(templateEngine());
+		viewResolver.setTemplateEngine(templateEngine(egovKrdsPaginationRenderer));
 		return viewResolver;
 	}
 

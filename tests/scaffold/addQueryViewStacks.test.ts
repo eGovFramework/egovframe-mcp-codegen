@@ -231,6 +231,8 @@ for (const stack of ["boot43", "war43"] as const) {
         expect(view).toContain("#dates.format(result.createdAt, 'yyyy-MM-dd HH:mm')");
         expect(view).toContain("#numbers.formatDecimal(result.amount, 1, 'COMMA', 2, 'POINT')");
         expect(view).toContain("${result.active != null and result.active} ? #{input.yes} : #{input.no}");
+        // KRDS 페이지네이션 렌더러 (Task 3) 와 KRDS 표 (Task 5)
+        expect(view).toContain("#egovKrdsPaginationRenderer.renderPagination(paginationInfo, 'payReportPagination')");
       }
       const vo = await read(spec.files.vo);
       expect(vo).toMatch(/private java\.sql\.Date joinDate;|private Date joinDate;/);
