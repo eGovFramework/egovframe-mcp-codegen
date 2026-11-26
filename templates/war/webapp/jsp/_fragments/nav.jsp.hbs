@@ -1,18 +1,41 @@
 <%--
 	엔티티 간 메뉴 네비게이션 fragment (eGovFrame 4.3 WAR / JSP).
-	이 파일은 egov_add_entity 도구가 단일 출처로 관리한다.
+	이 파일은 egov_add_entity 도구가 단일 출처로 관리한다 — 사용자가 직접 수정하면 다음 호출 (autoApplyMenu=true) 에서 덮어쓸 수 있다.
+	마크업과 색상은 5.1 Boot 의 nav fragment 와 같다 (KRDS 색상 토큰, 토큰이 없으면 괄호 안 기본색).
 --%>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib uri="http://www.springframework.org/tags" prefix="spring" %>
-<style>
-	.egov-entity-nav { margin: 0 auto 1.5rem auto; padding: 0; max-width: 980px; border-bottom: 1px solid #d8e5fd; }
-	.egov-entity-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; }
-	.egov-entity-nav-list > li { margin: 0; padding: 0; }
-	.egov-entity-nav-list > li > a { display: inline-block; padding: 0.5rem 0.95rem; color: #083891; font-weight: 500; text-decoration: none; border-radius: 5px 5px 0 0; }
-	.egov-entity-nav-list > li > a:hover { background:#ecf2fe; color:#052561; }
-	.egov-entity-nav-list > li > a.is-active { background:#256ef4; color:#fff; font-weight:600; }
-</style>
-<div class="egov-entity-nav" role="navigation" aria-label="entity navigation">
+<nav class="egov-entity-nav" aria-label="entity navigation">
+	<style>
+		.egov-entity-nav { margin: 0 0 1.5rem 0; padding: 0; border-bottom: 1px solid var(--krds-color-light-primary-10, #d8e5fd); }
+		.egov-entity-nav-list { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.25rem; }
+		.egov-entity-nav-list > li { margin: 0; padding: 0; }
+		.egov-entity-nav-list > li > a {
+			display: inline-block;
+			padding: 0.625rem 1rem;
+			color: var(--krds-color-light-primary-70, #083891);
+			font-weight: 500;
+			text-decoration: none;
+			border-radius: 6px 6px 0 0;
+			transition: background-color 0.15s ease, color 0.15s ease;
+		}
+		.egov-entity-nav-list > li > a:hover,
+		.egov-entity-nav-list > li > a:focus {
+			background-color: var(--krds-color-light-primary-5, #ecf2fe);
+			color: var(--krds-color-light-primary-80, #052561);
+			outline: none;
+		}
+		.egov-entity-nav-list > li > a.is-active {
+			background-color: var(--krds-color-light-primary-50, #256ef4);
+			color: #fff;
+			font-weight: 600;
+		}
+		.egov-entity-nav-list > li > a.is-active:hover,
+		.egov-entity-nav-list > li > a.is-active:focus {
+			background-color: var(--krds-color-light-primary-60, #0b50d0);
+			color: #fff;
+		}
+	</style>
 	<ul class="egov-entity-nav-list">
 {{#each entities}}
 		<li>
@@ -23,4 +46,4 @@
 		</li>
 {{/each}}
 	</ul>
-</div>
+</nav>

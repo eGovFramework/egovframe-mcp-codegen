@@ -4,14 +4,16 @@
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt" %>
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title><spring:message code="list.{{viewNameLower}}" htmlEscape="true" /></title>
-<link type="text/css" rel="stylesheet" href="<c:url value='/css/egovframework/sample.css'/>" />
-<script type="text/javaScript" language="javascript" defer="defer">
-<!--
+<link rel="stylesheet" type="text/css" href="<c:url value='/css/component/output.css'/>" />
+<link rel="stylesheet" type="text/css" href="<c:url value='/css/egovframe.css'/>" />
+<script type="text/javascript" src="<c:url value='/js/jquery.min.js'/>"></script>
+<script type="text/javascript">
 function fn_egov_selectList() {
 	document.listForm.pageIndex.value = 1;
 	document.listForm.action = "<c:url value='/egov{{viewName}}List.do'/>";
@@ -22,97 +24,100 @@ function fn_egov_link_page(pageNo) {
 	document.listForm.action = "<c:url value='/egov{{viewName}}List.do'/>";
 	document.listForm.submit();
 }
-//-->
 </script>
 </head>
-<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
-<form:form modelAttribute="{{viewVoName}}" id="listForm" name="listForm" method="get">
-<div id="content_pop">
-	<!-- 타이틀 -->
-	<div id="title">
-		<ul>
-			<li><img src="<c:url value='/images/egovframework/example/title_dot.gif'/>" alt=""/><spring:message code="list.{{viewNameLower}}" htmlEscape="true" /></li>
-		</ul>
-	</div>
-	<!-- // 타이틀 -->
+<body>
+<div id="container" class="inner">
+
+	<h2 class="heading-large"><spring:message code="list.{{viewNameLower}}" htmlEscape="true" /></h2>
 
 	<%-- @egov:nav-include — egov_add_entity / egov_add_query_view 가 fragment 갱신 시 자동 인식하는 마커. 사용자가 옮기지 마세요. --%>
 	<jsp:include page="/WEB-INF/jsp/_fragments/nav.jsp" />
 
+	<div id="content_pop">
+	<form:form modelAttribute="{{viewVoName}}" id="listForm" name="listForm" method="get">
+
 {{#if hasSearchable}}
-	<div id="search">
-		<ul>
-			<li>
-				<label for="searchCondition" style="visibility:hidden;"><spring:message code="search.choose" htmlEscape="true" /></label>
-				<form:select path="searchCondition" cssClass="use">
+		<div class="form-group">
+			<div class="search-wrap">
+				<div class="search-body">
+					<div class="form-conts searchOption">
+						<spring:message code="search.choose" var="searchChooseTitle" />
+						<form:select path="searchCondition" cssClass="krds-form-select medium" title="${searchChooseTitle}">
 {{#each searchable}}
-					<form:option value="{{@index}}"><spring:message code="title.{{../viewNameLower}}.{{alias}}" htmlEscape="true" /></form:option>
+							<form:option value="{{@index}}"><spring:message code="title.{{../viewNameLower}}.{{alias}}" htmlEscape="true" /></form:option>
 {{/each}}
-				</form:select>
-			</li>
-			<li><label for="searchKeyword" style="visibility:hidden;display:none;"><spring:message code="search.keyword" htmlEscape="true" /></label>
-				<form:input path="searchKeyword" cssClass="txt" />
-			</li>
-			<li>
-				<span class="btn_blue_l">
-					<a href="javascript:fn_egov_selectList();"><spring:message code="button.search" htmlEscape="true" /></a>
-					<img src="<c:url value='/images/egovframework/example/btn_bg_r.gif'/>" style="margin-left:6px;" alt=""/>
-				</span>
-			</li>
-		</ul>
-	</div>
+						</form:select>
+					</div>
+					<div class="form-conts btn-ico-wrap searchKeyword">
+						<spring:message code="search.keyword" var="searchKeywordHint" />
+						<form:input path="searchKeyword" cssClass="krds-input medium" placeholder="${searchKeywordHint}" />
+						<button type="button" class="krds-btn medium icon" onclick="fn_egov_selectList()">
+							<span class="sr-only"><spring:message code="button.search" htmlEscape="true" /></span>
+							<i class="svg-icon ico-sch"></i>
+						</button>
+					</div>
+				</div>
+			</div>
+		</div>
 {{/if}}
-	<!-- List -->
-	<div id="table">
-		<table width="100%" border="0" cellpadding="0" cellspacing="0" summary="<spring:message code='list.{{viewNameLower}}' htmlEscape='true' />">
-			<caption style="visibility:hidden"><spring:message code="list.{{viewNameLower}}" htmlEscape="true" /></caption>
-			<colgroup>
-				<col width="40" />
+
+		<div class="krds-table-wrap">
+			<table class="tbl col data">
+				<caption class="sr-only"><spring:message code="list.{{viewNameLower}}" htmlEscape="true" /></caption>
+				<colgroup>
+					<col style="width: 10%;">
 {{#each columns}}
-				<col width="" />
+					<col>
 {{/each}}
-			</colgroup>
-			<tr>
-				<th align="center">No</th>
+				</colgroup>
+				<thead>
+					<tr>
+						<th scope="col" class="text-center">No</th>
 {{#each columns}}
-				<th align="center"><spring:message code="title.{{../viewNameLower}}.{{alias}}" htmlEscape="true" /></th>
+						<th scope="col" class="text-center"><spring:message code="title.{{../viewNameLower}}.{{alias}}" htmlEscape="true" /></th>
 {{/each}}
-			</tr>
-			<c:forEach var="result" items="${resultList}" varStatus="status">
-			<tr>
-				<td align="center" class="listtd"><c:out value="${paginationInfo.totalRecordCount+1 - (({{viewVoName}}.pageIndex-1) * {{viewVoName}}.pageSize + status.count)}"/></td>
+					</tr>
+				</thead>
+				<tbody>
+					<c:forEach var="result" items="${resultList}" varStatus="status">
+					<tr>
+						<td class="text-center"><c:out value="${paginationInfo.totalRecordCount+1 - (({{viewVoName}}.pageIndex-1) * {{viewVoName}}.pageSize + status.count)}"/></td>
 {{#each columns}}
 {{#if isDate}}
-				<td align="center" class="listtd"><c:if test="${result.{{alias}} != null}"><fmt:formatDate value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if>&nbsp;</td>
+						<td class="text-center"><c:if test="${result.{{alias}} != null}"><fmt:formatDate value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if></td>
 {{else if isTimestamp}}
-				<td align="center" class="listtd"><c:if test="${result.{{alias}} != null}"><fmt:formatDate value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if>&nbsp;</td>
+						<td class="text-center"><c:if test="${result.{{alias}} != null}"><fmt:formatDate value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if></td>
 {{else if isNumber}}
 {{#if format}}
-				<td align="right" class="listtd"><c:if test="${result.{{alias}} != null}"><fmt:formatNumber value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if>&nbsp;</td>
+						<td class="text-right"><c:if test="${result.{{alias}} != null}"><fmt:formatNumber value="{{concat "${result." alias "}"}}" pattern="{{format}}"/></c:if></td>
 {{else}}
-				<td align="right" class="listtd"><c:out value="{{concat "${result." alias "}"}}"/>&nbsp;</td>
+						<td class="text-right"><c:out value="{{concat "${result." alias "}"}}"/></td>
 {{/if}}
 {{else if isBoolean}}
-				<td align="center" class="listtd"><c:choose><c:when test="{{{concat "${result." alias " != null and result." alias "}"}}}"><spring:message code="input.yes" htmlEscape="true" /></c:when><c:otherwise><spring:message code="input.no" htmlEscape="true" /></c:otherwise></c:choose></td>
+						<td class="text-center"><c:choose><c:when test="{{{concat "${result." alias " != null and result." alias "}"}}}"><spring:message code="input.yes" htmlEscape="true" /></c:when><c:otherwise><spring:message code="input.no" htmlEscape="true" /></c:otherwise></c:choose></td>
 {{else}}
-				<td align="center" class="listtd"><c:out value="{{concat "${result." alias "}"}}"/>&nbsp;</td>
+						<td class="text-center"><c:out value="{{concat "${result." alias "}"}}"/></td>
 {{/if}}
 {{/each}}
-			</tr>
-			</c:forEach>
-			<c:if test="${empty resultList}">
-			<tr>
-				<td align="center" class="listtd" colspan="{{add columns.length 1}}"><spring:message code="info.nodata.msg" htmlEscape="true" /></td>
-			</tr>
-			</c:if>
-		</table>
+					</tr>
+					</c:forEach>
+					<c:if test="${empty resultList}">
+					<tr>
+						<td class="text-center" colspan="{{add columns.length 1}}"><spring:message code="info.nodata.msg" htmlEscape="true" /></td>
+					</tr>
+					</c:if>
+				</tbody>
+			</table>
+		</div>
+
+		<div id="paging" class="krds-pagination w-page">
+			<ui:pagination paginationInfo="${paginationInfo}" type="krds" jsFunction="fn_egov_link_page" />
+		</div>
+		<form:hidden path="pageIndex" />
+	</form:form>
 	</div>
-	<!-- /List -->
-	<div id="paging" class="krds-pagination w-page">
-		<ui:pagination paginationInfo="${paginationInfo}" type="krds" jsFunction="fn_egov_link_page" />
-	</div>
-	<form:hidden path="pageIndex" />
+
 </div>
-</form:form>
 </body>
 </html>

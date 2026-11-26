@@ -165,15 +165,15 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp",
-      "sha256": "d6f9bac3da720fc6b2945dcc44ec405386e017a3d8b749917d4b1caf61f92a2e"
+      "sha256": "a878dcb55ecffe9149ec46a2a0474d65fb9471dc0e425c909ff0ee9d83c11e12"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardList.jsp",
-      "sha256": "722c182eb2c323d7deba5a2578f2704d7d5ffb6992713e7a37cf43a479fbd304"
+      "sha256": "8363c0510ded580a790030353b4dc630d1cdbf5a1ef6aa657ae91be05c618f30"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardRegister.jsp",
-      "sha256": "bcdd9ddbee70a7f001524dfd718f81d43689100b9cbad7b918e6bedfd81eb079"
+      "sha256": "55928504c197e57249755065ac8282989b96ec8c7d18b1fa03182d99a19729ee"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/cmmn/dataAccessFailure.jsp",

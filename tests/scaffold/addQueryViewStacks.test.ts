@@ -228,6 +228,8 @@ for (const stack of ["boot43", "war43"] as const) {
         expect(view).toContain('<spring:message code="title.payReport.joinDate" htmlEscape="true" />');
         // KRDS 페이지네이션 (Task 4) 과 KRDS 표 (Task 6)
         expect(view).toContain('type="krds" jsFunction="fn_egov_link_page"');
+        expect(view).toContain('class="krds-table-wrap"');
+        expect(view).not.toContain("sample.css");
       } else {
         expect(view).toContain("#dates.format(result.joinDate, 'yyyy/MM/dd')");
         expect(view).toContain("#dates.format(result.createdAt, 'yyyy-MM-dd HH:mm')");

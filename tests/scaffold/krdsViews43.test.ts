@@ -44,9 +44,9 @@ afterEach(async () => {
 });
 
 /** 프로젝트를 생성하고 프로젝트 루트 경로를 돌려준다. */
-async function scaffold(stack: Stack, ddl = PLAIN_DDL): Promise<string> {
+async function scaffold(stack: Stack, ddl = PLAIN_DDL, projectName = "board-app"): Promise<string> {
   await generateScaffoldProject({
-    projectName: "board-app",
+    projectName,
     packageName: "egovframework.example.board",
     outputPath: tmpRoot,
     entityName: "Board",
@@ -55,7 +55,7 @@ async function scaffold(stack: Stack, ddl = PLAIN_DDL): Promise<string> {
     projectType: stack === "war43" ? "war" : "boot",
     stackVersion: "4.3",
   });
-  return path.join(tmpRoot, "board-app");
+  return path.join(tmpRoot, projectName);
 }
 const read = (dir: string, rel: string): Promise<string> => fs.readFile(path.join(dir, rel), "utf-8");
 
@@ -262,5 +262,71 @@ describe("Task5 boot43 KRDS 뷰", () => {
     const err = await read(dir, "src/main/resources/templates/thymeleaf/egovSampleError.html");
     expect(err).not.toContain("sample.css");
     expect(err).toContain("#{fail.common.msg}");
+  });
+});
+
+describe("Task6 war43 KRDS 뷰", () => {
+  it("목록 JSP: HTML5 doctype, KRDS 자산·마크업, WAR 함수·URL 유지", async () => {
+    const list = await read(await scaffold("war43"), VIEW.war43.list);
+    for (const s of [
+      "<!DOCTYPE html>",
+      "<c:url value='/css/component/output.css'/>",
+      "<c:url value='/css/egovframe.css'/>",
+      "<c:url value='/js/jquery.min.js'/>",
+      "<c:url value='/js/egovframework/common.js'/>",
+      '<div id="container" class="inner">',
+      'class="heading-large"',
+      '<jsp:include page="/WEB-INF/jsp/_fragments/nav.jsp" />',
+      'cssClass="krds-form-select medium"',
+      'cssClass="krds-input medium"',
+      'class="krds-btn medium icon" onclick="fn_egov_selectList()"',
+      'class="krds-table-wrap"',
+      'class="tbl col data"',
+      '<spring:message code="info.nodata.msg" />',
+      'onclick="fn_egov_addView()"',
+      "<c:url value='/updateBoardView.do'/>",
+    ]) {
+      expect(list, s).toContain(s);
+    }
+    for (const s of ["XHTML 1.0 Transitional", "sample.css", "btn_blue_l", "title_dot.gif", 'cssClass="txt"', 'cssClass="use"', 'align="center"']) {
+      expect(list, s).not.toContain(s);
+    }
+  });
+
+  it("등록 JSP: KRDS 폼 마크업, form 태그·검증 유지, 날짜는 flatpickr", async () => {
+    const r = await read(await scaffold("war43", DATE_DDL), VIEW.war43.register);
+    for (const s of [
+      "<!DOCTYPE html>",
+      "<c:url value='/js/component/ui-script.js'/>",
+      'class="fieldset input-form"',
+      '<div class="form-tit">',
+      '<div class="form-conts">',
+      '<form:input path="title" maxlength="200" cssClass="krds-input" />',
+      '<form:errors path="title" element="p" cssClass="form-hint-invalid" />',
+      '<span class="required">*</span>',
+      '<form:input path="pubDt" placeholder="yyyy-MM-dd" cssClass="krds-input flatpickr-date" />',
+      '<form:input path="regDt" placeholder="yyyy-MM-dd" cssClass="krds-input flatpickr-date" />',
+      "flatpickr@4.6.13/dist/l10n/ko.js",
+      "flatpickr('.flatpickr-date', {",
+      '<validator:javascript formName="boardVO"',
+      'onclick="fn_egov_save()"',
+      'onclick="fn_egov_delete()"',
+      'class="krds-btn medium secondary"',
+      'name="searchCondition"',
+    ]) {
+      expect(r, s).toContain(s);
+    }
+    for (const s of ["sample.css", "btn_blue_l", "tbtd_caption", 'cssClass="txt"']) {
+      expect(r, s).not.toContain(s);
+    }
+    const plain = await read(await scaffold("war43", PLAIN_DDL, "board-plain"), VIEW.war43.register);
+    expect(plain).not.toContain("flatpickr");
+  });
+
+  it("nav JSP 가 KRDS 스타일과 기존 활성 판별식을 쓴다", async () => {
+    const nav = await read(await scaffold("war43"), "src/main/webapp/WEB-INF/jsp/_fragments/nav.jsp");
+    expect(nav).toContain('<nav class="egov-entity-nav" aria-label="entity navigation">');
+    expect(nav).toContain("var(--krds-color-light-primary-50, #256ef4)");
+    expect(nav).toContain("pageContext.request.contextPath += '/egovBoardList'");
   });
 });

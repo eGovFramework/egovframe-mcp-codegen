@@ -3,21 +3,44 @@
 <%@ taglib prefix="form" uri="http://www.springframework.org/tags/form" %>
 <%@ taglib prefix="validator" uri="http://www.springmodules.org/tags/commons-validator" %>
 <%@ taglib prefix="spring" uri="http://www.springframework.org/tags" %>
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" lang="ko" xml:lang="ko">
+<!DOCTYPE html>
+<html lang="ko">
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <c:set var="registerFlag" value="${empty {{voName}}.{{pkAttributes.0.ccName}} ? 'create' : 'modify'}"/>
 <title>
 <c:if test="${registerFlag == 'create'}"><spring:message code="button.create" /></c:if>
 <c:if test="${registerFlag == 'modify'}"><spring:message code="button.modify" /></c:if>
 </title>
-<link type="text/css" rel="stylesheet" href="<c:url value='/css/egovframework/sample.css'/>" />
+<link rel="stylesheet" type="text/css" href="<c:url value='/css/component/output.css'/>" />
+<link rel="stylesheet" type="text/css" href="<c:url value='/css/egovframe.css'/>" />
+{{#if hasDateAttr}}
+<link rel="stylesheet" type="text/css" href="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.css">
+{{/if}}
 <!--For Commons Validator Client Side-->
 <script type="text/javascript" src="<c:url value='/cmmn/validator.do'/>"></script>
 <validator:javascript formName="{{voName}}" staticJavascript="false" xhtml="true" cdata="false" />
-<script type="text/javaScript" language="javascript" defer="defer">
-<!--
+<script type="text/javascript" src="<c:url value='/js/jquery.min.js'/>"></script>
+<script type="text/javascript" src="<c:url value='/js/component/ui-script.js'/>" defer></script>
+<script type="text/javascript" src="<c:url value='/js/egovframework/common.js'/>" defer></script>
+{{#if hasDateAttr}}
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/flatpickr.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr@4.6.13/dist/l10n/ko.js"></script>
+{{/if}}
+<script type="text/javascript">
+{{#if hasDateAttr}}
+document.addEventListener('DOMContentLoaded', function() {
+	if (typeof flatpickr === 'function') {
+		flatpickr('.flatpickr-date', {
+			dateFormat: 'Y-m-d',
+			allowInput: true,
+			locale: (typeof flatpickr.l10ns !== 'undefined' && flatpickr.l10ns.ko) ? 'ko' : 'default'
+		});
+	}
+});
+
+{{/if}}
 function fn_egov_selectList() {
 	document.detailForm.action = "<c:url value='/egov{{entityName}}List.do'/>";
 	document.detailForm.method = 'get';
@@ -36,104 +59,81 @@ function fn_egov_save() {
 		frm.submit();
 	}
 }
-//-->
 </script>
 </head>
-<body style="text-align:center; margin:0 auto; display:inline; padding-top:100px;">
+<body>
 <form:form modelAttribute="{{voName}}" id="detailForm" name="detailForm">
-<div id="content_pop">
-	<!-- 타이틀 -->
-	<div id="title">
-		<ul>
-			<li><img src="<c:url value='/images/egovframework/example/title_dot.gif'/>" alt=""/>
-				<c:if test="${registerFlag == 'create'}"><spring:message code="button.create" /></c:if>
-				<c:if test="${registerFlag == 'modify'}"><spring:message code="button.modify" /></c:if>
-			</li>
-		</ul>
-	</div>
-	<!-- // 타이틀 -->
-	<div id="table">
-	<table width="100%" border="1" cellpadding="0" cellspacing="0" style="bordercolor:#D3E2EC; bordercolordark:#FFFFFF; BORDER-TOP:#C2D0DB 2px solid; BORDER-LEFT:#ffffff 1px solid; BORDER-RIGHT:#ffffff 1px solid; BORDER-BOTTOM:#C2D0DB 1px solid; border-collapse: collapse;">
-		<colgroup>
-			<col width="150" />
-			<col width="" />
-		</colgroup>
+<div id="container" class="inner">
+
+	<h2 class="heading-large">
+		<c:if test="${registerFlag == 'create'}"><spring:message code="button.create" /></c:if>
+		<c:if test="${registerFlag == 'modify'}"><spring:message code="button.modify" /></c:if>
+	</h2>
+
+	<div class="conts-wrap">
+		<div class="fieldset input-form">
 {{#each attributes}}
 {{#if isPrimaryKey}}
-		<c:if test="${registerFlag == 'modify'}">
-		<tr>
-			<td class="tbtd_caption"><label for="{{ccName}}"><spring:message code="title.{{../entityNameLower}}.{{ccName}}" /></label></td>
-			<td class="tbtd_content">
-				<form:input path="{{ccName}}" cssClass="essentiality" maxlength="{{maxLength}}" readonly="true" />
-			</td>
-		</tr>
-		</c:if>
+			<c:if test="${registerFlag == 'modify'}">
+			<div class="form-group">
+				<div class="form-tit">
+					<label for="{{ccName}}"><spring:message code="title.{{../entityNameLower}}.{{ccName}}" /></label>
+				</div>
+				<div class="form-conts">
+					<form:input path="{{ccName}}" maxlength="{{maxLength}}" cssClass="krds-input" readonly="true" />
+				</div>
+			</div>
+			</c:if>
 {{else}}
-		<tr>
-			<td class="tbtd_caption"><label for="{{ccName}}"><spring:message code="title.{{../entityNameLower}}.{{ccName}}" /></label></td>
-			<td class="tbtd_content">
+			<div class="form-group">
+				<div class="form-tit">
+					<label for="{{ccName}}"><span><spring:message code="title.{{../entityNameLower}}.{{ccName}}" /></span>{{#if (eq javaType "java.lang.String")}}{{#if isNotNull}} <span class="required">*</span>{{/if}}{{/if}}</label>
+				</div>
+				<div class="form-conts">
 {{#if fkParent}}
-				<form:select path="{{ccName}}" cssClass="txt">
-					<form:option value=""><spring:message code="search.choose" /></form:option>
-					<form:options items="${ {{fkParent.entityNameLower}}List }" itemValue="value" itemLabel="label" />
-				</form:select>
+					<form:select path="{{ccName}}" cssClass="krds-form-select">
+						<form:option value=""><spring:message code="search.choose" /></form:option>
+						<form:options items="${ {{fkParent.entityNameLower}}List }" itemValue="value" itemLabel="label" />
+					</form:select>
 {{else if isYnFlag}}
-				<form:select path="{{ccName}}" cssClass="use">
-					<form:option value="Y"><spring:message code="input.yes" /></form:option>
-					<form:option value="N"><spring:message code="input.no" /></form:option>
-				</form:select>
+					<form:select path="{{ccName}}" cssClass="krds-form-select">
+						<form:option value="Y"><spring:message code="input.yes" /></form:option>
+						<form:option value="N"><spring:message code="input.no" /></form:option>
+					</form:select>
 {{else}}
 {{#if isLongText}}
-				<form:textarea path="{{ccName}}" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} cssClass="txt" />
-				&nbsp;<form:errors path="{{ccName}}" />
+					<form:textarea path="{{ccName}}" rows="6"{{#if maxLength}} maxlength="{{maxLength}}"{{/if}} cssClass="krds-input" />
 {{else if isDate}}
-				<%-- 날짜/일시: EgovBindingInitializer 가 'yyyy-MM-dd'(Timestamp 는 'yyyy-MM-dd HH:mm:ss' 도) 를 바인딩하고 빈 값은 null 로 둔다 --%>
-				<form:input path="{{ccName}}" placeholder="yyyy-MM-dd" cssClass="txt" />
-				&nbsp;<form:errors path="{{ccName}}" />
+					<%-- 날짜/일시: flatpickr 달력. EgovBindingInitializer 가 'yyyy-MM-dd' 로 표시·바인딩하고 빈 값은 null 로 둔다 --%>
+					<form:input path="{{ccName}}" placeholder="yyyy-MM-dd" cssClass="krds-input flatpickr-date" />
 {{else}}
-				<form:input path="{{ccName}}" maxlength="{{maxLength}}" cssClass="txt" />
-				&nbsp;<form:errors path="{{ccName}}" />
+					<form:input path="{{ccName}}" maxlength="{{maxLength}}" cssClass="krds-input" />
 {{/if}}
 {{/if}}
-			</td>
-		</tr>
+					<form:errors path="{{ccName}}" element="p" cssClass="form-hint-invalid" />
+				</div>
+			</div>
 {{/if}}
 {{/each}}
-	</table>
+		</div>
+
+		<div class="page-btn-wrap">
+			<div class="btn-wrap">
+				<button type="button" class="krds-btn medium secondary" onclick="fn_egov_selectList()"><spring:message code="button.list" /></button>
+				<button type="button" class="krds-btn medium tertiary" onclick="document.detailForm.reset()"><spring:message code="button.reset" /></button>
+			</div>
+			<div class="btn-wrap">
+				<button type="button" class="krds-btn medium" onclick="fn_egov_save()">
+					<c:if test="${registerFlag == 'create'}"><spring:message code="button.create" /></c:if>
+					<c:if test="${registerFlag == 'modify'}"><spring:message code="button.modify" /></c:if>
+				</button>
+				<c:if test="${registerFlag == 'modify'}">
+				<button type="button" class="krds-btn medium danger" onclick="fn_egov_delete()"><spring:message code="button.delete" /></button>
+				</c:if>
+			</div>
+		</div>
 	</div>
-	<div id="sysbtn">
-		<ul>
-			<li>
-				<span class="btn_blue_l">
-					<a href="javascript:fn_egov_selectList();"><spring:message code="button.list" /></a>
-					<img src="<c:url value='/images/egovframework/example/btn_bg_r.gif'/>" style="margin-left:6px;" alt=""/>
-				</span>
-			</li>
-			<li>
-				<span class="btn_blue_l">
-					<a href="javascript:fn_egov_save();">
-						<c:if test="${registerFlag == 'create'}"><spring:message code="button.create" /></c:if>
-						<c:if test="${registerFlag == 'modify'}"><spring:message code="button.modify" /></c:if>
-					</a>
-					<img src="<c:url value='/images/egovframework/example/btn_bg_r.gif'/>" style="margin-left:6px;" alt=""/>
-				</span>
-			</li>
-			<c:if test="${registerFlag == 'modify'}">
-			<li>
-				<span class="btn_blue_l">
-					<a href="javascript:fn_egov_delete();"><spring:message code="button.delete" /></a>
-					<img src="<c:url value='/images/egovframework/example/btn_bg_r.gif'/>" style="margin-left:6px;" alt=""/>
-				</span>
-			</li>
-			</c:if>
-			<li>
-				<span class="btn_blue_l">
-					<a href="javascript:document.detailForm.reset();"><spring:message code="button.reset" /></a>
-					<img src="<c:url value='/images/egovframework/example/btn_bg_r.gif'/>" style="margin-left:6px;" alt=""/>
-				</span>
-			</li>
-		</ul>
-	</div>
+
 </div>
 <!-- 검색조건 유지 -->
 <input type="hidden" name="searchCondition" value="<c:out value='${searchVO.searchCondition}'/>"/>
