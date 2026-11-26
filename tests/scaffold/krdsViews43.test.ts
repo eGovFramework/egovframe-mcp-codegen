@@ -85,3 +85,31 @@ describe("Task1 정적 자산", () => {
     expect(src).not.toContain('"/images/**"');
   });
 });
+
+describe("Task2 메시지 번들", () => {
+  it.each<Stack>(["boot43", "war43"])("%s 번들에 page.prev/page.next 가 있다", async (stack) => {
+    const dir = await scaffold(stack);
+    for (const f of ["message-common.properties", "message-common_ko.properties"]) {
+      const c = await read(dir, `${MSG_DIR}/${f}`);
+      expect(c).toMatch(/^page\.prev=\\uC774\\uC804$/m);
+      expect(c).toMatch(/^page\.next=\\uB2E4\\uC74C$/m);
+    }
+    const en = await read(dir, `${MSG_DIR}/message-common_en.properties`);
+    expect(en).toMatch(/^page\.prev=Prev$/m);
+    expect(en).toMatch(/^page\.next=Next$/m);
+  });
+
+  it("war43 ko 번들의 공통 문구가 모두 한글이다", async () => {
+    const dir = await scaffold("war43");
+    const c = await read(dir, `${MSG_DIR}/message-common_ko.properties`);
+    expect(c).toMatch(/^button\.search=\\uAC80\\uC0C9$/m);
+    expect(c).toMatch(/^info\.nodata\.msg=\\u/m);
+    expect(c).toMatch(/^errors\.required=\{0\}\\uC740/m);
+    expect(c).toMatch(/^confirm\.required\.board\.title=.*\\uD544\\uC218/m);
+    for (const english of ["=Search", "=Create", "No data found", "is required", "An error has occurred"]) {
+      expect(c).not.toContain(english);
+    }
+    const en = await read(dir, `${MSG_DIR}/message-common_en.properties`);
+    expect(en).toMatch(/^button\.search=Search$/m);
+  });
+});
