@@ -173,7 +173,7 @@
     },
     {
       "path": "src/main/resources/log4j2.xml",
-      "sha256": "601867c39bc3dbd39d79f3dda2886b92306c5d61c05e089643e62ca34afa2386"
+      "sha256": "31b4910f66375646834afdc3389602b36c7dffcfe8ae1a95df0966b746fad2f0"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/_fragments/nav.html",
