@@ -173,11 +173,11 @@
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardList.html",
-      "sha256": "a71162b09c53fd95560c0d89bbefe5bfd507fe67966290a4a9445d0c4118fb32"
+      "sha256": "9b826f0d24b5d7272a505c0e6aa4c488cb740390ba55e997030e6cf094f9ae7b"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovBoardRegister.html",
-      "sha256": "8caccf3e68a779064f1d87813bf9b2057cc6983932a4131621ff7a4841ce9cc6"
+      "sha256": "06cd1ad5335e5bc092dba9408a0fe22d3c7e17e47d7fa7d35d80c8a4c38138e9"
     },
     {
       "path": "src/main/resources/templates/thymeleaf/egovSampleError.html",

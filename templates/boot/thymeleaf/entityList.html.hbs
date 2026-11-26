@@ -12,8 +12,8 @@
 	<script th:inline="javascript" th:src="@{/js/jquery.min.js}"></script>
 	<script th:inline="javascript" th:src="@{/js/egovframework/common.js}" defer></script>
 	<script th:inline="javascript">
-		// 검색 입력란에서 Enter 가 폼을 제출하지 않도록 막는다 (4.3 Boot 의 목록/상세 이동은 모두 스크립트가 수행).
-		document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
+		// 검색 입력란에서 Enter 가 폼을 제출하지 않도록 막는다 (4.3 Boot 의 목록/상세 이동은 모두 스크립트가 수행). textarea 의 줄바꿈은 허용.
+		document.addEventListener('keydown', function(event) { if (event.keyCode === 13 && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); }; }, true);
 
 		// 검색·페이지 이동은 서버가 돌려준 전체 페이지에서 #content_pop 만 뽑아 교체한다.
 		// 응답 HTML 전체를 replaceWith 하면 jQuery 가 head 의 <script src> 를 다시 평가해
@@ -23,16 +23,18 @@
 			if (!next.length) { alert([[#{fail.common.msg}]]); return; }
 			$('#content_pop').replaceWith(next);
 		}
+		// 서버 오류(4xx/5xx) 응답은 .done 에 오지 않으므로 .fail 에서 같은 알림을 띄운다.
+		function {{entityNameLower}}Fail() { alert([[#{fail.common.msg}]]); }
 		function {{entityNameLower}}Search() {
 			if (notNullCheck($('#searchKeyword').val())) {
 				$.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post',
 					data: { searchCondition: $('#searchCondition option:selected').val(), searchKeyword: $('#searchKeyword').val() }
-				}).done({{entityNameLower}}Replace);
+				}).done({{entityNameLower}}Replace).fail({{entityNameLower}}Fail);
 			} else { alert([[#{search.error}]]); }
 		}
 		function {{entityNameLower}}Pagination(pageIndex) {
 			$.ajax({ url: contextPath + '/{{entityNameLower}}/list', type: 'post', data: { pageIndex: pageIndex }
-			}).done({{entityNameLower}}Replace);
+			}).done({{entityNameLower}}Replace).fail({{entityNameLower}}Fail);
 		}
 		function {{entityNameLower}}Create() { $(location).attr('href', contextPath + '/{{entityNameLower}}/add'); }
 		function {{entityNameLower}}Detail({{pkAttributes.0.ccName}}) {

@@ -10,6 +10,7 @@ import * as fs from "fs-extra";
 import * as os from "node:os";
 import * as path from "node:path";
 
+import { egovAddEntity } from "../../src/tools/egovAddEntity.js";
 import { generateScaffoldProject } from "../../src/utils/scaffold/scaffoldGenerator.js";
 
 type Stack = "boot43" | "war43";
@@ -347,5 +348,39 @@ describe("Task8 context-path 배포", () => {
     // server.servlet.context-path=/app 이면 getRequestURI() 는 /app/egovBoardList.do 라 nav 의 startsWith('/egovBoardList') 가 실패한다.
     expect(src).toContain("request.getRequestURI().substring(request.getContextPath().length())");
     expect(src).not.toMatch(/return request\.getRequestURI\(\);/);
+  });
+});
+
+describe("최종 리뷰 수정", () => {
+  it("boot43 목록의 AJAX 가 오류 응답(.fail)에도 알림한다", async () => {
+    const list = await read(await scaffold("boot43"), VIEW.boot43.list);
+    expect(list.match(/\.fail\(boardFail\)/g)).toHaveLength(2);
+    expect(list).toMatch(/function boardFail\(\) \{ alert\(\[\[#\{fail\.common\.msg\}\]\]\); \}/);
+  });
+
+  it("boot43 의 Enter 차단이 textarea 줄바꿈은 허용한다", async () => {
+    const dir = await scaffold("boot43");
+    for (const v of [VIEW.boot43.list, VIEW.boot43.register]) {
+      expect(await read(dir, v), v).toContain("event.keyCode === 13 && event.target.tagName !== 'TEXTAREA'");
+    }
+  });
+
+  it("war43 에 두 번째 엔티티를 추가해도 필수 입력 문구가 한글이다", async () => {
+    const dir = await scaffold("war43");
+    await egovAddEntity({
+      projectPath: dir,
+      packageName: "egovframework.example.member",
+      entityName: "Member",
+      ddl: "CREATE TABLE MEMBER (ID VARCHAR(16) NOT NULL PRIMARY KEY, NAME VARCHAR(100) NOT NULL)",
+      withAttachment: false,
+    });
+    const c = await read(dir, `${MSG_DIR}/message-common_ko.properties`);
+    expect(c).toMatch(/^confirm\.required\.member\.name=.*\\uD544\\uC218/m);
+    expect(c).not.toContain(" is required.");
+  });
+
+  it("common.js 가 버튼·링크에서는 Enter 를 onclick 으로 위임하지 않는다 (네이티브 클릭과 중복 실행 방지)", async () => {
+    const js = await read(await scaffold("war43"), "src/main/webapp/js/egovframework/common.js");
+    expect(js).toContain("['BUTTON', 'A', 'INPUT'].indexOf(targetElement.tagName) === -1");
   });
 });

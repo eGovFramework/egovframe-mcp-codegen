@@ -22,8 +22,8 @@
 {{/if}}
 
 	<script th:inline="javascript">
-		// 폼에 action 이 없어 Enter 로 제출되면 POST 전용 URL 에 GET 이 가서 405 가 난다 — Enter 제출을 막는다.
-		document.addEventListener('keydown', function(event) { if (event.keyCode === 13) { event.preventDefault(); }; }, true);
+		// 폼에 action 이 없어 Enter 로 제출되면 POST 전용 URL 에 GET 이 가서 405 가 난다 — Enter 제출을 막는다. textarea 의 줄바꿈은 허용.
+		document.addEventListener('keydown', function(event) { if (event.keyCode === 13 && event.target.tagName !== 'TEXTAREA') { event.preventDefault(); }; }, true);
 {{#if hasDateAttr}}
 
 		document.addEventListener('DOMContentLoaded', function() {
