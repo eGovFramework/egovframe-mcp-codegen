@@ -1,0 +1,12 @@
+		<!-- === entity '{{entityName}}' form (egov_add_entity 가 삽입) === -->
+		<form name="{{voName}}">
+{{#each nonPkAttributes}}
+{{#if (eq javaType "java.lang.String")}}
+{{#if isNotNull}}
+			<field property="{{ccName}}" depends="required">
+				<arg key="title.{{../entityNameLower}}.{{ccName}}" position="0" />
+			</field>
+{{/if}}
+{{/if}}
+{{/each}}
+		</form>

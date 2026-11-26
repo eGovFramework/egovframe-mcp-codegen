@@ -435,3 +435,56 @@ describe("WAR FK 엔티티 추가", () => {
     expect(await fs.pathExists(path.join(dir, "src/main/java/egovframework/example/cmm/vo/FkComboVO.java"))).toBe(true);
   });
 });
+
+describe("WAR 엔티티 추가 시 validator.xml 갱신", () => {
+  const VALIDATOR = "src/main/webapp/WEB-INF/config/egovframework/validator/validator.xml";
+
+  async function memberProject(): Promise<string> {
+    await generateScaffoldProject({
+      projectName: "member-app",
+      packageName: "egovframework.example.member",
+      outputPath: tmpRoot,
+      entityName: "Member",
+      ddl: "CREATE TABLE MEMBER (MBR_NO VARCHAR(20) NOT NULL PRIMARY KEY, MBR_NM VARCHAR(100) NOT NULL)",
+      description: "",
+      projectType: "war",
+      stackVersion: "4.3",
+    });
+    return path.join(tmpRoot, "member-app");
+  }
+
+  it("추가 엔티티의 <form> 이 validator.xml 에 들어가고 필수 문자열 컬럼은 required 가 된다", async () => {
+    const dir = await memberProject();
+    const out = await egovAddEntity({
+      projectPath: dir,
+      packageName: "egovframework.example.board",
+      entityName: "Board",
+      ddl: "CREATE TABLE BOARD (PST_NO VARCHAR(20) NOT NULL PRIMARY KEY, MBR_NO VARCHAR(20), PST_TTL VARCHAR(256) NOT NULL, PST_CN VARCHAR(4000), CONSTRAINT FK_BOARD_MEMBER FOREIGN KEY (MBR_NO) REFERENCES MEMBER (MBR_NO))",
+      withAttachment: false,
+    });
+    const xml = await read(dir, VALIDATOR);
+    expect(xml).toContain('<form name="memberVO">');
+    expect(xml).toContain('<form name="boardVO">');
+    expect(xml).toMatch(/<form name="boardVO">\s*<field property="pstTtl" depends="required">\s*<arg key="title\.board\.pstTtl" position="0" \/>/);
+    expect(xml).not.toMatch(/<field property="pstCn"/);
+    expect(xml.match(/<\/formset>/g)).toHaveLength(1);
+    expect(xml.match(/<\/form-validation>/g)).toHaveLength(1);
+    expect(out).toContain("validator.xml");
+  });
+
+  it("필수 문자열 컬럼이 없는 엔티티도 빈 <form> 이 들어가 검증 함수가 생성된다", async () => {
+    const dir = await memberProject();
+    await egovAddEntity({
+      projectPath: dir,
+      packageName: "egovframework.example.orders",
+      entityName: "Order",
+      ddl: "CREATE TABLE ORDERS (ORDR_NO VARCHAR(50) NOT NULL PRIMARY KEY, MBR_NO VARCHAR(20), ORDR_AMT NUMERIC(15), CONSTRAINT FK_ORDERS_MEMBER FOREIGN KEY (MBR_NO) REFERENCES MEMBER (MBR_NO))",
+      withAttachment: false,
+    });
+    const xml = await read(dir, VALIDATOR);
+    expect(xml).toMatch(/<form name="orderVO">\s*<\/form>/);
+    // 등록 JSP 는 검증 함수가 없더라도 제출이 막히지 않도록 가드한다.
+    const jsp = await read(dir, "src/main/webapp/WEB-INF/jsp/egovframework/example/orders/egovOrderRegister.jsp");
+    expect(jsp).toContain("if (typeof validateOrderVO === 'function' && !validateOrderVO(frm)) {");
+  });
+});

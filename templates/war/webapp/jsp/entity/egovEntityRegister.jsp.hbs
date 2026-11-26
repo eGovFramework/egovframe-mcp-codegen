@@ -52,7 +52,8 @@ function fn_egov_delete() {
 }
 function fn_egov_save() {
 	frm = document.detailForm;
-	if(!validate{{entityName}}VO(frm)){
+	// validator.xml 에 {{voName}} form 이 없으면 검증 함수가 생성되지 않는다 — 그 경우에도 제출은 막지 않는다 (서버 검증은 동작).
+	if (typeof validate{{entityName}}VO === 'function' && !validate{{entityName}}VO(frm)) {
 		return;
 	}else{
 		frm.action = "<c:url value="${registerFlag == 'create' ? '/add{{entityName}}.do' : '/update{{entityName}}.do'}"/>";

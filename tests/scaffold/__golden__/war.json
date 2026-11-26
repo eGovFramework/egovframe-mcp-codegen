@@ -173,7 +173,7 @@
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/board/egovBoardRegister.jsp",
-      "sha256": "55928504c197e57249755065ac8282989b96ec8c7d18b1fa03182d99a19729ee"
+      "sha256": "a1bba89d3e5ff96e75efabb4ae8c95bf37d3744c9a8a26c462d5f6b34b8e48fd"
     },
     {
       "path": "src/main/webapp/WEB-INF/jsp/egovframework/example/cmmn/dataAccessFailure.jsp",

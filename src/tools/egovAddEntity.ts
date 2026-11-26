@@ -205,6 +205,37 @@ async function renderMigrationContent(
   return Handlebars.compile(raw)(ctx);
 }
 
+const WAR_VALIDATOR_REL_PATH = "src/main/webapp/WEB-INF/config/egovframework/validator/validator.xml";
+
+type ValidatorFormResult =
+  | { status: "notApplicable" }
+  | { status: "inserted" | "exists" | "missing"; relPath: string };
+
+/**
+ * (WAR) 기존 validator.xml 의 `</formset>` 바로 앞에 새 엔티티의 `<form>` 블록을 삽입한다.
+ * 같은 이름의 form 이 이미 있으면 그대로 둔다. 스택에 addEntityValidator 가 없으면 아무것도 하지 않는다.
+ */
+async function applyValidatorForm(args: {
+  projectDir: string;
+  templateBasePath: string;
+  ctx: import("../utils/scaffold/scaffoldGenerator.js").ScaffoldContext;
+}): Promise<ValidatorFormResult> {
+  const partial = args.ctx.stack.addEntityValidator;
+  if (!partial) return { status: "notApplicable" };
+  const absPath = path.join(args.projectDir, WAR_VALIDATOR_REL_PATH);
+  if (!(await fs.pathExists(absPath))) return { status: "missing", relPath: WAR_VALIDATOR_REL_PATH };
+  const xml = await fs.readFile(absPath, "utf-8");
+  if (xml.includes(`<form name="${args.ctx.voName}">`)) return { status: "exists", relPath: WAR_VALIDATOR_REL_PATH };
+  const closeIdx = xml.lastIndexOf("</formset>");
+  if (closeIdx < 0) return { status: "missing", relPath: WAR_VALIDATOR_REL_PATH };
+  const block = await renderMigrationContent(args.templateBasePath, partial, args.ctx as unknown as Record<string, unknown>);
+  // </formset> 줄의 들여쓰기는 유지하고, 블록은 줄바꿈 하나로 끝나게 맞춘다.
+  const lineStart = xml.lastIndexOf("\n", closeIdx) + 1;
+  const updated = xml.slice(0, lineStart) + block.replace(/\s*$/, "\n") + xml.slice(lineStart);
+  await fs.writeFile(absPath, updated, "utf-8");
+  return { status: "inserted", relPath: WAR_VALIDATOR_REL_PATH };
+}
+
 /**
  * autoApplyMessages 옵션의 처리 전략을 결정한다.
  *
@@ -876,6 +907,12 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
       }
     }
 
+    // 7-b2) (WAR) validator.xml 에 새 엔티티의 <form> 블록 삽입.
+    //   등록 JSP 의 <validator:javascript formName="{entity}VO"> 가 validate{Entity}VO() 를 만들려면
+    //   validator.xml 에 같은 이름의 form 이 있어야 한다. 없으면 등록 버튼이 ReferenceError 로 멈춘다.
+    //   같은 form 이 이미 있으면 건드리지 않는다 (재실행 멱등).
+    const validatorResult = await applyValidatorForm({ projectDir, templateBasePath, ctx });
+
     // 7-c) autoApplyMenu 처리.
     //   - false (기본): 메뉴는 사용자가 직접 관리. nav fragment 는 첫 스캐폴드 시 만들어진 그대로 유지.
     //   - true:
@@ -1065,6 +1102,19 @@ export async function egovAddEntity(rawParams: unknown): Promise<string> {
           );
         }
       }
+    }
+
+    // validator.xml 처리 결과 안내 (WAR 전용)
+    if (validatorResult.status === "inserted") {
+      lines.push("", `✅ validator.xml 갱신: <form name="${ctx.voName}"> 블록을 삽입했습니다 (${validatorResult.relPath}).`);
+    } else if (validatorResult.status === "exists") {
+      lines.push("", `ℹ️  validator.xml 에 <form name="${ctx.voName}"> 이 이미 있어 그대로 두었습니다 (${validatorResult.relPath}).`);
+    } else if (validatorResult.status === "missing") {
+      lines.push(
+        "",
+        `⚠️  validator.xml 을 찾지 못해 <form name="${ctx.voName}"> 블록을 넣지 못했습니다 (${validatorResult.relPath}).`,
+        `   이 블록이 없으면 등록 화면의 validate${ctx.entityName}VO() 가 생성되지 않습니다. 파일을 복구한 뒤 </formset> 앞에 form 블록을 추가하세요.`,
+      );
     }
 
     // 메시지 번들 처리 결과 안내 — 2 흐름

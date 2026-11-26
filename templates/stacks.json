@@ -88,6 +88,7 @@
       "staticAssets": "static50",
       "manifest": "manifests/war43.json",
       "addEntityMigration": "war/resources/add-entity-tables.sql.hbs",
+      "addEntityValidator": "war/webapp/validator-entity-form.xml.hbs",
       "addEntityMessages": {
         "defaultLocale": "war/message/message-entity-keys.properties.hbs",
         "en": "war/message/message-entity-keys_en.properties.hbs"

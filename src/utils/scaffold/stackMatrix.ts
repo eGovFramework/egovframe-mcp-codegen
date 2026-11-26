@@ -84,6 +84,14 @@ export interface StackEntry {
     en: string;
   };
   /**
+   * (WAR 전용) `egov_add_entity` 가 새 엔티티의 commons-validator `<form>` 블록을 기존
+   * validator.xml 의 `</formset>` 앞에 삽입할 때 쓰는 partial 템플릿 경로.
+   *
+   * 등록 JSP 의 `<validator:javascript formName="{entity}VO">` 는 validator.xml 에 같은 이름의
+   * form 이 있어야 `validate{Entity}VO()` 를 출력한다. 이 블록이 없으면 등록 버튼이 JS 오류로 멈춘다.
+   */
+  addEntityValidator?: string;
+  /**
    * 엔티티 간 메뉴 네비게이션 fragment 의 템플릿/출력 경로.
    *
    * - `template`: templates/ 기준 상대경로 (예: 'boot50/thymeleaf/_fragments/nav.html.hbs')
