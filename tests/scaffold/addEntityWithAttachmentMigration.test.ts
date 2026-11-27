@@ -76,7 +76,7 @@ describe("egov_add_entity — withAttachment 등록 화면과 CSRF 공존", () =
       "utf-8",
     );
     // CSRF 토큰은 multipart 본문 파트로 전송된다 — 내장 Tomcat 이 CsrfFilter 시점에
-    // 파트를 파싱해 주는 동작에 의존 (docs/design/security-config-templates.md 참조)
+    // 파트를 파싱해 주는 동작에 의존 (docs/architecture/SECURITY_CONFIG.md 참조)
     expect(register).toContain('enctype="multipart/form-data"');
     expect(register).toContain('id="csrfField"');
     expect(register).toContain('meta[name="_csrf_header"]');

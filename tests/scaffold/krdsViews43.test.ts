@@ -1,7 +1,7 @@
 /**
  * 4.3 Boot / 4.3 WAR 산출물 화면의 KRDS 전환 테스트.
  *
- * 설계: docs/superpowers/specs/2026-11-26-krds-views-43-design.md
+ * 설계: docs/architecture/SCREEN_TEMPLATES.md
  * 세 스택이 같은 KRDS 정적 자산(static50) 을 쓰고, 4.3 두 스택의 화면이 5.1 Boot 와 같은
  * 마크업·flatpickr 달력·KRDS 페이지네이션을 쓰는지 산출물 텍스트로 고정한다.
  */

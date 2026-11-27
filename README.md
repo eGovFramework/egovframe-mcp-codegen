@@ -1,166 +1,185 @@
 # eGovFrame MCP Codegen
 
-> **DDL 한 줄로 전자정부 표준프레임워크(eGovFrame) 프로젝트와 엔티티 CRUD 를 자동 생성하는 MCP 서버**
+> DDL 을 바탕으로 전자정부 표준프레임워크(eGovFrame) 프로젝트와 CRUD 코드를 생성하는 MCP 서버
 
 [![eGovFrame](https://img.shields.io/badge/eGovFrame-5.1.0-134F8C?labelColor=white&logo=data:image/svg%2Bxml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNzMuMjgyIDE3My4yODIiPjxwYXRoIGZpbGw9IiNmZmYiIGQ9Ik0xNzMuMjgyIDg2LjY1YzAgNDcuODQ0LTM4Ljc5NCA4Ni42MzItODYuNjQ2IDg2LjYzMkMzOC43OTkgMTczLjI4MiAwIDEzNC40OTQgMCA4Ni42NSAwIDM4Ljc4OCAzOC43OTkgMCA4Ni42MzYgMGM0Ny44NTIgMCA4Ni42NDYgMzguNzg4IDg2LjY0NiA4Ni42NSIvPjxwYXRoIGZpbGw9IiMwMDM3NjQiIGQ9Ik0xMjcuMzg5IDgwLjU5OGMtMTMuNzkxLTkuMzY1LTMxLjQzOS01LjU0Mi00MC43MTcgOC41MzMtNy43MiAxMS43NjctMTkuNDA1IDEzLjIzNS0yMy45MDYgMTMuMjM1LTE0Ljc1MSAwLTI0LjgyNC0xMC4zNjctMjcuODE4LTIxLjA5NWgtLjAxYy0uMDM5LS4xMDgtLjA1OS0uMi0uMDktLjMwNy0uMDI1LS4xMi0uMDU2LS4yMzMtLjA4OS0uMzY2LTEuMTc3LTQuNDY3LTEuNDY3LTYuNjA5LTEuNDY3LTExLjM2OCAwLTI1LjY1IDI2LjMyMS01NC4yMTMgNjQuMjE1LTU0LjIxMyAzOC44MjkgMCA2MS4wNSAyOS41NDUgNjYuNzggNDUuOTc5LS4xMDctLjI5NS0uMjA5LS41ODEtLjI5MS0uODc3LTExLjAxNS0zMi4xMjUtNDEuNDc0LTU1LjIxNi03Ny4zNTctNTUuMjE2LTQ1LjEzIDAtODEuNzI5IDM2LjU5LTgxLjcyOSA4MS43MzkgMCA0MC4zNTEgMjkuMTA4IDc0Ljg5MSA2OS40NzkgNzQuODkxIDMyLjE5NyAwIDUzLjg0Mi0xOC4wNTIgNjMuNzU3LTQyLjkzIDUuNDUtMTMuNjE0IDEuNTk1LTI5LjYwNS0xMC43NTctMzguMDA1Ii8%2BPHBhdGggZmlsbD0iI2U0MDMyZSIgZD0iTTE2NC43ODggNjIuNTg5Yy00Ljc3Ny0xNi4wMjYtMjcuMTUzLTQ3LjU3MS02Ny4yODItNDcuNTcxLTM3Ljg5NCAwLTY0LjIxNCAyOC41NjMtNjQuMjE0IDU0LjIxMiAwIDQuNzU5LjI5IDYuOTAxIDEuNDY2IDExLjM2OC0uNDg5LTEuOTUxLS43NC0zLjkwOC0uNzQtNS44MjMgMC0yNi43MjEgMjYuNzQxLTQ1LjIyNyA1NC4yNDgtNDUuMjI3IDM3LjIxOCAwIDY3LjM4OCAzMC4xNzQgNjcuMzg4IDY3LjM5IDAgMjkuMTczLTE2Ljc4NSA1NC40MzctNDEuMTc5IDY2LjU2NXYuMDIzYzMxLjQ1NS0xMS4zOTEgNTMuOTA4LTQxLjUxMiA1My45MDgtNzYuODg0IDAtOC4zNzgtMS4xMjctMTUuNzU5LTMuNTk1LTI0LjA1MyIvPjwvc3ZnPg%3D%3D)](https://www.egovframe.go.kr)
-[![Node](https://img.shields.io/badge/node-%3E%3D22.0.0-brightgreen.svg)](https://nodejs.org)
+[![Node](https://img.shields.io/badge/node-%3E%3D18-brightgreen.svg)](https://nodejs.org)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 
-## 📖 MCP 개요
+## 개요
 
-**MCP (Model Context Protocol)** 는 Anthropic 이 공개한 개방형 표준으로, LLM 클라이언트(Claude Desktop, Cursor, Claude Code 등) 와 외부 도구/데이터 소스를 안전하고 일관된 방식으로 연결합니다. MCP 서버는 stdio 또는 HTTP 위에 JSON-RPC 로 동작하며, LLM 에게 호출 가능한 **Tool** 목록과 각 Tool 의 입력 스키마를 노출합니다.
+**MCP (Model Context Protocol)** 는 AI 클라이언트(Claude Desktop, Claude Code, Cursor 등)와 외부 도구를 일관된 방식으로 연결하는 개방형 표준입니다. MCP 서버는 AI 가 호출할 수 있는 도구(Tool)의 목록과 각 도구의 입력 형식을 클라이언트에 알려 줍니다.
 
-**eGovFrame MCP Codegen** 은 이 MCP 표준을 따르는 코드 생성 전용 서버입니다. LLM 이 사용자의 자연어 요청을 받으면 서버가 노출한 4개의 Tool 중 적절한 것을 호출하고, 서버는 DDL 파싱 → Handlebars 템플릿 렌더링 → 파일 시스템 출력까지를 결정적(deterministic)으로 수행합니다. LLM 은 코드를 한 줄도 직접 생성하지 않습니다 — 모든 산출물은 eGovFrame 표준 템플릿으로부터 나옵니다.
+**eGovFrame MCP Codegen (코드생성 MCP)** 은 이 표준을 따르는 코드 생성 서버입니다. 사용자가 AI 클라이언트에 DDL 과 함께 자연어로 생성을 요청하면, AI 가 4개의 도구 가운데 알맞은 도구를 호출합니다. DDL 해석, 템플릿 렌더링, 파일 생성은 모두 서버의 코드가 정해진 규칙에 따라 수행하며, 모든 산출물은 표준프레임워크 템플릿에서 만들어집니다. AI 는 코드를 직접 작성하지 않으므로, 같은 DDL 로 요청하면 항상 같은 코드가 생성됩니다.
 
-이 서버는 **eGovFrame 4.3 Boot / 4.3 WAR / 5.1 Boot** 세 스택의 표준 레이아웃(Controller/Service/ServiceImpl/Mapper/VO + Thymeleaf 또는 JSP 화면)을 알고 있으며, 충돌 시 거부(no force-overwrite), 공용 설정 파일은 건드리지 않는 안전 우선 동작을 기본으로 합니다.
+## 주요 기능
 
-## 🛠️ 제공 도구 (Tools)
+| 기능 | 설명 |
+|------|------|
+| 3개 스택 지원 | 5.1 Boot, 4.3 Boot, 4.3 WAR 의 표준 구조로 생성합니다. |
+| 바로 실행되는 프로젝트 | Controller, Service, MyBatis Mapper, VO, KRDS 화면과 페이징, 검색, 유효성 검증, 예외 처리가 들어 있고, 내장 HSQLDB 로 바로 실행할 수 있습니다. |
+| 사용자 확인 | 스택이나 첨부파일 포함 여부를 지정하지 않으면 서버가 MCP Elicitation 으로 사용자에게 직접 묻습니다. |
+| 화면 라벨 | 컬럼과 테이블의 COMMENT 를 화면 라벨로 사용합니다. |
+| 운영 DB 용 SQL | 7개 DBMS(Oracle, Tibero, Altibase, CUBRID, Goldilocks, MySQL, PostgreSQL)용 SQL 을 함께 생성합니다. |
+| 보안 설정 | 5.1 Boot 프로젝트에는 Spring Security 설정(보안 응답 헤더, CSRF, 방화벽, CORS)이 기본으로 들어갑니다. |
 
-네 개의 MCP Tool 을 제공합니다.
+- **덮어쓰지 않음**: 기존 파일을 덮어쓰는 옵션이 없습니다. 엔티티나 조회 화면을 추가할 때 만들 파일 가운데 하나라도 이미 있으면 생성 전체를 거부합니다.
+- **오프라인 동작**: 실행에 필요한 의존 패키지가 배포 파일에 함께 들어 있어서 폐쇄망에서도 설치하고 실행할 수 있습니다.
 
-### 1. `egov_scaffold_project`
+## 지원 스택
 
-DDL 한 줄로부터 eGovFrame 프로젝트 전체 골격을 신규 생성합니다.
+| 스택 | 실행환경 | Java | 기반 | 화면 |
+|------|----------|------|------|------|
+| 5.1 Boot | 5.1.0 | 17 | Spring Boot 3 | Thymeleaf |
+| 4.3 Boot | 4.3.2 | 8 | Spring Boot 2.7 | Thymeleaf |
+| 4.3 WAR | 4.3.2 | 8 | Spring 5.3 | JSP, Tomcat 에 배포 |
 
-- `stackVersion: "5.1"` → eGovFrame 5.1 Boot (JDK 17 기준, Jakarta + Thymeleaf Spring6 + KRDS)
-- `stackVersion: "4.3"` → eGovFrame 4.3 Boot (JDK 8 기준, javax + Thymeleaf Spring5 + KRDS)
-- `stackVersion` 을 생략하면 서버가 Elicitation 으로 사용자에게 버전을 직접 묻습니다 (기본값 없음). `projectType` 까지 생략하면 선택지에 5.1 Boot / 4.3 Boot / 4.3 WAR 가 모두 보이고, WAR 를 고르면 첨부파일 질문 없이 끝납니다. `projectType='boot'` 를 명시하고 `withAttachment` 도 생략했으면 질문 하나로 두 항목을 같이 묻습니다. 구 명칭 `"5.0"` 은 더 이상 받지 않습니다
-- `projectType: "war"` → 전통 WAR + JSP + Tomcat 배포 (stack 4.3 만 지원, WAR + 5.1 조합은 거부). 화면은 Boot 와 같은 KRDS 형식
-- CRUD, 페이징, 검색, 유효성 검증, 예외 처리, 서비스 계층, MyBatis 매퍼, 정적 리소스 포함
-- 5.1 Boot 산출물은 공통컴포넌트(security 방식)를 참조한 Spring Security 보안 설정
-  (`EgovConfigWebSecurity`)을 기본 포함 — 보안 응답 헤더, CSRF 보호(기본 활성,
-  `egov.security.csrf` 로 토글), 명시적 StrictHttpFirewall, 프로퍼티 구동 CORS(기본 비활성).
-  4.3 Boot / WAR 산출물에는 적용되지 않음 (Phase A — `docs/design/security-config-templates.md`)
-- DDL 정규화(케이스/공백/인용부호) 기본 on — 의미를 바꾸지 않는 보수적 변환만 수행
+세 스택의 화면은 모두 KRDS(대한민국 정부 디자인 시스템)의 마크업과 정적 자산을 사용합니다.
 
-| 파라미터        | 타입    | 필수 | 설명                                                              |
-|---------------|--------|------|-------------------------------------------------------------------|
-| projectName   | string | ✓    | Maven artifactId (예: `board-app`)                                |
-| packageName   | string | ✓    | Base Java 패키지 (예: `egovframework.example.board`)              |
-| outputPath    | string | ✓    | 프로젝트 폴더가 생성될 부모 디렉터리                                |
-| entityName    | string | ✓    | PascalCase 엔티티 이름 (예: `Board`)                              |
-| ddl           | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
-| projectType   | string |      | `boot` / `war`. 사용자가 밝히지 않았다면 생략 — 생략 시 `stackVersion` 질문의 선택지에 4.3 WAR 가 함께 보임 (`withAttachment=true` 면 Boot 로 간주) |
-| stackVersion  | string |      | `5.1` / `4.3`. 생략하면 Elicitation 으로 사용자에게 묻고 (`projectType` 도 생략됐으면 5.1 Boot / 4.3 Boot / 4.3 WAR 중 선택), 미지원 클라이언트에서는 사용자에게 물은 뒤 지정해 재호출하라는 오류 반환. `projectType='war'` 면 묻지 않고 `4.3` 으로 확정. `5.0` 은 거부 |
-| normalizeDdl  | bool   |      | DDL 정규화 + 진단 보고서 첨부 (기본 true)                          |
-| description   | string |      | 프로젝트 한 줄 설명                                                |
-| withAttachment | bool  |      | 생략하면 Elicitation 으로 사용자에게 첨부파일 포함 여부를 묻고 (`projectType='boot'` 명시 + `stackVersion` 생략이면 같은 질문에 함께, `projectType` 도 생략이면 스택 질문에서 Boot 를 고른 뒤에 이어서), 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류를 반환. `true` 면 첨부파일 인프라를 설치하고 첫 엔티티에 연결, 사용자가 `decline` 하면 첨부 없이 생성 (Boot 전용: 5.1, 4.3. WAR 에서 `true` 는 거부, 생략하면 질문 없이 첨부 없이 생성) |
+## 제공 도구
 
-### 2. `egov_add_entity`
+이 MCP 서버는 도구 4개를 노출합니다.
 
-이미 생성된 eGovFrame 프로젝트에 새 엔티티의 CRUD 세트를 추가합니다.
+| 도구 | 용도 | 대상 스택 |
+|------|------|-----------|
+| [`egov_scaffold_project`](docs/reference/EGOV_SCAFFOLD_PROJECT_TOOL.md) | DDL 하나로 프로젝트 전체를 새로 생성 | 세 스택 |
+| [`egov_add_entity`](docs/reference/EGOV_ADD_ENTITY_TOOL.md) | 기존 프로젝트에 새 엔티티의 CRUD 코드를 추가 | 세 스택 |
+| [`egov_add_query_view`](docs/reference/EGOV_ADD_QUERY_VIEW_TOOL.md) | 다중 JOIN `SELECT` 문으로 조회 전용 화면을 추가 | 세 스택 |
+| [`egov_add_attach_file_infrastructure`](docs/reference/EGOV_ADD_ATTACH_FILE_INFRASTRUCTURE_TOOL.md) | 표준 첨부파일 인프라를 설치 | 5.1 Boot, 4.3 Boot |
 
-- `projectType` / `stackVersion` 은 기존 `pom.xml` 에서 자동 감지 (지정 불필요)
-- 생성될 파일 중 하나라도 충돌하면 **전체 거부** (덮어쓰기 옵션 없음)
-- `pom.xml` / `application.properties` / `sql-mapper-config.xml` 같은 공용 설정은 건드리지 않음. 단 `withAttachment=true` 이고 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치하므로 이 경우에 한해 `application.properties`, 메시지 번들, 시드 SQL 등도 수정됨 (Boot 만 지원: 5.1, 4.3)
+아래에는 필수 인자와 자주 쓰는 인자만 적었습니다. 전체 인자와 세부 동작은 각 도구의 문서와 [`docs/reference/TOOLS_OVERVIEW.md`](docs/reference/TOOLS_OVERVIEW.md) 에 있습니다.
 
-| 파라미터              | 타입    | 필수 | 설명                                                                 |
-|---------------------|--------|------|----------------------------------------------------------------------|
-| projectPath         | string | ✓    | 기존 eGovFrame 프로젝트 루트 (`pom.xml` 존재 필수)                    |
-| packageName         | string | ✓    | 새 엔티티의 풀 Java 패키지                                            |
-| entityName          | string | ✓    | PascalCase 엔티티 이름                                                |
-| ddl                 | string | ✓    | `CREATE TABLE …` DDL 문 (컬럼/테이블 COMMENT 는 화면 라벨로 사용. 괄호 밖 구분 문자(, / ; :) 포함·괄호 앞이 비어 있음·10자 초과 코멘트는 컬럼명 표기로 폴백) |
-| autoApplyMigration  | bool   |      | 시드 SQL 파일에 마이그레이션 DDL append (기본 true)                  |
-| autoApplyMessages   | bool   |      | 메시지 번들 3종에 키 자동 append (기본 true)                          |
-| autoApplyMenu       | bool   |      | nav fragment 자동 재생성 + 기존 List 화면에 include 라인 삽입 (기본 false) |
-| withAttachment      | bool   |      | 표준 첨부파일(`atchFileId`) 와이어드 엔티티로 생성. true 이고 인프라가 없으면 기본 옵션으로 함께 설치 (Boot 전용: 5.1, 4.3). 생략 시 Elicitation 으로 사용자에게 확인하며, 미지원 클라이언트에서는 사용자에게 물은 뒤 true/false 로 지정해 재호출하라는 오류 반환 |
-| idGeneration        | string |      | `auto` (기본, EgovTableIdGnrServiceImpl) / `manual` (코드 마스터 테이블) |
+### `egov_scaffold_project`
 
-### 3. `egov_add_query_view`
+DDL 로 표준프레임워크 프로젝트 전체를 새로 생성합니다.
 
-이미 생성된 eGovFrame 프로젝트(5.1 Boot / 4.3 Boot / 4.3 WAR)에 다중 JOIN 기반 read-only 조회 화면(리포트성 View) 을 추가합니다.
+| 인자 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `projectName` | string | 필수 | 프로젝트 폴더의 이름이자 Maven `artifactId` (예: `board-app`) |
+| `packageName` | string | 필수 | 첫 엔티티의 Java 패키지 (예: `egovframework.example.board`) |
+| `outputPath` | string | 필수 | 프로젝트 폴더를 만들 상위 디렉터리 |
+| `entityName` | string | 필수 | PascalCase 엔티티 이름 (예: `Board`) |
+| `ddl` | string | 필수 | `CREATE TABLE` 문 |
+| `projectType` | `"boot"` \| `"war"` | 선택 | `boot` 또는 `war`. 생략하면 서버가 사용자에게 묻습니다. |
+| `stackVersion` | `"5.1"` \| `"4.3"` | 선택 | `5.1` 또는 `4.3`. 생략하면 서버가 사용자에게 묻습니다. |
+| `withAttachment` | boolean | 선택 | 첫 엔티티에 첨부파일을 연결할지 여부. 생략하면 서버가 사용자에게 묻습니다. Boot 에서만 지원합니다. |
 
-- 일반 CRUD 와 달리 등록/수정/삭제는 만들지 않고 **List + 페이징 + 검색**만 생성
-- 사용자가 작성한 raw `SELECT` SQL 본문을 그대로 사용. 도구는 derived table 로 wrapping 해 페이징/검색을 외부에서 안전하게 적용
-- 컬럼 메타(alias / label / type / format) 가 VO 필드와 화면 렌더링을 모두 결정
-- 5.1 Boot / 4.3 Boot (Thymeleaf 화면), 4.3 WAR (JSP 화면) 지원. 스택은 `pom.xml` 에서 자동 감지
+`outputPath` 아래에 같은 이름의 비어 있지 않은 폴더가 있으면 거부합니다. WAR 와 5.1 의 조합은 지원하지 않습니다.
 
-| 파라미터          | 타입     | 필수 | 설명                                                                |
-|-----------------|---------|------|---------------------------------------------------------------------|
-| projectPath     | string  | ✓    | 기존 eGovFrame 프로젝트(5.1 Boot / 4.3 Boot / 4.3 WAR) 루트          |
-| packageName     | string  | ✓    | Query view 를 둘 Java 패키지                                         |
-| viewName        | string  | ✓    | PascalCase view 이름 (예: `StudentEnrollmentReport`)                |
-| sql             | string  | ✓    | 조회 본문 `SELECT` 문 (LIMIT/OFFSET 제외, alias 명시 필수)            |
-| columns         | array   | ✓    | 컬럼 메타 (`alias`, `label`, `type`, `format`)                       |
-| searchable      | array   |      | 검색 dropdown 에 노출될 alias 목록 (빈 배열 = 검색 UI 숨김)           |
-| defaultOrderBy  | string  |      | 기본 `ORDER BY` 절                                                  |
-| autoApplyMenu   | bool    |      | nav fragment 에 메뉴 자동 추가 (기본 true)                            |
-| autoApplyMessages | bool  |      | 컬럼 라벨/메뉴 라벨을 메시지 번들에 자동 append (기본 true)           |
+### `egov_add_entity`
 
-### 4. `egov_add_attach_file_infrastructure`
+기존 프로젝트에 새 엔티티의 CRUD 코드를 추가합니다. 스택은 `pom.xml` 에서 감지합니다.
 
-eGovFrame Boot(5.1, 4.3) 프로젝트에 표준 첨부파일 인프라를 1회 설치합니다 — **자체 보안 정책 + multipart 한도 + 업로드 에러 UX 까지 포함된 완성형**.
+| 인자 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `projectPath` | string | 필수 | 기존 프로젝트의 루트 경로 (`pom.xml` 필요) |
+| `packageName` | string | 필수 | 새 엔티티의 Java 패키지 |
+| `entityName` | string | 필수 | PascalCase 엔티티 이름 |
+| `ddl` | string | 필수 | `CREATE TABLE` 문 |
+| `idGeneration` | `"auto"` \| `"manual"` | 선택 | `auto`(기본값)는 `EgovTableIdGnrServiceImpl` 로 기본 키를 자동 채번하고, `manual` 은 사용자가 직접 입력합니다. |
+| `withAttachment` | boolean | 선택 | 엔티티에 첨부파일을 연결할지 여부. 생략하면 서버가 사용자에게 묻습니다. Boot 에서만 지원합니다. |
+| `autoApplyMigration` | boolean | 선택 | 새 테이블의 DDL 을 내장 HSQLDB 의 시드 SQL 에 덧붙입니다 (기본값 `true`). |
+| `autoApplyMessages` | boolean | 선택 | 메시지 키를 메시지 번들에 덧붙입니다 (기본값 `true`). |
+| `autoApplyMenu` | boolean | 선택 | 메뉴에 새 엔티티를 추가합니다 (기본값 `false`). |
 
-**구성 (자동 생성/등록되는 산출물 19종)**
+DDL 의 외래키가 참조하는 엔티티가 프로젝트에 있으면, 등록 화면에 콤보 상자를 만들고 목록 화면에 참조 엔티티의 이름을 표시합니다.
 
-- DB: `COMTNFILE` / `COMTNFILEDETAIL` 두 테이블 + 시퀀스 관리 테이블(`COMTECOPSEQ`) — dialect 별 7개 DDL
-- Java: `EgovFileMngService` / `Impl`, `FileVO`, `EgovFileMngUtil`, `FileManageMapper`, `EgovFileDownloadController`, `EgovConfigAttachFile` Bean, `EgovFileUploadExceptionAdvice` (`@ControllerAdvice`)
-- MyBatis: `EgovFileMng_SQL.xml`
-- View: `cmm/uploadError.html` (inline 에러 페이지) + `_fragments/alertMessages.html`
-- Properties: `Globals.fileStorePath` + multipart 한도 + 보안 정책 키 + 메시지 번들 키 3종 (ko/base/en) 자동 append
+### `egov_add_query_view`
 
-**핵심 동작**
+여러 테이블을 JOIN 하는 `SELECT` 문으로 조회 전용 화면(리포트 화면)을 추가합니다. 목록, 페이징, 검색만 만들고 등록, 수정, 삭제는 만들지 않습니다.
 
-- `atchFileId` 채번: `EgovTableIdGnrServiceImpl` (prefix=`FILE_`, cipers=15) — 정확히 `CHAR(20)` PK 와 길이 일치
-- 충돌 시 거부 (force/overwrite 옵션 없음). `skipIfPresent=true` (기본) 면 동일 내용 존재 시 no-op
-- 업로드 예외(크기 초과 / 실행파일 차단) 발생 시 `cmm/uploadError` view 가 한국어 안내 + "이전 화면" / "처음으로" 버튼 표시
-- `egov_add_entity` / `egov_scaffold_project` 의 `withAttachment: true` 는 인프라가 없으면 기본 옵션으로 자동 설치하므로 사전 호출은 필수가 아닙니다. 화이트리스트·한도 등 세부 옵션이 필요할 때만 이 도구를 먼저 호출하세요
+| 인자 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `projectPath` | string | 필수 | 기존 프로젝트의 루트 경로 |
+| `packageName` | string | 필수 | 조회 화면의 코드를 둘 Java 패키지 |
+| `viewName` | string | 필수 | PascalCase 화면 이름 (예: `StudentEnrollmentReport`) |
+| `sql` | string | 필수 | 조회에 사용할 `SELECT` 문. 컬럼마다 `AS` 로 별칭을 붙이고, `LIMIT` 과 `OFFSET` 은 넣지 않습니다. |
+| `columns` | object[] | 필수 | 컬럼 정보의 목록 (`alias`, `label`, `type`, `format`) |
+| `searchable` | string[] | 선택 | 검색 조건으로 쓸 컬럼의 별칭 목록 |
+| `defaultOrderBy` | string | 선택 | 기본 정렬 (예: `studentId DESC`) |
 
-| 파라미터              | 타입       | 필수 | 설명                                                              |
-|---------------------|-----------|------|-------------------------------------------------------------------|
-| projectPath         | string    | ✓    | 기존 eGovFrame Boot(5.1, 4.3) 프로젝트 루트                              |
-| fileStorePath       | string    |      | `Globals.fileStorePath` 절대경로. 비우면 OS 임시 디렉터리 fallback |
-| idGnrPrefix         | string    |      | atchFileId 채번 prefix (기본 `FILE_`)                              |
-| idGnrCipers         | number    |      | atchFileId 채번 자릿수 (기본 15, prefix+cipers=20 강제)            |
-| **maxFileSize**     | string    |      | Spring multipart 단일 파일 한도. 단위 B/KB/MB/GB (기본 `10MB`). EgovFileMngUtil 의 도메인 정책 한도(`egov.attach.maxFileSize`) 도 같은 값으로 자동 설정 |
-| **maxRequestSize**  | string    |      | Spring multipart 요청 전체 합산 한도 (기본 `50MB`)                 |
-| **allowedExtensions** | string[] |      | 화이트리스트 (예: `["pdf","docx","xlsx","png","jpg"]`). 지정 시 이 목록에 없는 확장자는 모두 거부. 비어 있으면 화이트리스트 비활성화 (기본) |
-| **blockedExtensions** | string[] |      | 추가 블랙리스트 (기본 P0 셋에 합산). 기본 셋이 이미 exe/bat/sh/jsp/php/svg/html 등 차단하므로 운영 정책으로 더 막을 경우에만 |
-| autoApplyProperties | bool      |      | `application.properties` 에 `Globals.fileStorePath` + multipart + 보안 키 자동 append (기본 true) |
-| skipIfPresent       | bool      |      | 모든 출력 파일이 동일 내용으로 존재 시 no-op (기본 true)            |
+### `egov_add_attach_file_infrastructure`
 
-#### 🔐 자동 적용되는 보안 정책
+Boot 프로젝트에 표준 첨부파일 인프라를 설치합니다. 첨부파일 테이블 DDL, 파일 관리 Service 와 Mapper, 다운로드 Controller, 업로드 오류 화면, 저장 경로와 용량과 확장자 정책의 설정을 만듭니다.
 
-본 도구가 설치하는 첨부파일 인프라는 다음 보안 방어선을 **기본으로** 제공합니다 — 추가 설정 없이 활성:
+| 인자 | 타입 | 필수 | 설명 |
+|------|------|------|------|
+| `projectPath` | string | 필수 | 기존 Boot(5.1, 4.3) 프로젝트의 루트 경로 |
+| `fileStorePath` | string | 선택 | 파일 저장 경로. 기본값은 운영체제 임시 디렉터리 아래의 `egov-upload` 입니다. |
+| `maxFileSize`, `maxRequestSize` | string | 선택 | 파일 하나와 요청 전체의 크기 한도 (기본값 `10MB`, `50MB`) |
+| `allowedExtensions` | string[] | 선택 | 허용할 확장자의 목록. 지정하면 목록에 없는 확장자를 모두 거부합니다. |
+| `blockedExtensions` | string[] | 선택 | 기본 차단 목록에 더할 확장자 |
 
-| 방어선 | 적용 위치 | 동작 |
-|---|---|---|
-| **Path traversal 차단** | `EgovFileMngUtil.safeChild` | `../etc/passwd` 같은 디렉터리 탈출 시 `SecurityException` |
-| **저장 파일명 재생성** | `parseFileInf` | UUID — 사용자 입력 파일명이 디스크에 닿지 않음 |
-| **인라인 실행 차단** | `EgovFileDownloadController.downFile` | `Content-Type: application/octet-stream` + `Content-Disposition: attachment` 강제. HTML/SVG/JS 가 첨부되어도 브라우저가 인라인 실행 안 함 |
-| **CRLF 헤더 인젝션 차단** | `downFile` | 파일명에서 `\r\n` 제거 (response splitting 방어) |
-| **실행 가능 확장자 차단 (P0)** | `EgovFileMngUtil.DEFAULT_BLOCKED_EXTENSIONS` | `EXE/BAT/SH/JSP/PHP/SVG/HTML/JAR` 등 30+ 확장자. 더블 확장자(`a.jpg.exe`) 도 마지막 기준으로 잡음 |
-| **저장 경로 webroot 검증 (P0)** | `EgovFileMngUtil.@PostConstruct` | `Globals.fileStorePath` 가 `src/main/resources/static`, `src/main/webapp`, `classpath:` 등과 겹치면 **부팅 거부** |
-| **운영 추가 블랙리스트 (P1)** | `egov.attach.blockedExtensions` | `blockedExtensions` 파라미터로 기본 셋에 추가 |
-| **화이트리스트 모드 (P1)** | `egov.attach.allowedExtensions` | `allowedExtensions` 파라미터 지정 시 해당 목록 외 모두 거부 |
-| **도메인 정책 파일 크기 (P1)** | `egov.attach.maxFileSize` | Spring multipart 한도와 별개로 컨트롤러 진입 시점에 한 번 더 검사 |
-| **업로드 예외 UX** | `EgovFileUploadExceptionAdvice` | `MaxUploadSizeExceededException` / `SecurityException` 잡아서 `cmm/uploadError` view 로 한국어 안내. referer URL/method 매핑에 의존하지 않음 |
+`egov_scaffold_project` 와 `egov_add_entity` 는 `withAttachment=true` 일 때 인프라가 없으면 기본 옵션으로 함께 설치합니다. 따라서 이 도구는 저장 경로나 정책을 기본값과 다르게 설치할 때만 먼저 호출합니다.
 
-⚠️ **여전히 외부 조치가 필요한 부분** (이번 인프라가 자동으로 해주지 않는 것):
+설치되는 인프라는 실행 가능한 확장자의 차단, 저장 파일명의 UUID 변환, 경로 탈출 방어, 다운로드 응답의 첨부 처리를 기본으로 제공합니다. 다운로드 URL 의 접근 제어, 악성코드 검사, 파일 내용 검사는 제공하지 않으므로 프로젝트에서 따로 갖추어야 합니다. 상세한 내용은 [`docs/architecture/ATTACH_FILE.md`](docs/architecture/ATTACH_FILE.md) 에 있습니다.
 
-- **다운로드 URL 인증/인가** (`/cmm/fms/FileDown.do`) — 5.1 은 Spring Security 정책으로 보호 권장, 4.3 은 접근 제어가 없으므로 인증 체계 도입 시 보호. 기본은 열려 있어 `atchFileId`+`fileSn` 만 알면 누구나 다운로드 가능 (IDOR)
-- **antivirus 스캔** — 자체 후크 없음. 운영 환경에서는 ClamAV 등 외부 스캔 권장
-- **MIME 매직넘버 검증** — 확장자만 검사하며 실제 내용은 검증 안 함 (`.jpg` 로 리네임된 `.exe` 우회 가능. 다만 다운로드 시 `octet-stream` 강제라 인라인 실행은 막힘)
+## 설치
 
-## 🚀 설치 (Installation)
+### 요구 사항
 
-### Prerequisites
+- **Node.js**: 18 이상 (22 권장)
+- **JDK 와 Maven**: 생성된 프로젝트를 빌드하고 실행하려면 JDK 와 Maven 이 필요합니다. 5.1 Boot 는 JDK 17, 4.3 Boot 와 4.3 WAR 는 JDK 8 을 기준으로 합니다.
 
-- **Node.js**: v18.0.0 이상 (v22.x 권장)
-- **npm**: v8.0.0 이상
+### 1. 배포 파일(tgz) 내려받기
 
-### Build
+[표준프레임워크 포털](https://www.egovframe.go.kr/home/sub.do?menuNo=114)에서 `egovframe-mcp-codegen-5.1.0.tgz` 를 내려받습니다. 실행에 필요한 의존 패키지가 모두 들어 있으며, 하나의 파일을 Windows, macOS, Linux 에서 공통으로 사용합니다.
+
+### 2. 서버 실행 명령
+
+압축을 풀지 않고 `npx` 로 실행하도록 AI 클라이언트에 등록합니다. 아래에서 `<TGZ>` 는 tgz 파일의 절대 경로입니다.
 
 ```bash
-npm install
-npm run build
+npx -y --package=<TGZ> egovframe-mcp-codegen
 ```
 
-## 🔧 MCP 클라이언트 설정 (Configuration)
+Windows 에서는 `cmd /c` 로 감싸서 실행합니다.
 
-### Claude Desktop
+```bat
+cmd /c npx -y --package=<TGZ> egovframe-mcp-codegen
+```
 
-**macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
+### 3. AI 클라이언트 등록
+
+`mcpServers` 형식을 쓰는 AI 클라이언트에는 다음 항목을 등록합니다.
+
+**macOS, Linux**
+
+```json
+{
+  "mcpServers": {
+    "egovframe-mcp-codegen": {
+      "command": "npx",
+      "args": ["-y", "--package=<TGZ>", "egovframe-mcp-codegen"]
+    }
+  }
+}
+```
+
+**Windows**
+
+```json
+{
+  "mcpServers": {
+    "egovframe-mcp-codegen": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "--package=<TGZ>", "egovframe-mcp-codegen"]
+    }
+  }
+}
+```
+
+Claude Code, Codex, Cursor, VS Code (GitHub Copilot), Cline, OpenCode, Claude Desktop 에 등록하는 방법(CLI 명령, 설정 파일의 위치와 형식)은 [`docs/setup/MCP_SETUP_GUIDE.md`](docs/setup/MCP_SETUP_GUIDE.md#ai-클라이언트별-등록) 에 있습니다. 환경 변수와 문제 해결도 같은 문서에서 다룹니다.
+
+### 저장소를 클론해서 실행 (개발자)
+
+```bash
+git clone https://github.com/eGovFramework/egovframe-mcp-codegen.git
+cd egovframe-mcp-codegen
+npm install    # prepare 스크립트가 빌드까지 실행합니다
+```
+
+클라이언트에는 `build/index.js` 를 절대 경로로 등록합니다.
 
 ```json
 {
@@ -173,60 +192,35 @@ npm run build
 }
 ```
 
-**Windows**: `%APPDATA%\Claude\claude_desktop_config.json` (경로만 Windows 형식으로 치환)
+### 환경 변수
 
-#### 환경변수 (선택 사항)
+서버는 환경 변수 없이 동작합니다. 템플릿 디렉터리는 `build/index.js` 가 놓인 패키지의 `templates/` 에서 찾습니다. 템플릿을 다른 위치에 둘 때에만 다음 변수를 지정합니다.
 
-이 서버는 **환경변수 없이도 동작**합니다. 서버는 빌드 산출물(`build/index.js`) 기준 상대 경로(`../templates`) 에서 템플릿 디렉터리를 자동으로 찾습니다. 패키지를 그대로 사용한다면 별도 설정이 필요 없습니다.
+| 환경 변수 | 용도 | 기본값 |
+|-----------|------|--------|
+| `EGOVFRAME_SCAFFOLD_TEMPLATE_PATH` | 템플릿 디렉터리의 절대 경로 | 패키지의 `templates/` |
+| `EGOVFRAME_STACK_MATRIX_PATH` | 스택 정의 파일(`stacks.json`)의 경로 | `<템플릿 디렉터리>/stacks.json` |
 
-템플릿 디렉터리를 다른 위치로 옮겨야 하는 경우에만 다음 환경변수를 지정하세요:
+## 사용 예시
 
-| 환경변수                              | 용도                                                                    | 기본값                                  |
-|-----------------------------------|-----------------------------------------------------------------------|-----------------------------------------|
-| `EGOVFRAME_SCAFFOLD_TEMPLATE_PATH` | `templates/` 디렉터리 절대 경로. 매니페스트(`templates/manifests/*.json`) 와 Handlebars 템플릿을 여기서 로드 | `build/index.js` 기준 `../../templates` |
-| `EGOVFRAME_STACK_MATRIX_PATH`     | `stacks.json` 파일 경로 (단독 지정 시)                                          | `${EGOVFRAME_SCAFFOLD_TEMPLATE_PATH}/stacks.json` |
+AI 클라이언트에 자연어로 요청하면 AI 가 알맞은 도구를 호출합니다.
 
-> ⚠️ 과거 문서에 `EGOVFRAME_TEMPLATE_PATH` 라는 이름이 적혀 있는 경우가 있는데, 실제 코드에서 사용하는 이름은 **`EGOVFRAME_SCAFFOLD_TEMPLATE_PATH`** 입니다.
+### 예시 1. 새 프로젝트 생성
 
-환경변수까지 명시한 설정 예:
+```text
+다음 DDL 로 표준프레임워크 5.1 Boot 게시판 프로젝트를 /workspace 에 만들어 줘. 첨부파일은 필요 없어.
 
-```json
-{
-  "mcpServers": {
-    "egovframe-mcp-codegen": {
-      "command": "node",
-      "args": ["/path/to/egovframe-mcp-codegen/build/index.js"],
-      "env": {
-        "EGOVFRAME_SCAFFOLD_TEMPLATE_PATH": "/custom/path/to/templates"
-      }
-    }
-  }
-}
+CREATE TABLE BOARD (
+  BOARD_ID   VARCHAR(20)  NOT NULL COMMENT '게시글ID',
+  TITLE      VARCHAR(200) NOT NULL COMMENT '제목',
+  CONTENT    TEXT                  COMMENT '내용',
+  WRITER     VARCHAR(50)           COMMENT '작성자',
+  CREATED_AT TIMESTAMP             COMMENT '등록일시',
+  PRIMARY KEY (BOARD_ID)
+) COMMENT='게시판'
 ```
 
-### Cursor
-
-`.cursor/mcp.json` 또는 settings 에서 동일한 형식으로 등록.
-
-## 💡 사용 예시 (Usage Examples)
-
-### 예시 1. 새 프로젝트 생성 (eGovFrame 5.1 Boot)
-
-```
-User: "다음 DDL 로 eGovFrame 5.1 Boot 게시판 프로젝트를 /workspace 에 만들어줘.
-       CREATE TABLE board (
-         board_id   VARCHAR(36)  PRIMARY KEY,
-         title      VARCHAR(200) NOT NULL,
-         content    TEXT,
-         writer     VARCHAR(50),
-         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-       )"
-
-Claude: (egov_scaffold_project 호출)
-        → /workspace/board-app/ 아래에 전체 프로젝트 골격 생성
-```
-
-LLM 이 자동 구성하는 도구 입력 예:
+AI 는 `egov_scaffold_project` 를 다음과 같은 입력으로 호출하고, `/workspace/board-app` 에 프로젝트가 생성됩니다.
 
 ```json
 {
@@ -234,190 +228,215 @@ LLM 이 자동 구성하는 도구 입력 예:
   "packageName": "egovframework.example.board",
   "outputPath": "/workspace",
   "entityName": "Board",
-  "ddl": "CREATE TABLE board (board_id VARCHAR(36) PRIMARY KEY, ...)",
-  "stackVersion": "5.1"
+  "ddl": "CREATE TABLE BOARD ( ... ) COMMENT='게시판'",
+  "projectType": "boot",
+  "stackVersion": "5.1",
+  "withAttachment": false
 }
 ```
 
-사용자가 버전을 말하지 않았다면 LLM 은 `stackVersion` 을 생략하고, 서버가 Elicitation 으로
-"표준프레임워크 5.1 (Spring Boot 3, Java 17)" / "표준프레임워크 4.3 (Spring Boot 2.7, Java 8)" /
-"표준프레임워크 4.3 WAR (Spring 5.3, Java 8, JSP + Tomcat)" 중 하나를 고르게 합니다
-(Boot 인지 WAR 인지도 말하지 않았을 때. `projectType='boot'` 를 명시했으면 WAR 는 보이지 않습니다).
+버전이나 첨부파일 포함 여부를 말하지 않으면 AI 는 해당 인자를 생략하고, 서버가 사용자에게 5.1 Boot, 4.3 Boot, 4.3 WAR 가운데 하나와 첨부파일 포함 여부를 묻습니다.
 
-### 예시 2. 기존 프로젝트에 엔티티 추가
+### 예시 2. 엔티티 추가
 
-```
-User: "/workspace/board-app 에 Article 엔티티를 추가해줘.
-       DDL: CREATE TABLE article (article_id VARCHAR(20) PRIMARY KEY, ...)"
+```text
+/workspace/board-app 에 Article 엔티티를 추가하고 메뉴에도 넣어 줘. 첨부파일은 필요 없어.
 
-Claude: (egov_add_entity 호출 — pom.xml 에서 stack 자동 감지)
-        → 새 Controller/Service/Mapper/View 생성
-        → 기존 시드 SQL 파일 끝에 DDL append
-        → 메시지 번들에 키 자동 추가
-```
-
-### 예시 3. 코드 마스터 테이블 (manual ID 채번)
-
-```
-User: "/workspace/board-app 에 배송상태 코드 테이블을 추가해줘.
-       DDL: CREATE TABLE delivery_status (stts_cd VARCHAR(10) PRIMARY KEY, stts_nm VARCHAR(50))"
-
-Claude: (egov_add_entity 호출, idGeneration: "manual")
-        → Register 화면에 PK 입력란 + required 검증 포함
+CREATE TABLE ARTICLE (
+  ARTICLE_ID VARCHAR(20)  NOT NULL COMMENT '기사ID',
+  BOARD_ID   VARCHAR(20)           COMMENT '게시판',
+  SUBJECT    VARCHAR(100) NOT NULL COMMENT '제목',
+  PRIMARY KEY (ARTICLE_ID),
+  CONSTRAINT FK_ARTICLE_BOARD FOREIGN KEY (BOARD_ID) REFERENCES BOARD(BOARD_ID)
+) COMMENT='기사'
 ```
 
-### 예시 4. 리포트성 조회 화면 추가
+AI 는 `egov_add_entity` 를 호출합니다. 서버는 `pom.xml` 에서 스택을 감지하고, `BOARD_ID` 가 참조하는 Board 엔티티를 찾아서 등록 화면에 콤보 상자를 만듭니다. 새 테이블의 DDL 은 시드 SQL 에, 메시지 키는 메시지 번들에 덧붙습니다.
 
-```
-User: "/workspace/academic-app 에 학생 수강 리포트 화면을 추가해줘.
-       SELECT s.student_id  AS studentId,
-              s.name         AS studentName,
-              c.course_name  AS courseName,
-              e.grade        AS grade
-       FROM student s
-       JOIN enrollment e ON e.student_id = s.student_id
-       JOIN course c     ON c.course_id  = e.course_id"
+### 예시 3. 첨부파일이 있는 엔티티 추가
 
-Claude: (egov_add_query_view 호출 — boot50 전용)
-        → 페이징/검색 가능한 read-only List 화면 생성
+```text
+/workspace/board-app 에 첨부파일을 올릴 수 있는 Notice 엔티티를 추가해 줘.
+DDL: CREATE TABLE NOTICE (NOTICE_ID VARCHAR(20) PRIMARY KEY, TITLE VARCHAR(200) NOT NULL COMMENT '제목')
 ```
 
-### 예시 5. 첨부파일 인프라 + 첨부 게시판
+AI 는 `egov_add_entity` 를 `withAttachment: true` 로 호출합니다. 프로젝트에 첨부파일 인프라가 없으면 기본 옵션으로 함께 설치되고, 등록 화면에 파일 선택, 기존 파일 목록, 다운로드 링크가 추가됩니다.
 
-```
-User: "보드 앱에 첨부파일 달린 NoticeBoard 엔티티를 추가해줘."
+### 예시 4. 조회 화면 추가
 
-Claude:
-  1) egov_add_entity 호출 (withAttachment 생략)
-     → Elicitation 지원 클라이언트: "엔티티 'NoticeBoard'에 표준 첨부파일 기능을 연결할까요?
-       프로젝트에 첨부파일 인프라가 없어 함께 설치됩니다." 를 사용자에게 직접 묻는다
-     → Elicitation 미지원 클라이언트: 파일을 만들지 않고 오류를 반환 —
-       Claude 가 사용자에게 물은 뒤 withAttachment 를 true/false 로 지정해 나머지 인자는 그대로 재호출
-  2) withAttachment: true 로 실행되면
-     → 인프라가 없을 때 기본 옵션으로 자동 설치 (BLOCKED_EXTENSIONS + webroot 검증 + ControllerAdvice +
-       uploadError view + multipart 한도 10MB/50MB + 메시지 번들 append)
-     → VO 에 atchFileId 필드, Controller 에 MultipartHttpServletRequest 분기,
-       등록 화면에 <input type="file" name="file_1" multiple> 추가
-  (세부 옵션이 필요하면 먼저 egov_add_attach_file_infrastructure 를 호출. 사용자가 취소하면 아무 파일도 만들지 않는다)
+```text
+/workspace/board-app 에 게시판별 기사 현황 화면을 추가해 줘.
+
+SELECT b.BOARD_ID   AS boardId,
+       b.TITLE      AS boardTitle,
+       a.SUBJECT    AS articleSubject,
+       b.CREATED_AT AS createdAt
+FROM BOARD b
+LEFT JOIN ARTICLE a ON a.BOARD_ID = b.BOARD_ID
 ```
 
-### 예시 6. 화이트리스트 + 큰 파일 허용 첨부 인프라
+AI 는 `egov_add_query_view` 를 호출합니다. 페이징과 검색이 되는 조회 전용 목록 화면이 `/egovBoardArticleReportList.do` 에 생성됩니다.
 
-```
-User: "/workspace/app 에 첨부파일 인프라 설치하되, PDF/Office 파일만 허용하고
-       파일은 50MB, 요청은 200MB 까지 받아줘."
+### 예시 5. 정책을 지정한 첨부파일 인프라 설치
 
-Claude: (egov_add_attach_file_infrastructure 호출)
+```text
+/workspace/board-app 에 첨부파일 인프라를 설치해 줘. PDF 와 오피스 문서만 허용하고,
+파일은 50MB, 요청은 200MB 까지 받게 해 줘.
 ```
+
+AI 는 `egov_add_attach_file_infrastructure` 를 다음과 같은 입력으로 호출합니다.
 
 ```json
 {
-  "projectPath": "/workspace/app",
-  "fileStorePath": "/opt/app/uploads",
+  "projectPath": "/workspace/board-app",
   "maxFileSize": "50MB",
   "maxRequestSize": "200MB",
   "allowedExtensions": ["pdf", "docx", "xlsx", "pptx", "hwp"]
 }
 ```
 
-`EgovFileMngUtil` 진입 시점에 화이트리스트 외 확장자는 거절되고, 도메인 정책 한도(50MB) 도 Spring multipart 와 별개로 한 번 더 검증됩니다.
+## 생성된 프로젝트의 실행
 
-## 🗂️ 폴더 구조 (Project Structure)
+생성된 프로젝트는 내장 HSQLDB 를 사용하므로 DB 를 준비하지 않고 바로 실행할 수 있습니다.
 
+```bash
+cd /workspace/board-app
+mvn clean package
+mvn spring-boot:run    # Boot. http://localhost:8080/ 에 접속
 ```
+
+WAR 프로젝트는 `mvn clean package` 가 만든 `target/board-app-1.0.0.war` 를 Tomcat 의 `webapps/` 에 복사해서 실행합니다. 스택별 구조, 화면의 URL, 운영 DB 로 전환하는 방법은 [`docs/reference/GENERATED_PROJECT.md`](docs/reference/GENERATED_PROJECT.md) 에 있습니다.
+
+## 안전 정책
+
+- **충돌하면 거부**: `egov_add_entity` 와 `egov_add_query_view` 는 만들 파일이 하나라도 이미 있으면 어떤 파일도 쓰지 않고, 충돌한 파일의 목록과 함께 거부합니다. 만들 파일이 모두 같은 내용으로 이미 있으면 변경 없이 성공으로 응답합니다. `egov_scaffold_project` 는 같은 이름의 비어 있지 않은 폴더가 있으면 거부합니다. `egov_add_attach_file_infrastructure` 는 같은 내용의 파일은 건너뛰고, 내용이 다른 파일이 있으면 거부합니다.
+- **기존 파일의 수정은 한정된 범위에서만**: `pom.xml`, 설정 클래스, 다른 엔티티의 코드는 고치지 않습니다. 기존 파일에 내용을 덧붙이는 경우는 시드 SQL, 메시지 번들, 메뉴, 첨부파일 설정으로 한정되며, 각각 옵션으로 끌 수 있습니다. 4.3 WAR 의 `validator.xml` 에는 새 엔티티의 검증 규칙을 항상 삽입합니다.
+- **쓰기 전 검증과 되돌리기**: 기존 프로젝트에 파일을 추가하는 세 도구는 렌더링 결과를 검사한 뒤에 파일을 쓰고, 쓰는 도중에 실패하면 이미 쓴 파일을 원래 상태로 되돌립니다. 새 폴더에 프로젝트를 만드는 `egov_scaffold_project` 는 파일을 쓴 뒤에 검사합니다.
+- **프로젝트 폴더 밖에 쓰지 않음**: 모든 산출물의 경로는 대상 프로젝트 폴더 안에 있는지 확인한 뒤에 씁니다.
+- **DDL 정리는 의미를 바꾸지 않는 범위에서만**: 대소문자, 공백, 따옴표를 정리하고 SQL 주석을 제거하며, 정리한 내용을 결과 메시지로 알립니다.
+
+## 제약 사항
+
+- 4.3 WAR 는 첨부파일을 지원하지 않습니다.
+- Oracle, Tibero, Altibase 로 전환할 때에는 생성된 MyBatis SQL 의 페이징 구문과 검색 조건을 직접 고쳐야 합니다.
+- 날짜 입력란의 달력(flatpickr)은 CDN 에서 불러오므로, 인터넷에 연결되지 않은 환경에서는 달력이 뜨지 않습니다.
+- 생성되는 프로젝트에는 로그인과 권한 관리가 없습니다.
+
+전체 목록과 피하는 방법은 [`docs/development/KNOWN_ISSUES.md`](docs/development/KNOWN_ISSUES.md) 에 있습니다.
+
+## 기술 스택
+
+| 구분 | 내용 |
+|------|------|
+| Protocol | MCP (Model Context Protocol), stdio 전송 |
+| MCP SDK | `@modelcontextprotocol/sdk` v1.29.0 |
+| Language | TypeScript v5.9.3 |
+| Runtime | Node.js 18 이상 (Node.js 22 권장) |
+| Template Engine | `handlebars` v4.7.9 |
+| SQL Parser | `node-sql-parser` v5.4.0 |
+| Schema Validation | `zod` v4.4.3 |
+| Test | Vitest v1.6.1 |
+
+## 폴더 구조
+
+```text
 egovframe-mcp-codegen/
 ├── src/
-│   ├── index.ts                                # MCP 서버 진입점 (4 tool 등록)
+│   ├── index.ts                                 # MCP 서버의 진입점 (도구 4개 등록, 사용자 확인)
 │   ├── tools/
-│   │   ├── egovScaffoldProject.ts              # 신규 프로젝트 생성
-│   │   ├── egovAddEntity.ts                    # 엔티티 CRUD 추가
-│   │   ├── egovAddQueryView.ts                 # 조회 화면 추가
-│   │   └── egovAddAttachFileInfrastructure.ts  # 첨부파일 인프라 설치
+│   │   ├── egovScaffoldProject.ts               # egov_scaffold_project
+│   │   ├── egovAddEntity.ts                     # egov_add_entity
+│   │   ├── egovAddQueryView.ts                  # egov_add_query_view
+│   │   └── egovAddAttachFileInfrastructure.ts   # egov_add_attach_file_infrastructure
 │   └── utils/
-│       ├── ddlNormalizer.ts                    # DDL 케이스/공백/타입 정규화
-│       └── scaffold/                           # 스캐폴드 엔진
-│           ├── ddlParser.ts                    # node-sql-parser 기반 진입
-│           ├── ddlParserAst.ts                 # AST 변환
-│           ├── ddlParserLegacy.ts              # legacy regex 폴백 파서
-│           ├── dataTypes.ts                    # SQL → Java/TS 타입 매핑
-│           ├── dialectTypes.ts                 # MySQL/Oracle/H2 dialect
-│           ├── entityDiscovery.ts              # 기존 엔티티 스캔
-│           ├── manifestLoader.ts               # templates/manifests/*.json 로더
-│           ├── projectDetector.ts              # pom.xml 기반 stack 자동 감지
-│           ├── scaffoldGenerator.ts            # 메인 렌더링 엔진
-│           └── stackMatrix.ts                  # stack × projectType 호환 매트릭스
-│
-├── templates/                                  # Handlebars 템플릿
-│   ├── boot/                                   # eGovFrame 4.3 Boot
-│   ├── boot50/                                 # eGovFrame 5.1 Boot
-│   ├── war/                                    # eGovFrame 4.3 WAR
-│   ├── static50/                               # KRDS 정적 리소스 (세 스택 공용)
-│   ├── attach-file/                            # 첨부파일 인프라 템플릿
-│   │   ├── manifests/   # boot.json (5.1/4.3 공용)
-│   │   └── boot/        # 5.1/4.3 공용 (stack 차이는 렌더 컨텍스트로 분기)
-│   │       ├── java/        # 8개 Java 클래스 (Service/Util/Mapper/Controller/Config/ExceptionAdvice)
-│   │       ├── thymeleaf/   # cmm/uploadError.html + _fragments/alertMessages.html
-│   │       ├── messages/    # 메시지 번들 append fragment (ko/base/en)
-│   │       ├── properties/  # application.properties append fragment (Globals/multipart/security/globals)
-│   │       ├── mapper/      # EgovFileMng_SQL.xml
-│   │       ├── ddl/         # 7 dialect 별 attach-file.sql
-│   │       └── ...
-│   ├── manifests/                              # 출력 파일 매니페스트
-│   │   ├── boot43.json
-│   │   ├── boot50.json
-│   │   └── war43.json
-│   └── stacks.json                             # 스택 정의
-│
-├── tests/                                      # Vitest 단위/통합 테스트
-│   ├── scaffold/                               # 스캐폴드 golden 테스트
-│   └── utils/                                  # 유틸 단위 테스트
-│
-├── docs/
-│   └── design/                                 # 설계 문서
-│
-├── build/                                      # tsc 산출물 (npm run build 후 생성)
+│       ├── ddlNormalizer.ts                     # DDL 정리
+│       ├── sqlText.ts                           # SQL 문자열 유틸리티
+│       ├── fsCopyFilter.ts                      # 정적 자산 복사 필터
+│       └── scaffold/                            # 코드 생성 엔진
+│           ├── ddlParser.ts, ddlParserAst.ts, ddlParserLegacy.ts    # DDL 파싱
+│           ├── dataTypes.ts, dialectTypes.ts                        # 타입 매핑
+│           ├── messageLabel.ts                                      # COMMENT 를 화면 라벨로 변환
+│           ├── stackMatrix.ts, manifestLoader.ts                    # 스택 정의와 매니페스트
+│           ├── scaffoldGenerator.ts                                 # 렌더링과 프로젝트 생성
+│           ├── projectDetector.ts, entityDiscovery.ts               # 기존 프로젝트의 해석
+│           ├── migrationStrategy.ts                                 # 시드 SQL 반영 방식의 결정
+│           ├── attachFileInstaller.ts, attachmentContext.ts         # 첨부파일
+│           ├── scaffoldDecision.ts, attachmentDecision.ts, elicitForm.ts    # 사용자 확인
+│           ├── outputValidator.ts, pathGuard.ts, writeRollback.ts   # 검증, 경로 확인, 되돌리기
+│           └── toolMessages.ts                                      # 오류 문구와 완료 표식
+├── templates/
+│   ├── stacks.json                              # 스택 정의
+│   ├── manifests/                               # 스택별 매니페스트 (boot50, boot43, war43)
+│   ├── boot50/                                  # 5.1 Boot 템플릿
+│   ├── boot/                                    # 4.3 Boot 템플릿
+│   ├── war/                                     # 4.3 WAR 템플릿
+│   ├── static50/                                # KRDS 정적 자산 (세 스택 공용)
+│   └── attach-file/                             # 첨부파일 인프라의 매니페스트와 템플릿 (두 Boot 스택 공용)
+├── tests/                                       # Vitest 테스트
+│   ├── scaffold/                                # 코드 생성의 단위 테스트와 통합 테스트
+│   │   └── __golden__/                          # 골든 파일
+│   └── utils/                                   # 유틸리티의 단위 테스트
+├── scripts/
+│   └── pack-bundle.sh                           # 배포 tgz 제작
+├── docs/                                        # 상세 문서 (아래 "문서" 참조)
+├── build/                                       # 컴파일 결과 (npm run build 로 생성)
 ├── package.json
 ├── tsconfig.json
 └── vitest.config.mjs
 ```
 
-## 🧪 테스트 (Testing)
+## 빌드와 테스트
 
-자동화 테스트는 [Vitest](https://vitest.dev/) 로 작성되어 `tests/**/*.test.ts` 에 위치합니다.
+| 명령 | 동작 |
+|------|------|
+| `npm test` | 빌드한 뒤에 전체 테스트를 실행합니다. |
+| `npm run test:unit` | 빌드하지 않고 테스트만 실행합니다. |
+| `npm run test:watch` | 파일이 바뀔 때마다 테스트를 다시 실행합니다. |
+| `npm run test:update` | 골든 파일을 현재 산출물로 갱신합니다. 의도한 변경일 때만 사용합니다. |
+| `npm run inspector` | 빌드한 서버를 MCP Inspector 로 실행해서 도구를 직접 호출해 봅니다. |
 
-| 명령어                | 동작                                                       |
-|----------------------|------------------------------------------------------------|
-| `npm test`           | `npm run build` 후 `vitest run` (전체 테스트)              |
-| `npm run test:unit`  | `vitest run` (build 생략)                                  |
-| `npm run test:watch` | watch 모드                                                 |
-| `npm run test:update`| `UPDATE_GOLDEN=1` 로 scaffold golden JSON 갱신             |
+테스트의 구성과 골든 테스트의 사용법은 [`docs/development/TESTING_GUIDE.md`](docs/development/TESTING_GUIDE.md) 에 있습니다.
 
-### MCP Inspector (수동 디버깅)
+## 문서
 
-```bash
-npm run inspector
-```
+상세 문서는 [`docs/`](docs/README.md) 에 주제별 폴더로 나뉘어 있습니다.
 
-빌드된 `build/index.js` 를 MCP Inspector 에 띄워 tool 을 인터랙티브하게 호출할 수 있습니다 — 신규 사용자 데모와 디버깅에 유용합니다.
+| 문서 | 설명 |
+|------|------|
+| [`docs/setup/MCP_SETUP_GUIDE.md`](docs/setup/MCP_SETUP_GUIDE.md) | 설치와 클라이언트별 등록 방법, 환경 변수, 문제 해결 |
+| [`docs/reference/TOOLS_OVERVIEW.md`](docs/reference/TOOLS_OVERVIEW.md) | 도구 4개의 용도와 공통 동작 |
+| [`docs/reference/DDL_INPUT.md`](docs/reference/DDL_INPUT.md) | 받아들이는 DDL 문법, 타입 매핑, COMMENT 라벨 규칙 |
+| [`docs/reference/GENERATED_PROJECT.md`](docs/reference/GENERATED_PROJECT.md) | 생성되는 프로젝트의 스택별 구조, 실행 방법, URL, 운영 DB 전환 |
+| [`docs/architecture/GENERATION_PIPELINE.md`](docs/architecture/GENERATION_PIPELINE.md) | 코드 생성의 처리 흐름, 모듈 구성, 스택 정의와 매니페스트 |
+| [`docs/architecture/USER_CONFIRMATION.md`](docs/architecture/USER_CONFIRMATION.md) | MCP Elicitation 으로 사용자에게 묻는 흐름 |
+| [`docs/architecture/ATTACH_FILE.md`](docs/architecture/ATTACH_FILE.md) | 첨부파일 인프라의 산출물과 보안 동작, 엔티티 연결 구조 |
+| [`docs/architecture/SECURITY_CONFIG.md`](docs/architecture/SECURITY_CONFIG.md) | 5.1 Boot 프로젝트의 Spring Security 설정 |
+| [`docs/architecture/SCREEN_TEMPLATES.md`](docs/architecture/SCREEN_TEMPLATES.md) | 세 스택의 화면 템플릿 구성과 차이 |
+| [`docs/operations/PACKAGING_GUIDE.md`](docs/operations/PACKAGING_GUIDE.md) | 배포 tgz 의 제작과 점검 |
+| [`docs/development/TESTING_GUIDE.md`](docs/development/TESTING_GUIDE.md) | 빌드와 테스트 명령, 테스트 구성 |
+| [`docs/development/GENERATED_PROJECT_VERIFICATION.md`](docs/development/GENERATED_PROJECT_VERIFICATION.md) | 생성된 프로젝트를 실제로 실행해서 확인하는 절차 |
+| [`docs/development/KNOWN_ISSUES.md`](docs/development/KNOWN_ISSUES.md) | 남아 있는 문제와 제약 사항 |
+| [`docs/release-notes/v5.1.0-beta.md`](docs/release-notes/v5.1.0-beta.md) | 5.1.0 Beta 릴리스 노트와 배포 파일의 체크섬 |
 
-## ⚠️ 안전 정책 (Safety Defaults)
+## 변경 이력
 
-이 서버는 결정적이고 보수적인 동작을 우선시합니다:
+| 버전 | 배포일 | 내용 |
+|------|--------|------|
+| v5.1.0 Beta | 2026-11-27 | 최초 배포 버전 ([릴리스 노트](docs/release-notes/v5.1.0-beta.md)) |
 
-- **충돌 시 거부**: 출력 파일이 하나라도 이미 존재하면 어떤 파일도 작성하지 않고 충돌 목록과 함께 거부합니다. `egov_scaffold_project` 도 `outputPath` 아래에 같은 이름의 비어 있지 않은 폴더가 있으면 거부합니다. 강제 덮어쓰기 옵션은 의도적으로 제공하지 않습니다.
-- **공용 설정 불간섭**: `pom.xml`, `application.properties`, `sql-mapper-config.xml` 같은 프로젝트 공용 설정은 신규 엔티티 추가 시 건드리지 않습니다.
-- **DDL 정규화는 보수적**: 의미를 바꾸지 않는 케이스/공백/인용부호 변환만 수행하며, 변경 항목은 진단 보고서로 사용자에게 반드시 통지합니다.
-- **스택 호환성 검증**: WAR + 5.1 같은 미지원 조합은 진입 시점에 명확한 에러로 거부합니다.
+이번 버전은 베타 버전입니다. 문제가 있으면 [GitHub Issues](https://github.com/eGovFramework/egovframe-mcp-codegen/issues) 에 알려 주세요.
 
-## 🔗 함께 쓰는 자매 MCP
+## 함께 쓰는 MCP 서버
 
-- **[egovframe-mcp-search](../egovframe-mcp-search)** — eGovFrame 가이드 / 표준 용어 / 공통컴포넌트 / 호환성 통합 검색
-- **[egovframe-mcp-check](../egovframe-mcp-check)** — 생성된 프로젝트의 아키텍처 컴플라이언스 검증
+이 서버는 코드 생성만 제공합니다. 자료 검색과 아키텍처 준수 점검은 다음 서버가 제공합니다.
 
-## 📄 라이선스
+- **[egovframe-mcp-search](https://github.com/eGovFramework/egovframe-mcp-search)**: 공식 가이드, 개발자 지식, 공통컴포넌트, 호환 소프트웨어 통합 검색
+- **[egovframe-mcp-check](https://github.com/eGovFramework/egovframe-mcp-check)**: eGovFrame 프로젝트의 레이어별 아키텍처 준수 점검 (정적 분석)
 
-Apache-2.0
+## 라이선스
 
-## 🙏 Credits
+Apache-2.0 라이선스를 따릅니다. 전문은 [`LICENSE`](LICENSE) 에 있습니다.
 
-[egovframe-vscode-initializr](https://github.com/egovframework/egovframe-vscode-initializr) 의 스캐폴드 로직을 기반으로 합니다.
+## Credits
+
+[egovframe-vscode-initializr](https://github.com/eGovFramework/egovframe-vscode-initializr) 의 스캐폴드 로직을 기반으로 합니다.

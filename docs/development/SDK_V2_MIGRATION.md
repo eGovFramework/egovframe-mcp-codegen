@@ -1,8 +1,10 @@
-# Elicitation: SDK 1.29.0과 v2 비교 및 전환 가이드
+# MCP SDK v2 전환 가이드
+
+이 문서는 사용자 확인(Elicitation)을 중심으로 `@modelcontextprotocol/sdk` 1.29.0 과 v2 의 차이를 비교하고, v2 로 전환할 때 고칠 코드를 정리합니다. 현재 구현의 동작은 [사용자 확인 흐름](../architecture/USER_CONFIRMATION.md)에 있습니다.
 
 - 작성일: 2026-11-09
 - 현재 사용 버전: `@modelcontextprotocol/sdk` 1.29.0 (`package.json`은 `^1.29.0`)
-- 대상 코드: `src/index.ts`, `src/utils/scaffold/attachmentDecision.ts`
+- 대상 코드: `src/index.ts`, `src/utils/scaffold/elicitForm.ts`, `src/utils/scaffold/scaffoldDecision.ts`, `src/utils/scaffold/attachmentDecision.ts`
 
 > **검증 범위:** 1.29.0 동작은 설치된 SDK로 실행해 확인했습니다. v2 내용은 아래 참고 문서를 읽고 정리한 것이며, 이 저장소에 v2를 설치해 실행하지는 않았습니다. 전환 시 실제 패키지의 타입과 동작으로 다시 확인해야 합니다.
 
@@ -91,7 +93,7 @@ main은 `elicitInput`과 클라이언트 `callTool`의 기본 제한 시간이 �
 | 파일 | 변경 |
 |---|---|
 | `package.json` | `@modelcontextprotocol/sdk`를 제거하고 `@modelcontextprotocol/server`를 추가합니다. 테스트용으로 `@modelcontextprotocol/client`를 `devDependencies`에 추가합니다. |
-| `CLAUDE.md`, `README.md` | Node 최소 버전을 18에서 20으로 올리고 SDK 패키지 설명을 갱신합니다. `.nvmrc`는 22이므로 변경하지 않습니다. |
+| `README.md`, `docs/` 의 요구 사항 | Node 최소 버전을 18에서 20으로 올리고 SDK 패키지 설명을 갱신합니다. `.nvmrc`는 22이므로 변경하지 않습니다. |
 
 `zod ^4.4.3`은 v2의 요구 사항(`^4.2.0`)을 만족합니다. v2 문서의 예제는 `zod/v4`에서 import합니다. 현재의 `import { z } from "zod"`를 유지해도 되는지는 전환 시 `.describe()`가 `tools/list`에 나오는지로 확인합니다. `tests/toolRegistration.test.ts`가 이 동작을 검사합니다.
 
@@ -107,7 +109,7 @@ import { McpServer } from "@modelcontextprotocol/server";
 import { StdioServerTransport } from "@modelcontextprotocol/server/stdio";
 ```
 
-- `inputSchema`의 raw shape 4개는 deprecated overload로 계속 동작합니다. `z.object(...)`로 바꾸려면 프로젝트의 "raw zod shape" 컨벤션(`CLAUDE.md`)도 함께 고쳐야 합니다. 세 저장소에 공통된 컨벤션이므로 별도 결정이 필요합니다.
+- `inputSchema`의 raw shape 4개는 deprecated overload로 계속 동작합니다. `z.object(...)`로 바꾸려면 `inputSchema` 를 zod 필드 정의의 나열로 적는 프로젝트의 규칙도 함께 고쳐야 합니다. 세 저장소에 공통된 컨벤션이므로 별도 결정이 필요합니다.
 - `egov_scaffold_project`와 `egov_add_entity` 핸들러의 `(args, extra)`를 `(args, ctx)`로 바꿉니다.
 
 ### 4.3 사용자 확인: 1단계, 2025-11-25 연결 유지

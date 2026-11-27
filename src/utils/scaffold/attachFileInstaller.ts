@@ -32,7 +32,7 @@ const HSQL_SEED_FALLBACK_OUTPUT = "src/main/resources/db/attach-file.sql";
 const HSQL_SEED_TEMPLATE = "attach-file/boot/ddl/attach-file-hsql-seed.sql.hbs";
 
 /**
- * 입력 스키마. spec(docs/design/attach-file-tool-schema.md §1.1) 과 1:1 매핑.
+ * 입력 스키마. 인자의 의미는 docs/reference/EGOV_ADD_ATTACH_FILE_INFRASTRUCTURE_TOOL.md 참조.
  * 필수는 projectPath 하나뿐 — 나머지는 안전한 default 보유.
  */
 export const AddAttachFileInfrastructureInputSchema = z.object({
